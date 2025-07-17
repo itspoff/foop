@@ -1,18 +1,15 @@
 import { SlashCommandBuilder, InteractionContextType } from "discord.js";
 import connectToDatabase from "../db.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
-
-/**
- * Utility: format time difference in human-readable string
- */
-function timeSince(date) {
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-
-  if (seconds < 60) return `${seconds}s ago`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  return `${Math.floor(seconds / 86400)}d ago`;
-}
+import {
+  formatMood,
+  formatEnergy,
+  formatDisplayName,
+  formatDisplayTag,
+  timeSince,
+  formatDisplayMission,
+  formatLockedInMission,
+} from "../utils/formatLabels.js";
 
 export const data = new SlashCommandBuilder()
   .setName("status")
@@ -27,26 +24,64 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
   const db = await connectToDatabase();
-  const users = db.collection("users");
+  const tags = db.collection("tags");
+  const missions = db.collection("missions");
 
   const target = interaction.options.getUser("user") || interaction.user;
   const member = target.id === interaction.user.id ? interaction.member : null;
   const user = await getOrCreateUser(target, member);
 
-  const mood = (user.mood || "normal").toUpperCase();
-  const energy = user.energy ?? 100;
+  const userMissions = await missions
+    .find({ user_id: user._id })
+    .sort({ created_at: -1 })
+    .toArray();
+
+  const completedMissions = await missions
+    .find({
+      user_id: user._id,
+      is_complete: true,
+    })
+    .toArray();
+
+  const displayMissions = userMissions
+    .map((m) => formatDisplayMission(m))
+    .join("\n");
+
+  const lockedInMission = await missions.findOne({
+    user_id: user._id,
+    locked_in_at: { $ne: null },
+  });
+
+  const displayLockedInMission = formatLockedInMission(lockedInMission);
+
+  const displayName = formatDisplayName(
+    user.display_name || interaction.user.globalName
+  );
+
+  const mood = formatMood(user.mood || "normal");
+  const energy = formatEnergy(user.energy ?? 100);
+
+  const activeTag = user.active_tag
+    ? await tags.findOne({ code: user.active_tag })
+    : null;
+
+  console.log(activeTag);
+  const tag = activeTag ? formatDisplayTag(activeTag) : "";
 
   const lastUpdated = user.last_updated
     ? timeSince(new Date(user.last_updated))
     : "unknown";
 
-  const displayName = user.nickname || target.username;
+  const statusUpdate = `## ${displayName}  ${mood}  ${energy}  
+-#  ${
+    tag ? `${tag}  |` : ""
+  }  \`Last Updated: ${lastUpdated} ago\`  |  \`PPts: ${user.ppts}\`
+> **\`Conditions:    \`** \`🔵 Under\`  \`🔵 Dev\`  \`🟠 elopment\`  
+> **\`Locked in on:  \`** ${displayLockedInMission}
+### \`Today's Missions:\` \`${completedMissions.length} / ${
+    userMissions.length
+  }\`
+${displayMissions}`;
 
-  const msg = [];
-  msg.push(`\`\`\`ansi`);
-  msg.push(`${displayName}'s Status`);
-  msg.push(`Mood: ${mood.toUpperCase()} | Energy: [2;33m${energy}[0m / 100`);
-  msg.push(`\`\`\``);
-  msg.push(`-# Last updated: ${lastUpdated}`);
-  await interaction.reply({ content: msg.join("\n") });
+  await interaction.followUp({ content: statusUpdate });
 }

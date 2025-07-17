@@ -1,7 +1,7 @@
 import { InteractionContextType, SlashCommandBuilder } from "discord.js";
 import connectToDatabase from "../db.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
-import { formatReason } from "../utils/formatReason.js";
+import { formatMood, formatReason } from "../utils/formatLabels.js";
 
 export const data = new SlashCommandBuilder()
   .setName("mood")
@@ -45,13 +45,17 @@ export async function execute(interaction) {
     { $set: { mood: newMood, last_updated: new Date() } }
   );
 
-  const msg = [];
-  msg.push(`\`\`\`ansi`);
-  if (reason) msg.push(formatReason(reason));
-  const moodMsg = value === "down" ? `Mood went [2;34mdown[0m.` : `Mood went [2;33mup[0m.`;
+  const moodUpdate = `${formatReason(reason)}
+\`Mood went ${value}!\`
+\`Mood is now\` ${formatMood(newMood)}`;
 
-  msg.push(moodMsg);
-  msg.push(`\`\`\``);
+  // const msg = [];
+  // msg.push(`\`\`\`ansi`);
+  // if (reason) msg.push(formatReason(reason));
+  // const moodMsg = value === "down" ? `Mood went [2;34mdown[0m.` : `Mood went [2;33mup[0m.`;
 
-  await interaction.reply({ content: msg.join("\n") });
+  // msg.push(moodMsg);
+  // msg.push(`\`\`\``);
+
+  await interaction.followUp({ content: moodUpdate });
 }
