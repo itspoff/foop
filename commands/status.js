@@ -16,6 +16,7 @@ export const data = new SlashCommandBuilder()
   .setDescription("View someone's status")
   .setContexts([
     InteractionContextType.Guild,
+    InteractionContextType.BotDM,
     InteractionContextType.PrivateChannel,
   ])
   .addUserOption((option) =>

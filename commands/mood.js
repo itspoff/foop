@@ -8,6 +8,7 @@ export const data = new SlashCommandBuilder()
   .setDescription("Update your mood")
   .setContexts([
     InteractionContextType.Guild,
+    InteractionContextType.BotDM,
     InteractionContextType.PrivateChannel,
   ])
   .addStringOption((option) =>

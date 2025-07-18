@@ -12,6 +12,7 @@ export const data = new SlashCommandBuilder()
   .setDescription("Manage your missions")
   .setContexts([
     InteractionContextType.Guild,
+    InteractionContextType.BotDM,
     InteractionContextType.PrivateChannel,
   ])
   .addSubcommand((sub) =>

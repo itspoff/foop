@@ -13,6 +13,7 @@ export const data = new SlashCommandBuilder()
   .setDescription("Set your active tag")
   .setContexts([
     InteractionContextType.Guild,
+    InteractionContextType.BotDM,
     InteractionContextType.PrivateChannel,
   ])
   .addStringOption((option) =>
