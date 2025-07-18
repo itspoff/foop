@@ -66,7 +66,6 @@ export async function execute(interaction) {
     ? await tags.findOne({ code: user.active_tag })
     : null;
 
-  console.log(activeTag);
   const tag = activeTag ? formatDisplayTag(activeTag) : "";
 
   const lastUpdated = user.last_updated

@@ -12,6 +12,7 @@ export const data = new SlashCommandBuilder()
   .setDescription("Pull for tags you can apply to your status!")
   .setContexts([
     InteractionContextType.Guild,
+    InteractionContextType.BotDM,
     InteractionContextType.PrivateChannel,
   ]);
 
