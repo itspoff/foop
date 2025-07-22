@@ -2,69 +2,42 @@ import { SlashCommandBuilder, InteractionContextType } from "discord.js";
 import connectToDatabase from "../db.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
 import { generateUniqueCode } from "../utils/generateUniqueCode.js";
-import {
-  capitalizeFirstLetter,
-  formatDisplayMission,
-} from "../utils/formatLabels.js";
+import { capitalizeFirstLetter, formatMission, formatTime, showMissionList } from "../utils/formatLabels.js";
+import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 
 export const data = new SlashCommandBuilder()
   .setName("mission")
   .setDescription("Manage your missions")
-  .setContexts([
-    InteractionContextType.Guild,
-    InteractionContextType.BotDM,
-    InteractionContextType.PrivateChannel,
-  ])
+  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel])
   .addSubcommand((sub) =>
     sub
       .setName("add")
-      .setDescription("Add a new mission")
-      .addStringOption((opt) =>
-        opt.setName("name").setDescription("Mission name").setRequired(true)
-      )
+      .setDescription("Add a new mission.")
+      .addStringOption((opt) => opt.setName("name").setDescription("Mission name").setRequired(true))
       .addBooleanOption((opt) =>
-        opt
-          .setName("daily")
-          .setDescription("Set the mission to repeat daily")
-          .setRequired(false)
+        opt.setName("daily").setDescription("Set the mission to repeat daily").setRequired(false)
       )
   )
   .addSubcommand((sub) =>
     sub
       .setName("lockin")
-      .setDescription("Start tracking time for a mission")
-      .addStringOption((opt) =>
-        opt
-          .setName("code")
-          .setDescription("The 4-digit mission code")
-          .setRequired(true)
-      )
+      .setDescription("Lock in on a mission by code.")
+      .addStringOption((opt) => opt.setName("code").setDescription("The 4-digit mission code").setRequired(true))
   )
+  .addSubcommand((sub) => sub.setName("checkout").setDescription("Check out on the current mission."))
   .addSubcommand((sub) =>
     sub
       .setName("complete")
-      .setDescription("Complete a mission")
-      .addStringOption((opt) =>
-        opt
-          .setName("code")
-          .setDescription("The 4-digit mission code")
-          .setRequired(true)
-      )
+      .setDescription("Complete a mission.")
+      .addStringOption((opt) => opt.setName("code").setDescription("The 4-digit mission code").setRequired(true))
   )
   .addSubcommand((sub) =>
     sub
       .setName("delete")
-      .setDescription("Delete a mission by code")
-      .addStringOption((opt) =>
-        opt
-          .setName("code")
-          .setDescription("The 4-digit mission code")
-          .setRequired(true)
-      )
+      .setDescription("Delete a mission by code.")
+      .addStringOption((opt) => opt.setName("code").setDescription("The 4-digit mission code").setRequired(true))
   )
-  .addSubcommand((sub) =>
-    sub.setName("clear").setDescription("Clear completed non-daily missions")
-  );
+  .addSubcommand((sub) => sub.setName("clear").setDescription("Clear completed non-daily missions"));
 
 export async function execute(interaction) {
   const db = await connectToDatabase();
@@ -75,6 +48,7 @@ export async function execute(interaction) {
   const handlers = {
     add: () => handleAdd(interaction, user, missions),
     lockin: () => handleLockin(interaction, user, missions),
+    checkout: () => handleCheckout(interaction, user, missions),
     complete: () => handleComplete(interaction, user, missions),
     delete: () => handleDelete(interaction, user, missions),
     clear: () => handleClear(interaction, user, missions),
@@ -85,32 +59,6 @@ export async function execute(interaction) {
   }
 
   return interaction.followUp({ content: "Unknown subcommand." });
-}
-
-async function showMissionList(
-  interaction,
-  user,
-  missions,
-  highlightCode = null,
-  highlightText = ""
-) {
-  const all = await missions
-    .find({ user_id: user._id })
-    .sort({ created_at: -1 })
-    .toArray();
-  const completed = all.filter((m) => m.is_complete);
-
-  const msg = all
-    .map((m) => {
-      const label = formatDisplayMission(m);
-      if (m.code === highlightCode) return `${label} \`${highlightText}\``;
-      return label;
-    })
-    .join("\n");
-
-  return interaction.followUp({
-    content: `### \`Today's Missions:\` \`${completed.length} / ${all.length}\`\n${msg}`,
-  });
 }
 
 async function handleAdd(interaction, user, missions) {
@@ -134,6 +82,7 @@ async function handleAdd(interaction, user, missions) {
 }
 
 async function handleLockin(interaction, user, missions) {
+  // TODO: can only lock in on one task at a time
   const code = interaction.options.getString("code");
 
   if (!/^\d{4}$/i.test(code)) {
@@ -143,29 +92,55 @@ async function handleLockin(interaction, user, missions) {
   }
 
   const mission = await missions.findOne({ code, user_id: user._id });
-  if (!mission)
-    return interaction.followUp({ content: "❌ Mission not found." });
+  if (!mission) return interaction.followUp({ content: "❌ Mission not found." });
   if (mission.is_complete)
     return interaction.followUp({
-      content: `✅ Mission [${capitalizeFirstLetter(
-        mission.name
-      )}] already complete.`,
+      content: `✅ Mission [${capitalizeFirstLetter(mission.name)}] already complete.`,
     });
+
+  await missions.updateOne({ _id: mission._id }, { $set: { locked_in_at: new Date() }, $inc: { attempts: 1 } });
+
+  return interaction.followUp({
+    content: "`Locked in on:` `🔐` " + formatMission(mission),
+  });
+}
+
+async function handleCheckout(interaction, user, missions) {
+  const mission = await missions.findOne({
+    user_id: user._id,
+    locked_in_at: { $ne: null },
+    is_complete: { $ne: true },
+  });
+
+  if (!mission) {
+    return interaction.followUp({
+      content: "❌ No active locked-in mission to check out from.",
+    });
+  }
+
+  const totalTime = calculateTotalTimeTaken(mission.locked_in_at, mission.time_taken);
+  const sessionTime = Math.floor((new Date() - new Date(mission.locked_in_at)) / 1000); // in seconds
 
   await missions.updateOne(
     { _id: mission._id },
-    { $set: { locked_in_at: new Date() }, $inc: { attempts: 1 } }
+    {
+      $set: {
+        time_taken: totalTime,
+        locked_in_at: null,
+      },
+    }
   );
 
-  // TODO: unlockin logic
-
-  return showMissionList(
-    interaction,
-    user,
-    missions,
-    mission.code,
-    "🔐 Locked In!"
-  );
+  return interaction.followUp({
+    content:
+      "`Checked out on:` `⭕️` " +
+      formatMission(mission) +
+      " `⏱️ " +
+      formatTime(totalTime) +
+      " (+" +
+      formatTime(sessionTime) +
+      ")`",
+  });
 }
 
 async function handleComplete(interaction, user, missions) {
@@ -178,36 +153,22 @@ async function handleComplete(interaction, user, missions) {
   }
 
   const mission = await missions.findOne({ code, user_id: user._id });
-  if (!mission)
-    return interaction.followUp({ content: "❌ Mission not found." });
+  if (!mission) return interaction.followUp({ content: "❌ Mission not found." });
   if (mission.is_complete)
     return interaction.followUp({
-      content: `✅ Mission [${capitalizeFirstLetter(
-        mission.name
-      )}] already complete.`,
+      content: `✅ Mission [${capitalizeFirstLetter(mission.name)}] already complete.`,
     });
 
-  // gives difference between two dates in ms, then rounds down
-  const now = new Date();
-  const timeTaken = mission.locked_in_at
-    ? Math.floor((now - new Date(mission.locked_in_at)) / 1000)
-    : null;
+  const totalTime = calculateTotalTimeTaken(mission.locked_in_at, mission.time_taken);
 
-  // TODO: unlockin on user side if task is locked in
   await missions.updateOne(
     { _id: mission._id },
     {
-      $set: { is_complete: true, time_taken: timeTaken },
+      $set: { is_complete: true, locked_in_at: null, time_taken: totalTime },
     }
   );
 
-  return showMissionList(
-    interaction,
-    user,
-    missions,
-    mission.code,
-    "🐾 Completed!"
-  );
+  return showMissionList(interaction, user, missions, mission.code, "🐾 Completed!");
 }
 
 async function handleDelete(interaction, user, missions) {
@@ -236,14 +197,10 @@ async function handleDelete(interaction, user, missions) {
     });
   }
 
-  // TODO: also delete from user obj
-
   await missions.deleteOne({ _id: mission._id });
 
   return interaction.followUp({
-    content: `🗑️ Mission \`${capitalizeFirstLetter(
-      mission.name
-    )}\` has been deleted.`,
+    content: `🗑️ Mission \`${capitalizeFirstLetter(mission.name)}\` has been deleted.`,
   });
 }
 

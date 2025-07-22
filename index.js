@@ -16,9 +16,7 @@ client.commands = new Collection();
 
 (async () => {
   await connectToDatabase();
-  const commandFiles = fs
-    .readdirSync("./commands")
-    .filter((file) => file.endsWith(".js"));
+  const commandFiles = fs.readdirSync("./commands").filter((file) => file.endsWith(".js"));
 
   for (const file of commandFiles) {
     const command = await import(`./commands/${file}`);
@@ -43,15 +41,11 @@ client.commands = new Collection();
       const cost = interaction.customId === "pull_1x" ? 100 : 1000;
       const pulls = interaction.customId === "pull_1x" ? 1 : 10;
 
-      const pullsResult = Array.from({ length: pulls }, () =>
-        getRandomTag(tags)
-      );
+      const pullsResult = Array.from({ length: pulls }, () => getRandomTag(tags));
 
       const tagCodes = pullsResult.map((tag) => tag.code);
       const ownedTagCodes = user.tags ?? [];
-      const newTagCodes = tagCodes.filter(
-        (code) => !ownedTagCodes.includes(code)
-      );
+      const newTagCodes = tagCodes.filter((code) => !ownedTagCodes.includes(code));
 
       if (user.ppts < cost) {
         await interaction.reply({
@@ -69,9 +63,7 @@ client.commands = new Collection();
       );
 
       await interaction.reply({
-        content: `\`Pulled ${pulls} tag(s)!\` \`PPts remaining: ${
-          user.ppts
-        }\` \n\n${pullsResult
+        content: `\`Pulled ${pulls} tag(s)!\` \`PPts remaining: ${user.ppts}\` \n\n${pullsResult
           .map((tag) => {
             const isNew = !ownedTagCodes.includes(tag.code);
             const label = formatPulledTag(tag);
@@ -90,12 +82,9 @@ client.commands = new Collection();
 
     const user = await getOrCreateUser(interaction.user, interaction.member);
 
-    const lastBonus = user.last_daily_bonus
-      ? new Date(user.last_daily_bonus)
-      : null;
+    const lastBonus = user.last_daily_bonus ? new Date(user.last_daily_bonus) : null;
 
-    const toDateStringPST = (d) =>
-      d.toLocaleDateString("en-US", { timeZone: "America/Los_Angeles" });
+    const toDateStringPST = (d) => d.toLocaleDateString("en-US", { timeZone: "America/Los_Angeles" });
 
     const todayDate = toDateStringPST(new Date());
     const lastBonusDate = lastBonus ? toDateStringPST(lastBonus) : null;
@@ -151,10 +140,9 @@ client.commands = new Collection();
     try {
       await command.execute(interaction);
     } catch (error) {
-      console.error("❌ Error executing command:", error);
-      await interaction.reply({
+      console.error("`❌ Error executing command:`", error);
+      await interaction.followUp({
         content: "There was an error!",
-        ephemeral: true,
       });
     }
   });

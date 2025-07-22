@@ -40,19 +40,40 @@ export function timeSince(date) {
   return `${Math.floor(seconds / 86400)}d`;
 }
 
+export function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+}
+
 export function formatDisplayMission(mission) {
   const emoji = mission.is_complete ? "💮" : "⭕️";
   const code = mission.code || "0000";
-  return `> \`${emoji}\`  ${
-    mission.is_complete ? "~~" : ""
-  }\`${capitalizeFirstLetter(mission.name)}\`${
+  return `> \`${emoji}\`  ${mission.is_complete ? "~~" : ""}\`${capitalizeFirstLetter(mission.name)}\`${
     mission.is_complete ? "~~" : ""
   } \`🏷️${code}\``;
 }
 
+export async function showMissionList(interaction, user, missions, highlightCode = null, highlightText = "") {
+  const all = await missions.find({ user_id: user._id }).sort({ created_at: -1 }).toArray();
+  const completed = all.filter((m) => m.is_complete);
+
+  const msg = all
+    .map((m) => {
+      const label = formatDisplayMission(m);
+      if (m.code === highlightCode) return `${label} \`${highlightText}\``;
+      return label;
+    })
+    .join("\n");
+
+  return interaction.followUp({
+    content: `### \`Today's Missions:\` \`${completed.length} / ${all.length}\`\n${msg}`,
+  });
+}
+
 export function formatMission(mission) {
   const code = mission.code || "0000";
-  return `\`${capitalizeFirstLetter(mission.name)}\`\`🏷️${code}\``;
+  return `\`${capitalizeFirstLetter(mission.name)}\` \`🏷️${code}\``;
 }
 
 export function formatLockedInMission(mission) {
@@ -61,9 +82,7 @@ export function formatLockedInMission(mission) {
   }
 
   const code = mission.code || "0000";
-  return `\`📌 ${capitalizeFirstLetter(
-    mission.name
-  )}\` \`🏷️${code}\`  \`⏱️ ${timeSince(mission.locked_in_at)}\``;
+  return `\`📌 ${capitalizeFirstLetter(mission.name)}\` \`🏷️${code}\`  \`⏱️ ${timeSince(mission.locked_in_at)}\``;
 }
 
 export function capitalizeFirstLetter(string) {
@@ -77,8 +96,6 @@ export function formatReason(reason) {
   if (trimmed.length === 0) return "";
 
   const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
-  const sentence = capitalized.endsWith(".", "?", "!")
-    ? capitalized
-    : capitalized + ".";
+  const sentence = capitalized.endsWith(".", "?", "!") ? capitalized : capitalized + ".";
   return `\`💬 ${sentence}\``;
 }

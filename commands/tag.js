@@ -1,9 +1,5 @@
 // commands/tag.js
-import {
-  InteractionContextType,
-  InteractionResponse,
-  SlashCommandBuilder,
-} from "discord.js";
+import { InteractionContextType, InteractionResponse, SlashCommandBuilder } from "discord.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
 import connectToDatabase from "../db.js";
 import { formatDisplayTag, formatPulledTag } from "../utils/formatLabels.js";
@@ -11,14 +7,8 @@ import { formatDisplayTag, formatPulledTag } from "../utils/formatLabels.js";
 export const data = new SlashCommandBuilder()
   .setName("tag")
   .setDescription("Set your active tag")
-  .setContexts([
-    InteractionContextType.Guild,
-    InteractionContextType.BotDM,
-    InteractionContextType.PrivateChannel,
-  ])
-  .addStringOption((option) =>
-    option.setName("code").setDescription("Tag code to activate")
-  );
+  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel])
+  .addStringOption((option) => option.setName("code").setDescription("Tag code to activate"));
 
 export async function execute(interaction) {
   const db = await connectToDatabase();
@@ -69,9 +59,7 @@ export async function execute(interaction) {
   });
 
   await interaction.followUp({
-    content: `## \`${user.display_name}'s tag inventory:\`\n${formatted.join(
-      "\n"
-    )}`,
+    content: `## \`${user.display_name}'s tag inventory:\`\n${formatted.join("\n")}`,
     ephemeral: true,
   });
 }

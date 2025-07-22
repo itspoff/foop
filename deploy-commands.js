@@ -32,30 +32,21 @@ const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
 
 (async () => {
   try {
-    const existingCommands = await rest.get(
-      Routes.applicationCommands(process.env.APP_ID)
-    );
+    const existingCommands = await rest.get(Routes.applicationCommands(process.env.APP_ID));
     for (const cmd of existingCommands) {
       await rest.delete(Routes.applicationCommand(process.env.APP_ID, cmd.id));
       console.log(`Deleted global command: ${cmd.name}`);
     }
 
     const resolved = await Promise.all(commands);
-    const commandJSONs = resolved
-      .filter((cmd) => "data" in cmd)
-      .map((cmd) => cmd.data.toJSON());
+    const commandJSONs = resolved.filter((cmd) => "data" in cmd).map((cmd) => cmd.data.toJSON());
 
     console.log("Deploying the following commands:");
-    console.table(
-      commandJSONs.map((c) => ({ name: c.name, description: c.description }))
-    );
+    console.table(commandJSONs.map((c) => ({ name: c.name, description: c.description })));
 
-    // await rest.put(
-    //   Routes.applicationGuildCommands(process.env.APP_ID, process.env.GUILD_ID),
-    //   {
-    //     body: commandJSONs,
-    //   }
-    // );
+    // await rest.put(Routes.applicationGuildCommands(process.env.APP_ID, process.env.GUILD_ID), {
+    //   body: commandJSONs,
+    // });
     await rest.put(Routes.applicationCommands(process.env.APP_ID), {
       body: commandJSONs,
     });

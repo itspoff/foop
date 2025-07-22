@@ -1,5 +1,5 @@
 {
-  "name": "discord-getting-started",
+  "name": "poff-update-app",
   "private": true,
   "version": "1.0.0",
   "description": "Discord example app",
@@ -24,5 +24,14 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itspoff/poff-update-app.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/itspoff/poff-update-app/issues"
+  },
+  "homepage": "https://github.com/itspoff/poff-update-app#readme"
 }
