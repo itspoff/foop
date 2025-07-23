@@ -65,8 +65,7 @@ async function handleAdd(interaction, user, missions) {
   const code = await generateUniqueCode(missions);
   const name = interaction.options.getString("name").toLowerCase();
   const is_daily = interaction.options.getBoolean("daily") ?? false;
-
-  await missions.insertOne({
+  const mission = {
     user_id: user._id,
     code,
     name,
@@ -76,9 +75,13 @@ async function handleAdd(interaction, user, missions) {
     attempts: 0,
     is_daily,
     is_system: false,
-  });
+  };
 
-  return showMissionList(interaction, user, missions, code, "✨️ New!");
+  await missions.insertOne(mission);
+
+  return interaction.followUp({
+    content: "`Added new mission:` `⭕️` " + formatMission(mission),
+  });
 }
 
 async function handleLockin(interaction, user, missions) {
@@ -114,7 +117,7 @@ async function handleCheckout(interaction, user, missions) {
 
   if (!mission) {
     return interaction.followUp({
-      content: "❌ No active locked-in mission to check out from.",
+      content: "`❌ No active locked-in mission to check out from.`",
     });
   }
 
@@ -176,31 +179,31 @@ async function handleDelete(interaction, user, missions) {
 
   if (!/^\d{4}$/.test(code)) {
     return interaction.followUp({
-      content: "❌ Use a valid **4-digit number code** (e.g., 1234).",
+      content: "`❌ Use a valid **4-digit number code** (e.g., 1234).`",
     });
   }
 
   const mission = await missions.findOne({ code });
   if (!mission) {
     return interaction.followUp({
-      content: `❌ No mission found with code **${code}**.`,
+      content: `\`❌ No mission found with code **${code}**.\``,
     });
   }
   if (mission.is_system) {
     return interaction.followUp({
-      content: "⚠️ You can't delete a system mission.",
+      content: "`⚠️ You can't delete a system mission.`",
     });
   }
   if (!mission.user_id === user._id) {
     return interaction.followUp({
-      content: "❌ You don't have permission to delete this mission.",
+      content: "`❌ You don't have permission to delete this mission.`",
     });
   }
 
   await missions.deleteOne({ _id: mission._id });
 
   return interaction.followUp({
-    content: `🗑️ Mission \`${capitalizeFirstLetter(mission.name)}\` has been deleted.`,
+    content: `\`Mission\` \`🗑️\` \`${capitalizeFirstLetter(mission.name)}\` \`has been deleted.\``,
   });
 }
 
