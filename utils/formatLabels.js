@@ -52,12 +52,29 @@ export async function showMissionList(
   missions,
   highlightCode = null,
   highlightText = "",
-  followUp = "true"
+  followUp = true
 ) {
   const all = await missions.find({ user_id: user._id }).sort({ created_at: -1 }).toArray();
-  const completed = all.filter((m) => m.is_complete);
 
-  const msg = all
+  // 1. Daily missions
+  // 2. Completed missions
+  // 3. Everything else
+  const sorted = all.sort((a, b) => {
+    // daily
+    if (a.type === "daily" && b.type !== "daily") return -1;
+    if (b.type === "daily" && a.type !== "daily") return 1;
+
+    // completed
+    if (a.is_complete && !b.is_complete) return -1;
+    if (b.is_complete && !a.is_complete) return 1;
+
+    // created_at descending
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+
+  const completed = sorted.filter((m) => m.is_complete);
+
+  const msg = sorted
     .map((m) => {
       const label = formatDisplayMission(m);
       if (m.code === highlightCode) return `${label} \`${highlightText}\``;
@@ -67,10 +84,10 @@ export async function showMissionList(
 
   if (followUp) {
     return interaction.followUp({
-      content: `### \`Today's Missions:\` \`${completed.length} / ${all.length}\`\n${msg}`,
+      content: `### \`Today's Missions:\` \`${completed.length} / ${sorted.length}\`\n${msg}`,
     });
   } else {
-    return `### \`Today's Missions:\` \`${completed.length} / ${all.length}\`\n${msg}`;
+    return `### \`Today's Missions:\` \`${completed.length} / ${sorted.length}\`\n${msg}`;
   }
 }
 
