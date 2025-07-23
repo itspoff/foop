@@ -1,10 +1,11 @@
-import { SlashCommandBuilder } from "discord.js";
+import { InteractionContextType, SlashCommandBuilder } from "discord.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
 import { formatCondition } from "../utils/formatLabels.js";
 
 export const data = new SlashCommandBuilder()
   .setName("condition")
   .setDescription("Manage user conditions")
+  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel])
   .addSubcommand((sub) =>
     sub
       .setName("add")
