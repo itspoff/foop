@@ -14,17 +14,20 @@ import {
 
 export const data = new SlashCommandBuilder()
   .setName("status")
-  .setDescription("View someone's status")
-  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel])
-  .addUserOption((option) => option.setName("user").setDescription("User to check status of"));
+  .setDescription("Send a status update!")
+  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
+// .addUserOption((option) => option.setName("user").setDescription("User to check status of"));
 
 export async function execute(interaction) {
   const db = await connectToDatabase();
   const tags = db.collection("tags");
   const missions = db.collection("missions");
 
-  const target = interaction.options.getUser("user") || interaction.user;
-  const member = target.id === interaction.user.id ? interaction.member : null;
+  // const target = interaction.options.getUser("user") || interaction.user;
+  // const member = target.id === interaction.user.id ? interaction.member : null;
+
+  const target = interaction.user;
+  const member = interaction.member;
 
   const user = await getOrCreateUser(target, member);
   const conditions = user.conditions;
