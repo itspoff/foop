@@ -7,10 +7,17 @@ export async function getOrCreateUser(discordUser, guildMember = null) {
   const users = db.collection("users");
 
   const userId = discordUser.id;
-  const display_name =
-    guildMember?.nickname || discordUser.global_name || discordUser.username;
+  const display_name = guildMember?.nickname || discordUser.global_name || discordUser.username;
 
   let user = await users.findOne({ _id: userId });
+
+  const now = new Date();
+  const cleanedConditions = (user.conditions || []).filter((c) => new Date(c.expires_at) > now);
+
+  if (cleanedConditions.length !== (user.conditions || []).length) {
+    await users.updateOne({ _id: user._id }, { $set: { conditions: cleanedConditions, last_updated: now } });
+    user.conditions = cleanedConditions;
+  }
 
   if (!user) {
     const newUser = {

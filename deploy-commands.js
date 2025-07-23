@@ -44,12 +44,12 @@ const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
     console.log("Deploying the following commands:");
     console.table(commandJSONs.map((c) => ({ name: c.name, description: c.description })));
 
-    // await rest.put(Routes.applicationGuildCommands(process.env.APP_ID, process.env.GUILD_ID), {
-    //   body: commandJSONs,
-    // });
-    await rest.put(Routes.applicationCommands(process.env.APP_ID), {
+    await rest.put(Routes.applicationGuildCommands(process.env.APP_ID, process.env.GUILD_ID), {
       body: commandJSONs,
     });
+    // await rest.put(Routes.applicationCommands(process.env.APP_ID), {
+    //   body: commandJSONs,
+    // });
 
     console.log("✅ Successfully reloaded all commands.");
   } catch (error) {

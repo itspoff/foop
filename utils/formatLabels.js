@@ -46,15 +46,14 @@ export function formatTime(seconds) {
   return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
 }
 
-export function formatDisplayMission(mission) {
-  const emoji = mission.is_complete ? "💮" : "⭕️";
-  const code = mission.code || "0000";
-  return `> \`${emoji}\`  ${mission.is_complete ? "~~" : ""}\`${capitalizeFirstLetter(mission.name)}\`${
-    mission.is_complete ? "~~" : ""
-  } \`🏷️${code}\``;
-}
-
-export async function showMissionList(interaction, user, missions, highlightCode = null, highlightText = "") {
+export async function showMissionList(
+  interaction,
+  user,
+  missions,
+  highlightCode = null,
+  highlightText = "",
+  followUp = "true"
+) {
   const all = await missions.find({ user_id: user._id }).sort({ created_at: -1 }).toArray();
   const completed = all.filter((m) => m.is_complete);
 
@@ -66,11 +65,24 @@ export async function showMissionList(interaction, user, missions, highlightCode
     })
     .join("\n");
 
-  return interaction.followUp({
-    content: `### \`Today's Missions:\` \`${completed.length} / ${all.length}\`\n${msg}`,
-  });
+  if (followUp) {
+    return interaction.followUp({
+      content: `### \`Today's Missions:\` \`${completed.length} / ${all.length}\`\n${msg}`,
+    });
+  } else {
+    return `### \`Today's Missions:\` \`${completed.length} / ${all.length}\`\n${msg}`;
+  }
 }
 
+export function formatDisplayMission(mission) {
+  const emoji = mission.is_complete ? "💮" : "⭕️";
+  const code = mission.code || "0000";
+  return `> \`${emoji}\`  ${mission.is_complete ? "~~" : ""}\`${capitalizeFirstLetter(mission.name)}\`${
+    mission.is_complete ? "~~" : ""
+  } \`🏷️${code}\``;
+}
+
+// unused
 export function formatMission(mission) {
   const code = mission.code || "0000";
   return `\`${capitalizeFirstLetter(mission.name)}\` \`🏷️${code}\``;
@@ -98,4 +110,27 @@ export function formatReason(reason) {
   const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
   const sentence = capitalized.endsWith(".", "?", "!") ? capitalized : capitalized + ".";
   return `\`💬 ${sentence}\``;
+}
+
+export function formatConditionList(conditions) {
+  if (conditions.length === 0) {
+    return "";
+  }
+  const msg = conditions
+    .map((c) => {
+      const label = formatCondition(c);
+      return label;
+    })
+    .join(" ");
+  return msg;
+}
+
+export function formatCondition(condition) {
+  if (condition) {
+    const emoji = condition.is_positive ? "🟠" : "🔵";
+    const name = capitalizeFirstLetter(condition.name);
+    return `\`${emoji} ${name}\``;
+  }
+
+  console.log("Could not format condition.");
 }
