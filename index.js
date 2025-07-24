@@ -4,7 +4,7 @@ import connectToDatabase from "./db.js";
 import fs from "node:fs";
 import { getOrCreateUser } from "./utils/getOrCreateUser.js";
 import getRandomTag from "./utils/getRandomTag.js";
-import { formatPulledTag } from "./utils/formatLabels.js";
+import { formatHelpText, formatPulledTag } from "./utils/formatLabels.js";
 
 config();
 
