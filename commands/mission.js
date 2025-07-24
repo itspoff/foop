@@ -151,7 +151,7 @@ async function handleComplete(interaction, user, missions) {
 
   if (!/^\d{4}$/.test(code)) {
     return interaction.followUp({
-      content: "❌ Use a valid **4-digit number code** (e.g., 1234).",
+      content: "`❌ Use a valid **4-digit number code** (e.g., 1234).`",
     });
   }
 
@@ -159,7 +159,7 @@ async function handleComplete(interaction, user, missions) {
   if (!mission) return interaction.followUp({ content: "❌ Mission not found." });
   if (mission.is_complete)
     return interaction.followUp({
-      content: `✅ Mission [${capitalizeFirstLetter(mission.name)}] already complete.`,
+      content: `\`✅\` \`Mission ${formatMission(mission.name)} is already complete.`,
     });
 
   const totalTime = calculateTotalTimeTaken(mission.locked_in_at, mission.time_taken);
@@ -171,7 +171,7 @@ async function handleComplete(interaction, user, missions) {
     }
   );
 
-  return showMissionList(interaction, user, missions, mission.code, "🐾 Completed!");
+  return showMissionList(interaction, user, missions, mission.code, `🐾 Completed in ⏱️ ${formatTime(totalTime)}!`);
 }
 
 async function handleDelete(interaction, user, missions) {

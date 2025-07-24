@@ -54,40 +54,45 @@ export async function showMissionList(
   highlightText = "",
   followUp = true
 ) {
-  const all = await missions.find({ user_id: user._id }).sort({ created_at: -1 }).toArray();
+  const all = await missions.find({ user_id: user._id }).toArray();
 
-  // 1. Daily missions
-  // 2. Completed missions
-  // 3. Everything else
   const sorted = all.sort((a, b) => {
-    // daily
-    if (a.type === "daily" && b.type !== "daily") return -1;
-    if (b.type === "daily" && a.type !== "daily") return 1;
+    const getPriority = (m) => {
+      if (m.is_daily && m.is_complete) return 0;
+      if (m.is_daily && !m.is_complete) return 1;
+      if (!m.is_daily && m.is_complete) return 2;
+      return 3;
+    };
 
-    // completed
-    if (a.is_complete && !b.is_complete) return -1;
-    if (b.is_complete && !a.is_complete) return 1;
+    const priorityA = getPriority(a);
+    const priorityB = getPriority(b);
 
-    // created_at descending
+    if (priorityA !== priorityB) return priorityA - priorityB;
+
     return new Date(b.created_at) - new Date(a.created_at);
   });
 
   const completed = sorted.filter((m) => m.is_complete);
 
-  const msg = sorted
-    .map((m) => {
-      const label = formatDisplayMission(m);
-      if (m.code === highlightCode) return `${label} \`${highlightText}\``;
-      return label;
-    })
-    .join("\n");
+  const dailyMissions = sorted.filter((m) => m.is_daily);
+  const otherMissions = sorted.filter((m) => !m.is_daily);
+
+  const formatWithHighlight = (m) => {
+    const label = formatDisplayMission(m);
+    return m.code === highlightCode ? `${label} \`${highlightText}\`` : label;
+  };
+
+  const dailyList = dailyMissions.map(formatWithHighlight).join("\n");
+  const otherList = otherMissions.map(formatWithHighlight).join("\n");
+
+  const msg = [dailyList, otherList].filter(Boolean).join("\n\n"); // add space if both groups exist
+
+  const content = `### \`Today's Missions:\` \`${completed.length} / ${sorted.length}\`\n${msg}`;
 
   if (followUp) {
-    return interaction.followUp({
-      content: `### \`Today's Missions:\` \`${completed.length} / ${sorted.length}\`\n${msg}`,
-    });
+    return interaction.followUp({ content });
   } else {
-    return `### \`Today's Missions:\` \`${completed.length} / ${sorted.length}\`\n${msg}`;
+    return content;
   }
 }
 
