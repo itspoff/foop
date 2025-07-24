@@ -12,12 +12,6 @@ export async function getOrCreateUser(discordUser, guildMember = null) {
   let user = await users.findOne({ _id: userId });
 
   const now = new Date();
-  const cleanedConditions = (user.conditions || []).filter((c) => new Date(c.expires_at) > now);
-
-  if (cleanedConditions.length !== (user.conditions || []).length) {
-    await users.updateOne({ _id: user._id }, { $set: { conditions: cleanedConditions, last_updated: now } });
-    user.conditions = cleanedConditions;
-  }
 
   if (!user) {
     const newUser = {
@@ -51,6 +45,13 @@ export async function getOrCreateUser(discordUser, guildMember = null) {
       is_daily: true,
       is_system: true,
     });
+  }
+
+  const cleanedConditions = (user.conditions || []).filter((c) => new Date(c.expires_at) > now);
+
+  if (cleanedConditions.length !== (user.conditions || []).length) {
+    await users.updateOne({ _id: user._id }, { $set: { conditions: cleanedConditions, last_updated: now } });
+    user.conditions = cleanedConditions;
   }
 
   return user;
