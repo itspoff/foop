@@ -82,14 +82,25 @@ client.commands = new Collection();
 
     const user = await getOrCreateUser(interaction.user, interaction.member);
 
-    const lastBonus = user.last_daily_bonus ? new Date(user.last_daily_bonus) : null;
+    const lastClaim = user.last_daily_bonus ? new Date(user.last_daily_bonus) : null;
 
-    const toDateStringPST = (d) => d.toLocaleDateString("en-US", { timeZone: "America/Los_Angeles" });
+    const getToday3amPST = () => {
+      const now = new Date();
+      const nowPST = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
 
-    const todayDate = toDateStringPST(new Date());
-    const lastBonusDate = lastBonus ? toDateStringPST(lastBonus) : null;
+      const threeAM = new Date(nowPST);
+      threeAM.setHours(3, 0, 0, 0);
 
-    if (todayDate !== lastBonusDate) {
+      if (nowPST < threeAM) {
+        threeAM.setDate(threeAM.getDate() - 1);
+      }
+
+      return threeAM;
+    };
+
+    const resetTime = getToday3amPST();
+
+    if (!lastClaim || lastClaim < resetTime) {
       const bonus = 300 + Math.floor(Math.random() * 1001);
       await users.updateOne(
         { _id: user._id },
@@ -99,7 +110,7 @@ client.commands = new Collection();
         }
       );
 
-      await missions.updateMany(
+      const resetDailyMissions = await missions.updateMany(
         { is_daily: true },
         {
           $set: {
@@ -110,7 +121,7 @@ client.commands = new Collection();
         }
       );
 
-      await missions.deleteMany({
+      const clearCompletedMissions = await missions.deleteMany({
         is_daily: false,
         is_complete: true,
       });
@@ -129,7 +140,7 @@ client.commands = new Collection();
       await interaction.reply({
         content: `## \`✨\` *\`Daily Login Bonus!\`* \`✨\`
 ||\`🔥 +${bonus} PPts \`||  \`🌊 Energy Restored!\`
-*\`‼️ New Daily Missions Available\`*${helpText}`,
+*\`‼️ ${resetDailyMissions.modifiedCount} New Daily Missions Available\`*${helpText}`,
       });
     } else {
       await interaction.deferReply();
