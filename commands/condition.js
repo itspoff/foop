@@ -1,6 +1,6 @@
 import { InteractionContextType, SlashCommandBuilder } from "discord.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
-import { formatCondition } from "../utils/formatLabels.js";
+import { formatCondition, formatHelpText } from "../utils/formatLabels.js";
 
 export const data = new SlashCommandBuilder()
   .setName("condition")
@@ -23,7 +23,7 @@ export async function execute(interaction) {
   const user = await getOrCreateUser(interaction.user, interaction.member);
 
   const name = interaction.options.getString("name").toLowerCase();
-  const timer = interaction.options.getInteger("timer") || 12;
+  const timer = interaction.options.getInteger("timer") ?? 1;
   const isPositive = interaction.options.getBoolean("positive") ?? true;
 
   if (name === "clear") {
@@ -37,16 +37,19 @@ export async function execute(interaction) {
     return interaction.followUp(`\`All conditions cleared.\``);
   }
 
-  if (timer <= 0) {
-    return interaction.followUp({
-      content: "`❌ Timer must be greater than 0 hours.`",
-      ephemeral: true,
-    });
-  }
-
   const expiresAt = new Date(Date.now() + timer * 60 * 60 * 1000); // convert hours to ms
-
   const newCondition = { name, expires_at: expiresAt, is_positive: isPositive };
+
+  if (timer <= 0) {
+    await users.findOneAndUpdate(
+      { _id: user._id },
+      {
+        $pull: { conditions: { name } },
+      }
+    );
+
+    return interaction.followUp(`\`Condition\` ${formatCondition(newCondition)} \`expired.\``);
+  }
 
   await users.findOneAndUpdate(
     { _id: user._id },
@@ -62,9 +65,11 @@ export async function execute(interaction) {
     }
   );
 
+  const helpText = formatHelpText(
+    "use /condition with the same name to update the condition's timer or change it from positive to negative."
+  );
+
   return interaction.followUp(
-    `\`Condition\` ${formatCondition(
-      newCondition
-    )} \`added for ${timer} hour(s).\`\n-# *use /condition with the same name to update the condition's timer or change it from positive to negative.*`
+    `\`Condition\` ${formatCondition(newCondition)} \`added for ${timer} hour(s).\`${helpText}`
   );
 }

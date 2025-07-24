@@ -6,11 +6,11 @@ import {
   formatEnergy,
   formatDisplayName,
   formatDisplayTag,
-  timeSince,
   formatLockedInMission,
   showMissionList,
   formatConditionList,
 } from "../utils/formatLabels.js";
+import { timeSince } from "../utils/formatTime.js";
 
 export const data = new SlashCommandBuilder()
   .setName("status")

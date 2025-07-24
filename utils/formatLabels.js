@@ -1,3 +1,5 @@
+import { timeSince } from "./formatTime.js";
+
 export function formatMood(mood) {
   const moodMap = {
     great: "`☀️GREAT`",
@@ -31,19 +33,38 @@ export function formatPulledTag(tag) {
   else return "";
 }
 
-export function timeSince(date) {
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+export function formatReason(reason) {
+  if (!reason) return "";
 
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
-  return `${Math.floor(seconds / 86400)}d`;
+  const trimmed = reason.trim();
+  if (trimmed.length === 0) return "";
+
+  const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+  const sentence = capitalized.endsWith(".", "?", "!") ? capitalized : capitalized + ".";
+  return `\`💬 ${sentence}\``;
 }
 
-export function formatTime(seconds) {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+export function formatConditionList(conditions) {
+  if (conditions.length === 0) {
+    return "";
+  }
+  const msg = conditions
+    .map((c) => {
+      const label = formatCondition(c);
+      return label;
+    })
+    .join(" ");
+  return msg;
+}
+
+export function formatCondition(condition) {
+  if (condition) {
+    const emoji = condition.is_positive ? "🟠" : "🔵";
+    const name = capitalizeFirstLetter(condition.name);
+    return `\`${emoji} ${name}\``;
+  }
+
+  console.log("Could not format condition.");
 }
 
 export async function showMissionList(
@@ -96,18 +117,17 @@ export async function showMissionList(
   }
 }
 
+export function formatMission(mission) {
+  const code = mission.code || "0000";
+  return `\`${capitalizeFirstLetter(mission.name)}\` \`🏷️${code}\``;
+}
+
 export function formatDisplayMission(mission) {
   const emoji = mission.is_complete ? "💮" : "⭕️";
   const code = mission.code || "0000";
   return `> \`${emoji}\`  ${mission.is_complete ? "~~" : ""}\`${capitalizeFirstLetter(mission.name)}\`${
     mission.is_complete ? "~~" : ""
   } \`🏷️${code}\``;
-}
-
-// unused
-export function formatMission(mission) {
-  const code = mission.code || "0000";
-  return `\`${capitalizeFirstLetter(mission.name)}\` \`🏷️${code}\``;
 }
 
 export function formatLockedInMission(mission) {
@@ -123,36 +143,6 @@ export function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-export function formatReason(reason) {
-  if (!reason) return "";
-
-  const trimmed = reason.trim();
-  if (trimmed.length === 0) return "";
-
-  const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
-  const sentence = capitalized.endsWith(".", "?", "!") ? capitalized : capitalized + ".";
-  return `\`💬 ${sentence}\``;
-}
-
-export function formatConditionList(conditions) {
-  if (conditions.length === 0) {
-    return "";
-  }
-  const msg = conditions
-    .map((c) => {
-      const label = formatCondition(c);
-      return label;
-    })
-    .join(" ");
-  return msg;
-}
-
-export function formatCondition(condition) {
-  if (condition) {
-    const emoji = condition.is_positive ? "🟠" : "🔵";
-    const name = capitalizeFirstLetter(condition.name);
-    return `\`${emoji} ${name}\``;
-  }
-
-  console.log("Could not format condition.");
+export function formatHelpText(string) {
+  return `\n-# *${string}*`;
 }

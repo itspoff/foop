@@ -2,7 +2,8 @@ import { SlashCommandBuilder, InteractionContextType } from "discord.js";
 import connectToDatabase from "../db.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
 import { generateUniqueCode } from "../utils/generateUniqueCode.js";
-import { capitalizeFirstLetter, formatMission, formatTime, showMissionList } from "../utils/formatLabels.js";
+import { capitalizeFirstLetter, formatHelpText, formatMission, showMissionList } from "../utils/formatLabels.js";
+import { formatTime } from "../utils/formatTime.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 
 export const data = new SlashCommandBuilder()
@@ -78,9 +79,10 @@ async function handleAdd(interaction, user, missions) {
   };
 
   await missions.insertOne(mission);
+  const helpText = formatHelpText("use /mission lockin " + code + " to start working on this mission.");
 
   return interaction.followUp({
-    content: "`Added new mission:` `⭕️` " + formatMission(mission),
+    content: "`Added new mission:` `⭕️` " + formatMission(mission) + helpText,
   });
 }
 
@@ -102,9 +104,10 @@ async function handleLockin(interaction, user, missions) {
     });
 
   await missions.updateOne({ _id: mission._id }, { $set: { locked_in_at: new Date() }, $inc: { attempts: 1 } });
+  const helpText = formatHelpText("use /mission checkout at any time to take a break.");
 
   return interaction.followUp({
-    content: "`Locked in on:` `🔐` " + formatMission(mission),
+    content: "`Locked in on:` `🔐` " + formatMission(mission) + helpText,
   });
 }
 
@@ -215,6 +218,6 @@ async function handleClear(interaction, user, missions) {
     is_system: false,
   });
   return interaction.followUp({
-    content: `🧹 Cleared \`${result.deletedCount}\` completed non-daily mission(s).`,
+    content: `\`🧹 Cleared ${result.deletedCount} completed non-daily mission(s).\``,
   });
 }
