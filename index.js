@@ -124,14 +124,15 @@ client.commands = new Collection();
         }
       );
 
+      const helpText = formatHelpText("use /mission add to start the day!");
+
       await interaction.reply({
         content: `## \`✨\` *\`Daily Login Bonus!\`* \`✨\`
 ||\`🔥 +${bonus} PPts \`||  \`🌊 Energy Restored!\`
-*\`‼️ New Daily Missions Available\`*`,
+*\`‼️ New Daily Missions Available\`*${helpText}`,
       });
     } else {
       await interaction.deferReply();
-      // await interaction.deleteReply();
     }
 
     const command = client.commands.get(interaction.commandName);
