@@ -15,6 +15,7 @@ const client = new Client({
 
 client.commands = new Collection();
 
+const baseDailyBonus = 100;
 (async () => {
   await connectToDatabase();
   const commandFiles = fs.readdirSync("./commands").filter((file) => file.endsWith(".js"));
@@ -114,7 +115,7 @@ client.commands = new Collection();
     const resetTime = getToday3amPST();
 
     if (!lastClaim || lastClaim < resetTime) {
-      const bonus = 300 + Math.floor(Math.random() * 1001);
+      const bonus = baseDailyBonus + Math.floor(Math.random() * 101);
       await users.updateOne(
         { _id: user._id },
         {
