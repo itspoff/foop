@@ -223,9 +223,10 @@ async function handleComplete(interaction, user, missions, users) {
     }
   );
 
-  const completeMissionMsg = (totalTime = 0
-    ? formatMission(mission) + " `🐾 Completed!`"
-    : formatMission(mission) + " `🐾 Completed in ⏱️ " + formatTime(totalTime) + "!`");
+  const completeMissionMsg =
+    totalTime === 0
+      ? formatMission(mission) + " `🐾 Completed!`"
+      : formatMission(mission) + " `🐾 Completed in ⏱️ " + formatTime(totalTime) + "!`";
 
   const bonusMessage =
     bonus > 0
