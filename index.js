@@ -90,30 +90,23 @@ const baseDailyBonus = 100;
     function getToday3amPST() {
       const now = new Date();
 
-      const formatter = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/Los_Angeles",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      });
+      // get current date in PST/PDT
+      const pstNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
 
-      const parts = formatter.formatToParts(now);
-      const year = parts.find((p) => p.type === "year").value;
-      const month = parts.find((p) => p.type === "month").value;
-      const day = parts.find((p) => p.type === "day").value;
+      // set to 3am
+      pstNow.setHours(3, 0, 0, 0);
 
-      // Create a new Date at 3:00 AM PST
-      const threeAMPST = new Date(`${year}-${month}-${day}T03:00:00-08:00`); // -08:00 = PST
-
-      const nowPST = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
-      if (nowPST.getHours() < 3) {
-        threeAMPST.setUTCDate(threeAMPST.getUTCDate() - 1);
+      // if current time is before 3am PST, use previous day 3am PST
+      if (now.toLocaleString("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", hour12: false }) < 3) {
+        pstNow.setDate(pstNow.getDate() - 1);
       }
 
-      return threeAMPST;
+      return pstNow;
     }
 
     const resetTime = getToday3amPST();
+    console.log(resetTime);
+    console.log(lastClaim);
 
     if (!lastClaim || lastClaim < resetTime) {
       const bonus = baseDailyBonus + Math.floor(Math.random() * 101);
