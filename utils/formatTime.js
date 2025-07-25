@@ -18,16 +18,20 @@ export function formatTime(seconds) {
 }
 
 export function timeSince(date) {
-  const now = DateTime.now();
   const then = DateTime.fromJSDate(date);
-  const diff = now.diff(then, ["days", "hours", "minutes", "seconds"]).toObject();
+  const seconds = DateTime.now().diff(then, "seconds").as("seconds");
 
-  if (diff.seconds < 10) return "just now";
-  if (diff.seconds < 60) return `${Math.floor(diff.seconds)}s ago`;
-  if (diff.minutes < 60) return `${Math.floor(diff.minutes)}m ago`;
-  if (diff.hours < 24) return `${Math.floor(diff.hours)}h ago`;
-  if (diff.days < 2) return "yesterday";
-  return `${Math.floor(diff.days)}d ago`;
+  if (seconds < 60) return `${Math.floor(seconds)}s`;
+
+  const minutes = seconds / 60;
+  if (minutes < 60) return `${Math.floor(minutes)}m`;
+
+  const hours = minutes / 60;
+  if (hours < 24) return `${Math.floor(hours)}h`;
+
+  const days = hours / 24;
+
+  return `${Math.floor(days)}d`;
 }
 
 export function getResetTimePST() {

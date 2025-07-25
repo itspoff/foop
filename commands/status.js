@@ -44,7 +44,7 @@ export async function execute(interaction) {
 
   const activeTag = user.active_tag ? await tags.findOne({ code: user.active_tag }) : null;
   const tag = activeTag ? formatDisplayTag(activeTag) : "";
-  const lastUpdated = user.last_updated ? timeSince(new Date(user.last_updated)) : "unknown";
+  const lastUpdated = user.last_updated ? timeSince(user.last_updated) : "unknown";
   const ppts = user.ppts;
 
   // display bar
@@ -57,7 +57,7 @@ export async function execute(interaction) {
   const displayMissions = await showMissionList(interaction, user, missions, null, "", false);
 
   const statusUpdate = `## ${displayName}  ${mood}  ${energy}  
--#  ${tag ? `${tag}  |` : ""}  \`Last Updated: ${lastUpdated}\`  |  \`PPts: ${ppts}\`
+-#  ${tag ? `${tag}  |` : ""}  \`Last Updated: ${lastUpdated} ago\`  |  \`PPts: ${ppts}\`
 > **\`Conditions:    \`** ${displayConditions}
 > **\`Locked in on:  \`** ${displayLockedInMission}
 ${targetExists ? "" : displayMissions}`;
