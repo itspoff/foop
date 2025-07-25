@@ -50,7 +50,7 @@ export async function getOrCreateUser(discordUser, guildMember = null) {
   const cleanedConditions = (user.conditions || []).filter((c) => new Date(c.expires_at) > now);
 
   if (cleanedConditions.length !== (user.conditions || []).length) {
-    await users.updateOne({ _id: user._id }, { $set: { conditions: cleanedConditions, last_updated: now } });
+    await users.updateOne({ _id: user._id }, { $set: { conditions: cleanedConditions } });
     user.conditions = cleanedConditions;
   }
 

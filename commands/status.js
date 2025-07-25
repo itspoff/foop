@@ -57,7 +57,7 @@ export async function execute(interaction) {
   const displayMissions = await showMissionList(interaction, user, missions, null, "", false);
 
   const statusUpdate = `## ${displayName}  ${mood}  ${energy}  
--#  ${tag ? `${tag}  |` : ""}  \`Last Updated: ${lastUpdated} ago\`  |  \`PPts: ${ppts}\`
+-#  ${tag ? `${tag}  |` : ""}  \`Last Updated: ${lastUpdated}\`  |  \`PPts: ${ppts}\`
 > **\`Conditions:    \`** ${displayConditions}
 > **\`Locked in on:  \`** ${displayLockedInMission}
 ${targetExists ? "" : displayMissions}`;

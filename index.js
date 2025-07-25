@@ -5,7 +5,7 @@ import fs from "node:fs";
 import { getOrCreateUser } from "./utils/getOrCreateUser.js";
 import getRandomTag from "./utils/getRandomTag.js";
 import { formatHelpText, formatPulledTag } from "./utils/formatLabels.js";
-import { formatTime } from "./utils/formatTime.js";
+import { getResetTimePST } from "./utils/formatTime.js";
 
 config();
 
@@ -86,29 +86,10 @@ const baseDailyBonus = 100;
     const user = await getOrCreateUser(interaction.user, interaction.member);
 
     const lastClaim = user.last_daily_bonus ? new Date(user.last_daily_bonus) : null;
-
-    function getToday3amPST() {
-      const now = new Date();
-
-      // get current date in PST/PDT
-      const pstNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
-
-      // set to 3am
-      pstNow.setHours(3, 0, 0, 0);
-
-      // if current time is before 3am PST, use previous day 3am PST
-      if (now.toLocaleString("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", hour12: false }) < 3) {
-        pstNow.setDate(pstNow.getDate() - 1);
-      }
-
-      return pstNow;
-    }
-
-    const resetTime = getToday3amPST();
-    console.log(resetTime);
-    console.log(lastClaim);
+    const resetTime = getResetTimePST();
 
     if (!lastClaim || lastClaim < resetTime) {
+      console.log("Daily Login from:", user.display_name);
       const bonus = baseDailyBonus + Math.floor(Math.random() * 101);
       await users.updateOne(
         { _id: user._id },
@@ -119,7 +100,7 @@ const baseDailyBonus = 100;
       );
 
       const resetDailyMissions = await missions.updateMany(
-        { _id: user._id, is_daily: true },
+        { user_id: user._id, is_daily: true },
         {
           $set: {
             is_complete: false,
@@ -129,11 +110,15 @@ const baseDailyBonus = 100;
         }
       );
 
+      console.log("reset %d daily missions", resetDailyMissions.modifiedCount);
+
       const clearCompletedMissions = await missions.deleteMany({
-        _id: user._id,
+        user_id: user._id,
         is_daily: false,
         is_complete: true,
       });
+
+      console.log("removed %d completed missions", clearCompletedMissions.modifiedCount);
 
       await missions.updateOne(
         { user_id: user._id, name: "daily login" },
