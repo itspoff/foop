@@ -1,7 +1,18 @@
 export function formatTime(seconds) {
-  const mins = Math.floor(seconds / 60);
+  seconds = Math.round(seconds);
+
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
-  return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+
+  const result = [];
+  if (days) result.push(`${days}d`);
+  if (hours) result.push(`${hours}h`);
+  if (mins) result.push(`${mins}m`);
+  if (secs) result.push(`${secs}s`);
+
+  return result.join(" ") || "0s";
 }
 
 export function timeSince(date) {

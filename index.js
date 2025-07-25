@@ -5,6 +5,7 @@ import fs from "node:fs";
 import { getOrCreateUser } from "./utils/getOrCreateUser.js";
 import getRandomTag from "./utils/getRandomTag.js";
 import { formatHelpText, formatPulledTag } from "./utils/formatLabels.js";
+import { formatTime } from "./utils/formatTime.js";
 
 config();
 
@@ -84,19 +85,31 @@ client.commands = new Collection();
 
     const lastClaim = user.last_daily_bonus ? new Date(user.last_daily_bonus) : null;
 
-    const getToday3amPST = () => {
+    function getToday3amPST() {
       const now = new Date();
+
+      const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Los_Angeles",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+
+      const parts = formatter.formatToParts(now);
+      const year = parts.find((p) => p.type === "year").value;
+      const month = parts.find((p) => p.type === "month").value;
+      const day = parts.find((p) => p.type === "day").value;
+
+      // Create a new Date at 3:00 AM PST
+      const threeAMPST = new Date(`${year}-${month}-${day}T03:00:00-08:00`); // -08:00 = PST
+
       const nowPST = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
-
-      const threeAM = new Date(nowPST);
-      threeAM.setHours(3, 0, 0, 0);
-
-      if (nowPST < threeAM) {
-        threeAM.setDate(threeAM.getDate() - 1);
+      if (nowPST.getHours() < 3) {
+        threeAMPST.setUTCDate(threeAMPST.getUTCDate() - 1);
       }
 
-      return threeAM;
-    };
+      return threeAMPST;
+    }
 
     const resetTime = getToday3amPST();
 
