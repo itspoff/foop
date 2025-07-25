@@ -218,6 +218,7 @@ async function handleComplete(interaction, user, missions, users) {
   await users.updateOne(
     { _id: user._id },
     {
+      $set: { last_updated: new Date() },
       $inc: { ppts: bonus, energy: -cost },
     }
   );

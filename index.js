@@ -59,6 +59,7 @@ const baseDailyBonus = 100;
       await users.updateOne(
         { _id: user._id },
         {
+          $set: { last_updated: new Date() },
           $inc: { ppts: -cost },
           $addToSet: { tags: { $each: newTagCodes } },
         }
@@ -120,7 +121,7 @@ const baseDailyBonus = 100;
         { _id: user._id },
         {
           $inc: { ppts: bonus },
-          $set: { energy: 100, mood: "normal", last_daily_bonus: new Date() },
+          $set: { energy: 100, mood: "normal", last_daily_bonus: new Date(), last_updated: new Date() },
         }
       );
 

@@ -30,7 +30,7 @@ export async function execute(interaction) {
     await users.updateOne(
       { _id: user._id },
       {
-        $set: { conditions: [] },
+        $set: { conditions: [], last_updated: new Date() },
       }
     );
 
@@ -61,6 +61,7 @@ export async function execute(interaction) {
   await users.updateOne(
     { _id: user._id },
     {
+      $set: { last_updated: new Date() },
       $push: { conditions: newCondition },
     }
   );

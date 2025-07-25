@@ -44,7 +44,7 @@ export async function execute(interaction) {
     }
 
     // Update the user's active tag
-    await users.updateOne({ _id: user._id }, { $set: { active_tag: tagCode } });
+    await users.updateOne({ _id: user._id }, { $set: { active_tag: tagCode, last_updated: new Date() } });
 
     await interaction.followUp({
       content: `\`✅ Your active tag has been set to:\` \`${tag.name}\``,
