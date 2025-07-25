@@ -125,7 +125,7 @@ const baseDailyBonus = 100;
       );
 
       const resetDailyMissions = await missions.updateMany(
-        { is_daily: true },
+        { _id: user._id, is_daily: true },
         {
           $set: {
             is_complete: false,
@@ -136,6 +136,7 @@ const baseDailyBonus = 100;
       );
 
       const clearCompletedMissions = await missions.deleteMany({
+        _id: user._id,
         is_daily: false,
         is_complete: true,
       });
