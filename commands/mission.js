@@ -203,7 +203,7 @@ async function handleComplete(interaction, user, missions, users) {
     }
   );
 
-  const bonus = 12 + Math.floor(Math.random() * 13);
+  var bonus = 12 + Math.floor(Math.random() * 13);
   var cost = 10 + Math.floor(Math.random() * 11);
   if (user.energy - cost < 0) {
     cost = user.energy;
