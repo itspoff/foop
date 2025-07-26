@@ -14,10 +14,24 @@ const client = new Client({
 });
 
 client.commands = new Collection();
+client.buttons = new Collection();
+
+const buttonFiles = fs.readdirSync("./buttons").filter((file) => file.endsWith(".js"));
+for (const file of buttonFiles) {
+  const button = (await import(`./buttons/${file}`)).default;
+  if (button?.id) {
+    const ids = Array.isArray(button.id) ? button.id : [button.id];
+    for (const id of ids) {
+      client.buttons.set(id, button);
+    }
+  }
+}
 
 const baseDailyBonus = 100;
+let db;
+
 (async () => {
-  await connectToDatabase();
+  db = await connectToDatabase();
   const commandFiles = fs.readdirSync("./commands").filter((file) => file.endsWith(".js"));
 
   for (const file of commandFiles) {
@@ -29,127 +43,101 @@ const baseDailyBonus = 100;
 
   client.once(Events.ClientReady, async (c) => {
     console.log(`Logged in as ${c.user.tag}`);
-    const db = await connectToDatabase();
+    db = await connectToDatabase();
   });
 
   client.on(Events.InteractionCreate, async (interaction) => {
-    const db = await connectToDatabase();
+    if (!db) db = await connectToDatabase();
     if (interaction.isButton()) {
-      const users = db.collection("users");
       const user = await getOrCreateUser(interaction.user, interaction.member);
-
       const tags = await db.collection("tags").find().toArray();
 
-      const cost = interaction.customId === "pull_1x" ? 100 : 1000;
-      const pulls = interaction.customId === "pull_1x" ? 1 : 10;
+      const buttonHandler = client.buttons.get(interaction.customId);
+      if (!buttonHandler) return;
 
-      const pullsResult = Array.from({ length: pulls }, () => getRandomTag(tags));
-
-      const tagCodes = pullsResult.map((tag) => tag.code);
-      const ownedTagCodes = user.tags ?? [];
-      const newTagCodes = tagCodes.filter((code) => !ownedTagCodes.includes(code));
-
-      if (user.ppts < cost) {
+      try {
+        await buttonHandler.execute(interaction, { db, user, tags });
+      } catch (err) {
+        console.error("Error executing command:", err);
         await interaction.reply({
-          content: `\`⚠️ Not enough PPts.\``,
+          content: "`❌ There was an error.`",
+          ephemeral: true,
         });
-        return;
       }
-
-      await users.updateOne(
-        { _id: user._id },
-        {
-          $set: { last_updated: new Date() },
-          $inc: { ppts: -cost },
-          $addToSet: { tags: { $each: newTagCodes } },
-        }
-      );
-
-      await interaction.reply({
-        content: `\`Pulled ${pulls} tag(s)!\` \`PPts remaining: ${user.ppts}\` \n\n${pullsResult
-          .map((tag) => {
-            const isNew = !ownedTagCodes.includes(tag.code);
-            const label = formatPulledTag(tag);
-            const rarity = tag.weight <= 10 ? " `🐾 Rare!`" : "";
-            const novelty = isNew ? " `✨️ New!`" : "";
-            return `${label}${rarity}${novelty}`;
-          })
-          .join("\n")}`,
-      });
     }
 
-    if (!interaction.isChatInputCommand()) return;
+    if (interaction.isChatInputCommand()) {
+      const users = db.collection("users");
+      const missions = db.collection("missions");
 
-    const users = db.collection("users");
-    const missions = db.collection("missions");
+      const user = await getOrCreateUser(interaction.user, interaction.member);
 
-    const user = await getOrCreateUser(interaction.user, interaction.member);
+      const lastClaim = user.last_daily_bonus ? new Date(user.last_daily_bonus) : null;
+      const resetTime = getResetTimePST();
 
-    const lastClaim = user.last_daily_bonus ? new Date(user.last_daily_bonus) : null;
-    const resetTime = getResetTimePST();
+      if (!lastClaim || lastClaim < resetTime) {
+        console.log("Daily Login from:", user.display_name);
+        const bonus = baseDailyBonus + Math.floor(Math.random() * 101);
+        await users.updateOne(
+          { _id: user._id },
+          {
+            $inc: { ppts: bonus },
+            $set: { energy: 100, mood: "normal", last_daily_bonus: new Date(), last_updated: new Date() },
+          }
+        );
 
-    if (!lastClaim || lastClaim < resetTime) {
-      console.log("Daily Login from:", user.display_name);
-      const bonus = baseDailyBonus + Math.floor(Math.random() * 101);
-      await users.updateOne(
-        { _id: user._id },
-        {
-          $inc: { ppts: bonus },
-          $set: { energy: 100, mood: "normal", last_daily_bonus: new Date(), last_updated: new Date() },
-        }
-      );
+        const resetDailyMissions = await missions.updateMany(
+          { user_id: user._id, is_daily: true },
+          {
+            $set: {
+              is_complete: false,
+              time_taken: null,
+              locked_in_at: null,
+            },
+          }
+        );
 
-      const resetDailyMissions = await missions.updateMany(
-        { user_id: user._id, is_daily: true },
-        {
-          $set: {
-            is_complete: false,
-            time_taken: null,
-            locked_in_at: null,
-          },
-        }
-      );
+        console.log("reset %d daily missions", resetDailyMissions.modifiedCount);
 
-      console.log("reset %d daily missions", resetDailyMissions.modifiedCount);
+        const clearCompletedMissions = await missions.deleteMany({
+          user_id: user._id,
+          is_daily: false,
+          is_complete: true,
+        });
 
-      const clearCompletedMissions = await missions.deleteMany({
-        user_id: user._id,
-        is_daily: false,
-        is_complete: true,
-      });
+        console.log("removed %d completed missions", clearCompletedMissions.modifiedCount);
 
-      console.log("removed %d completed missions", clearCompletedMissions.modifiedCount);
+        await missions.updateOne(
+          { user_id: user._id, name: "daily login" },
+          {
+            $set: {
+              is_complete: true,
+            },
+          }
+        );
 
-      await missions.updateOne(
-        { user_id: user._id, name: "daily login" },
-        {
-          $set: {
-            is_complete: true,
-          },
-        }
-      );
+        const helpText = formatHelpText("use /mission add to start the day!");
 
-      const helpText = formatHelpText("use /mission add to start the day!");
-
-      await interaction.reply({
-        content: `## \`✨\` *\`Daily Login Bonus!\`* \`✨\`
+        await interaction.reply({
+          content: `## \`✨\` *\`Daily Login Bonus!\`* \`✨\`
 ||\`🔥 +${bonus} PPts \`||  \`🌊 Energy Restored!\`
 *\`‼️ ${resetDailyMissions.modifiedCount} New Daily Missions Available\`*${helpText}`,
-      });
-    } else {
-      await interaction.deferReply();
-    }
+        });
+      } else {
+        await interaction.deferReply();
+      }
 
-    const command = client.commands.get(interaction.commandName);
-    if (!command) return;
+      const command = client.commands.get(interaction.commandName);
+      if (!command) return;
 
-    try {
-      await command.execute(interaction);
-    } catch (error) {
-      console.error("`❌ Error executing command:`", error);
-      await interaction.followUp({
-        content: "There was an error!",
-      });
+      try {
+        await command.execute(interaction);
+      } catch (error) {
+        console.error("`❌ Error executing command:`", error);
+        await interaction.followUp({
+          content: "There was an error!",
+        });
+      }
     }
   });
 
