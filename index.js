@@ -70,6 +70,18 @@ let db;
     }
 
     if (interaction.isChatInputCommand()) {
+      const command = client.commands.get(interaction.commandName);
+      if (!command) return;
+
+      try {
+        await command.execute(interaction);
+      } catch (error) {
+        console.error("`❌ Error executing command:`", error);
+        await interaction.reply({
+          content: "There was an error!",
+        });
+      }
+
       // daily bonus constants
       const users = db.collection("users");
       const missions = db.collection("missions");
@@ -120,24 +132,11 @@ let db;
         );
 
         const helpText = formatHelpText("use /mission add to start the day!");
-        await interaction.deferReply();
 
         await interaction.followUp({
           content: `## \`✨\` *\`Daily Login Bonus!\`* \`✨\`
 ||\`🔥 +${bonus} PPts \`||  \`🌊 Energy Restored!\`
 *\`‼️ ${resetDailyMissions.modifiedCount} New Daily Missions Available\`*${helpText}`,
-        });
-      }
-
-      const command = client.commands.get(interaction.commandName);
-      if (!command) return;
-
-      try {
-        await command.execute(interaction);
-      } catch (error) {
-        console.error("`❌ Error executing command:`", error);
-        await interaction.reply({
-          content: "There was an error!",
         });
       }
     }
