@@ -123,7 +123,10 @@ export function formatMission(mission) {
 }
 
 export function formatDisplayMission(mission) {
-  const emoji = mission.is_complete ? "💮" : "⭕️";
+  var emoji = mission.is_complete ? "💮" : "⭕️";
+  if (mission.locked_in_at) {
+    emoji = "🔐";
+  }
   const code = mission.code || "0000";
   return `> \`${emoji}\`  ${mission.is_complete ? "~~" : ""}\`${capitalizeFirstLetter(mission.name)}\`${
     mission.is_complete ? "~~" : ""
