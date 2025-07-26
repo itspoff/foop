@@ -51,6 +51,7 @@ export default {
       }
     );
 
+    // remove buttons from prev msg
     await interaction.update({
       components: [interaction.message.components[0]],
       flags: MessageFlags.IsComponentsV2,
@@ -71,12 +72,22 @@ export default {
       .setLabel("🔐 Lock In")
       .setStyle(ButtonStyle.Secondary);
 
+    const completeButton = new ButtonBuilder()
+      .setCustomId(`complete_${code}`)
+      .setLabel("🐾 Complete")
+      .setStyle(ButtonStyle.Secondary);
+
+    const deleteButton = new ButtonBuilder()
+      .setCustomId(`delete_${code}`)
+      .setLabel("💢 Delete")
+      .setStyle(ButtonStyle.Danger);
+
     const missionsButton = new ButtonBuilder()
       .setCustomId(`missions_`)
       .setLabel("📖 Show Missions")
       .setStyle(ButtonStyle.Secondary);
 
-    const row = new ActionRowBuilder().addComponents(lockInButton, missionsButton);
+    const row = new ActionRowBuilder().addComponents(lockInButton, completeButton, deleteButton, missionsButton);
 
     return interaction.followUp({
       components: [text, row],

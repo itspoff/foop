@@ -115,7 +115,6 @@ async function handleAdd(interaction, user, missions) {
   const row = new ActionRowBuilder().addComponents(lockInButton, completeButton, deleteButton);
 
   await interaction.reply({
-    // content: "`Added new mission:` `⭕️` " + formatMission(mission),
     components: [text, row],
     flags: MessageFlags.IsComponentsV2,
   });
@@ -158,9 +157,6 @@ async function handleLockin(interaction, user, missions) {
 
   await missions.updateOne({ _id: mission._id }, { $set: { locked_in_at: new Date() }, $inc: { attempts: 1 } });
 
-  // return interaction.reply({
-  //   content: "`Locked in on:` `🔐` " + formatMission(mission) + helpText,
-  // });
   const text = new TextDisplayBuilder().setContent("`Locked in on:` `🔐` " + formatMission(mission));
 
   const checkOutButton = new ButtonBuilder()
@@ -188,9 +184,9 @@ async function handleCheckout(interaction, user, missions) {
     is_complete: { $ne: true },
   });
 
-  const text = new TextDisplayBuilder().setContent("`🗨️` `can you lock the fuck in`\n> `Lock in on a mission first.`");
+  const msg = new TextDisplayBuilder().setContent("`🗨️` `can you lock the fuck in`\n> `Lock in on a mission first.`");
   const thumbnail = new ThumbnailBuilder().setDescription("poff").setURL("attachment://poff-icon.png");
-  const lockInMessage = new SectionBuilder().addTextDisplayComponents(text).setThumbnailAccessory(thumbnail);
+  const lockInMessage = new SectionBuilder().addTextDisplayComponents(msg).setThumbnailAccessory(thumbnail);
 
   if (!mission) {
     const file = new AttachmentBuilder("assets/poff-icon.png", { name: "poff-icon.png" });
@@ -201,6 +197,8 @@ async function handleCheckout(interaction, user, missions) {
       ephemeral: true,
     });
   }
+
+  const code = mission.code;
 
   const totalTime = calculateTotalTimeTaken(mission.locked_in_at, mission.time_taken);
   const sessionTime = Math.floor((new Date() - new Date(mission.locked_in_at)) / 1000); // in seconds
@@ -215,15 +213,41 @@ async function handleCheckout(interaction, user, missions) {
     }
   );
 
-  return interaction.reply({
-    content:
-      "`Checked out on:` `⭕️` " +
+  const text = new TextDisplayBuilder().setContent(
+    "`Checked out on:` `⭕️` " +
       formatMission(mission) +
       " `⏱️ " +
       formatTime(totalTime) +
       " (+" +
       formatTime(sessionTime) +
-      ")`",
+      ")`"
+  );
+
+  const lockInButton = new ButtonBuilder()
+    .setCustomId(`lockin_${code}`)
+    .setLabel("🔐 Lock In")
+    .setStyle(ButtonStyle.Secondary);
+
+  const completeButton = new ButtonBuilder()
+    .setCustomId(`complete_${code}`)
+    .setLabel("🐾 Complete")
+    .setStyle(ButtonStyle.Secondary);
+
+  const deleteButton = new ButtonBuilder()
+    .setCustomId(`delete_${code}`)
+    .setLabel("💢 Delete")
+    .setStyle(ButtonStyle.Danger);
+
+  const missionsButton = new ButtonBuilder()
+    .setCustomId(`missions_`)
+    .setLabel("📖 Show Missions")
+    .setStyle(ButtonStyle.Secondary);
+
+  const row = new ActionRowBuilder().addComponents(lockInButton, completeButton, deleteButton, missionsButton);
+
+  return interaction.reply({
+    components: [text, row],
+    flags: MessageFlags.IsComponentsV2,
   });
 }
 
@@ -298,8 +322,18 @@ async function handleComplete(interaction, user, missions, users) {
 
   const msg = completeMissionMsg + bonusMessage;
 
+  const text = new TextDisplayBuilder().setContent(msg);
+
+  const missionsButton = new ButtonBuilder()
+    .setCustomId(`missions_`)
+    .setLabel("📖 Show Missions")
+    .setStyle(ButtonStyle.Secondary);
+
+  const row = new ActionRowBuilder().addComponents(missionsButton);
+
   return interaction.reply({
-    content: msg,
+    components: [text, row],
+    flags: MessageFlags.IsComponentsV2,
   });
 }
 
@@ -335,8 +369,20 @@ async function handleDelete(interaction, user, missions) {
 
   await missions.deleteOne({ _id: mission._id });
 
+  const text = new TextDisplayBuilder().setContent(
+    `\`Mission\` \`🗑️\` \`${capitalizeFirstLetter(mission.name)}\` \`has been deleted.\``
+  );
+
+  const missionsButton = new ButtonBuilder()
+    .setCustomId(`missions_`)
+    .setLabel("📖 Show Missions")
+    .setStyle(ButtonStyle.Secondary);
+
+  const row = new ActionRowBuilder().addComponents(missionsButton);
+
   return interaction.reply({
-    content: `\`Mission\` \`🗑️\` \`${capitalizeFirstLetter(mission.name)}\` \`has been deleted.\``,
+    components: [text, row],
+    flags: MessageFlags.IsComponentsV2,
   });
 }
 

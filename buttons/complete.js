@@ -77,6 +77,7 @@ export default {
 
     const msg = completeMissionMsg + bonusMessage;
 
+    // remove buttons
     await interaction.update({
       components: [interaction.message.components[0]],
       flags: MessageFlags.IsComponentsV2,

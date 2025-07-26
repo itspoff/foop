@@ -7,13 +7,6 @@ export default {
     const missions = db.collection("missions");
     const code = value;
 
-    if (!/^\d{4}$/.test(code)) {
-      return interaction.reply({
-        content: "> `❌ Invalid 4-digit number code (e.g., 1234).`",
-        ephemeral: true,
-      });
-    }
-
     const mission = await missions.findOne({ code, user_id: user._id });
     if (!mission) return interaction.reply({ content: "> `❌ Mission not found.`", ephemeral: true });
 
@@ -41,8 +34,8 @@ export default {
     }
 
     await missions.updateOne({ _id: mission._id }, { $set: { locked_in_at: new Date() }, $inc: { attempts: 1 } });
-    // const helpText = formatHelpText("use /mission checkout at any time to take a break.");
 
+    // remove buttons
     await interaction.update({
       components: [interaction.message.components[0]],
       flags: MessageFlags.IsComponentsV2,
