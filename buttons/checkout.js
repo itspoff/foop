@@ -38,6 +38,13 @@ export default {
       });
     }
 
+    if (mission.code !== code) {
+      return interaction.reply({
+        content: "> `❌ Hey! This isn't your mission.`",
+        ephemeral: true,
+      });
+    }
+
     const totalTime = calculateTotalTimeTaken(mission.locked_in_at, mission.time_taken);
     const sessionTime = Math.floor((new Date() - new Date(mission.locked_in_at)) / 1000); // in seconds
 

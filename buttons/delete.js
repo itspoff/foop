@@ -35,6 +35,8 @@ export default {
     }
 
     await missions.deleteOne({ _id: mission._id });
+
+    // remove button from prev msg
     await interaction.update({
       components: [interaction.message.components[0]],
       flags: MessageFlags.IsComponentsV2,

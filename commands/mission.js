@@ -164,12 +164,12 @@ async function handleLockin(interaction, user, missions) {
     .setLabel("💨 Check Out")
     .setStyle(ButtonStyle.Secondary);
 
-  const missionsButton = new ButtonBuilder()
-    .setCustomId(`missions_`)
-    .setLabel("📖 Show Missions")
+  const completeButton = new ButtonBuilder()
+    .setCustomId(`complete_${code}`)
+    .setLabel("🐾 Complete")
     .setStyle(ButtonStyle.Secondary);
 
-  const row = new ActionRowBuilder().addComponents(checkOutButton, missionsButton);
+  const row = new ActionRowBuilder().addComponents(checkOutButton, completeButton);
 
   return interaction.reply({
     components: [text, row],
