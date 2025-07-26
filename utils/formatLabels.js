@@ -111,7 +111,7 @@ export async function showMissionList(
   const content = `### \`Today's Missions:\` \`${completed.length} / ${sorted.length}\`\n${msg}`;
 
   if (followUp) {
-    return interaction.followUp({ content });
+    return interaction.reply({ content });
   } else {
     return content;
   }

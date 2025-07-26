@@ -1,4 +1,17 @@
-import { SlashCommandBuilder, InteractionContextType } from "discord.js";
+import {
+  SlashCommandBuilder,
+  InteractionContextType,
+  ButtonBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
+  SectionBuilder,
+  MessageFlags,
+  SeparatorBuilder,
+  SeparatorSpacingSize,
+  TextDisplayBuilder,
+  ThumbnailBuilder,
+  AttachmentBuilder,
+} from "discord.js";
 import connectToDatabase from "../db.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
 import { generateUniqueCode } from "../utils/generateUniqueCode.js";
@@ -66,7 +79,7 @@ export async function execute(interaction) {
     return handlers[sub]();
   }
 
-  return interaction.followUp({ content: "Unknown subcommand." });
+  return interaction.reply({ content: "Unknown subcommand." });
 }
 
 async function handleAdd(interaction, user, missions) {
@@ -86,48 +99,73 @@ async function handleAdd(interaction, user, missions) {
   };
 
   await missions.insertOne(mission);
-  const helpText = formatHelpText("use /mission lockin " + code + " to start working on this mission.");
 
-  return interaction.followUp({
-    content: "`Added new mission:` `⭕️` " + formatMission(mission) + helpText,
+  const text = new TextDisplayBuilder().setContent("`Added new mission:` `⭕️` " + formatMission(mission));
+  const exampleSeparator = new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small);
+
+  const lockInButton = new ButtonBuilder()
+    .setCustomId(`lockin_${code}`)
+    .setLabel("🔐 Lock In")
+    .setStyle(ButtonStyle.Secondary);
+
+  const completeButton = new ButtonBuilder()
+    .setCustomId(`complete_${code}`)
+    .setLabel("🐾 Complete")
+    .setStyle(ButtonStyle.Secondary);
+
+  const deleteButton = new ButtonBuilder()
+    .setCustomId(`delete_${code}`)
+    .setLabel("💢 Delete")
+    .setStyle(ButtonStyle.Danger);
+
+  const row = new ActionRowBuilder().addComponents(lockInButton, completeButton, deleteButton);
+
+  await interaction.reply({
+    // content: "`Added new mission:` `⭕️` " + formatMission(mission),
+    components: [text, row],
+    flags: MessageFlags.IsComponentsV2,
   });
 }
 
 async function handleLockin(interaction, user, missions) {
   const code = interaction.options.getString("code");
 
-  if (!/^\d{4}$/i.test(code)) {
-    return interaction.followUp({
-      content: "❌ Use a valid **4-digit number code** (e.g., 1234).",
+  if (!/^\d{4}$/.test(code)) {
+    return interaction.reply({
+      content: "> `❌ Invalid 4-digit number code (e.g., 1234).`",
+      ephemeral: true,
     });
   }
 
   const mission = await missions.findOne({ code, user_id: user._id });
-  if (!mission) return interaction.followUp({ content: "❌ Mission not found." });
+  if (!mission) return interaction.reply({ content: "> `❌ Mission not found.`" });
   if (mission.is_complete)
-    return interaction.followUp({
-      content: `✅ Mission [${capitalizeFirstLetter(mission.name)}] already complete.`,
+    return interaction.reply({
+      content: `\`💦\` \`no!! you can't lock in on a completed task...\` \n> ${formatMission(
+        mission
+      )} \`is already complete.\``,
+      ephemeral: true,
     });
 
   const alreadyLocked = await missions.findOne({
     user_id: user._id,
     locked_in_at: { $ne: null },
     is_complete: false,
-    code: { $ne: code },
   });
 
   if (alreadyLocked) {
-    return interaction.followUp({
+    return interaction.reply({
       content: `\`⚠️ You are already locked in on:\` \`🔐\` ${formatMission(alreadyLocked)} ${formatHelpText(
         "use /mission checkout before locking in on a new mission."
       )}`,
+      ephemeral: true,
     });
   }
 
   await missions.updateOne({ _id: mission._id }, { $set: { locked_in_at: new Date() }, $inc: { attempts: 1 } });
   const helpText = formatHelpText("use /mission checkout at any time to take a break.");
 
-  return interaction.followUp({
+  return interaction.reply({
     content: "`Locked in on:` `🔐` " + formatMission(mission) + helpText,
   });
 }
@@ -139,9 +177,18 @@ async function handleCheckout(interaction, user, missions) {
     is_complete: { $ne: true },
   });
 
+  const text = new TextDisplayBuilder().setContent("`🗨️` `can you lock the fuck in`\n> `Lock in on a mission first.`");
+  const thumbnail = new ThumbnailBuilder().setDescription("poff").setURL("attachment://poff-icon.png");
+  const lockInMessage = new SectionBuilder().addTextDisplayComponents(text).setThumbnailAccessory(thumbnail);
+
   if (!mission) {
-    return interaction.followUp({
-      content: "`❌ No active locked-in mission to check out from.`",
+    const file = new AttachmentBuilder("assets/poff-icon.png", { name: "poff-icon.png" });
+    return interaction.reply({
+      // content: "`🗨️` `can you lock the fuck in`",
+      components: [lockInMessage],
+      flags: MessageFlags.IsComponentsV2,
+      files: [file],
+      ephemeral: true,
     });
   }
 
@@ -158,7 +205,7 @@ async function handleCheckout(interaction, user, missions) {
     }
   );
 
-  return interaction.followUp({
+  return interaction.reply({
     content:
       "`Checked out on:` `⭕️` " +
       formatMission(mission) +
@@ -174,18 +221,20 @@ async function handleComplete(interaction, user, missions, users) {
   const code = interaction.options.getString("code");
 
   if (!/^\d{4}$/.test(code)) {
-    return interaction.followUp({
-      content: "`❌ Use a valid **4-digit number code** (e.g., 1234).`",
+    return interaction.reply({
+      content: "> `❌ Invalid 4-digit number code (e.g., 1234).`",
+      ephemeral: true,
     });
   }
 
   const mission = await missions.findOne({ code, user_id: user._id });
 
-  if (!mission) return interaction.followUp({ content: "❌ Mission not found." });
+  if (!mission) return interaction.reply({ content: "> `❌ Mission not found.`", ephemeral: true });
 
   if (mission.is_complete)
-    return interaction.followUp({
+    return interaction.reply({
       content: `${formatMission(mission)} \` is already complete.\``,
+      ephemeral: true,
     });
 
   var totalTime = 0;
@@ -239,7 +288,7 @@ async function handleComplete(interaction, user, missions, users) {
 
   const msg = completeMissionMsg + bonusMessage;
 
-  return interaction.followUp({
+  return interaction.reply({
     content: msg,
   });
 }
@@ -248,31 +297,35 @@ async function handleDelete(interaction, user, missions) {
   const code = interaction.options.getString("code");
 
   if (!/^\d{4}$/.test(code)) {
-    return interaction.followUp({
-      content: "`❌ Use a valid **4-digit number code** (e.g., 1234).`",
+    return interaction.reply({
+      content: "> `❌ Use a valid 4-digit number code (e.g., 1234).`",
+      ephemeral: true,
     });
   }
 
   const mission = await missions.findOne({ code });
   if (!mission) {
-    return interaction.followUp({
-      content: `\`❌ No mission found with code **${code}**.\``,
+    return interaction.reply({
+      content: `> \`❌ No mission found with code ${code}.\``,
+      ephemeral: true,
     });
   }
   if (mission.is_system) {
-    return interaction.followUp({
-      content: "`⚠️ You can't delete a system mission.`",
+    return interaction.reply({
+      content: "> `⚠️ You can't delete a system mission.`",
+      ephemeral: true,
     });
   }
-  if (!mission.user_id === user._id) {
-    return interaction.followUp({
-      content: "`❌ You don't have permission to delete this mission.`",
+  if (mission.user_id !== user._id) {
+    return interaction.reply({
+      content: "> `❌ You don't have permission to delete this mission.`",
+      ephemeral: true,
     });
   }
 
   await missions.deleteOne({ _id: mission._id });
 
-  return interaction.followUp({
+  return interaction.reply({
     content: `\`Mission\` \`🗑️\` \`${capitalizeFirstLetter(mission.name)}\` \`has been deleted.\``,
   });
 }
@@ -284,7 +337,7 @@ async function handleClear(interaction, user, missions) {
     is_daily: false,
     is_system: false,
   });
-  return interaction.followUp({
+  return interaction.reply({
     content: `\`🧹 Cleared ${result.deletedCount} completed non-daily mission(s).\``,
   });
 }

@@ -6,11 +6,7 @@ import { formatMood, formatReason } from "../utils/formatLabels.js";
 export const data = new SlashCommandBuilder()
   .setName("mood")
   .setDescription("Update your mood")
-  .setContexts([
-    InteractionContextType.Guild,
-    InteractionContextType.BotDM,
-    InteractionContextType.PrivateChannel,
-  ])
+  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel])
   .addStringOption((option) =>
     option
       .setName("value")
@@ -18,9 +14,7 @@ export const data = new SlashCommandBuilder()
       .setRequired(true)
       .addChoices({ name: "up", value: "up" }, { name: "down", value: "down" })
   )
-  .addStringOption((option) =>
-    option.setName("reason").setDescription("Reason for mood change")
-  );
+  .addStringOption((option) => option.setName("reason").setDescription("Reason for mood change"));
 
 export async function execute(interaction) {
   const db = await connectToDatabase();
@@ -41,10 +35,7 @@ export async function execute(interaction) {
     newMood = moods[Math.max(currentMoodIndex - 1, 0)];
   }
 
-  await users.updateOne(
-    { _id: user._id },
-    { $set: { mood: newMood, last_updated: new Date() } }
-  );
+  await users.updateOne({ _id: user._id }, { $set: { mood: newMood, last_updated: new Date() } });
 
   const moodUpdate = `${formatReason(reason)}
 \`Mood went ${value}!\`
@@ -58,5 +49,5 @@ export async function execute(interaction) {
   // msg.push(moodMsg);
   // msg.push(`\`\`\``);
 
-  await interaction.followUp({ content: moodUpdate });
+  await interaction.reply({ content: moodUpdate });
 }

@@ -2,12 +2,12 @@ import getRandomTag from "../utils/getRandomTag.js";
 import { formatPulledTag } from "../utils/formatLabels.js";
 
 export default {
-  id: ["pull_1x", "pull_10x"],
+  prefix: "pull_",
 
-  async execute(interaction, { db, user, tags }) {
+  async execute(interaction, { db, user, tags, value }) {
     const users = db.collection("users");
 
-    const isSinglePull = interaction.customId === "pull_1x";
+    const isSinglePull = value === "1x";
     const cost = isSinglePull ? 100 : 1000;
     const pulls = isSinglePull ? 1 : 10;
 

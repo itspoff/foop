@@ -15,15 +15,13 @@ const client = new Client({
 
 client.commands = new Collection();
 client.buttons = new Collection();
+client.buttonHandlersByPrefix = [];
 
 const buttonFiles = fs.readdirSync("./buttons").filter((file) => file.endsWith(".js"));
 for (const file of buttonFiles) {
   const button = (await import(`./buttons/${file}`)).default;
-  if (button?.id) {
-    const ids = Array.isArray(button.id) ? button.id : [button.id];
-    for (const id of ids) {
-      client.buttons.set(id, button);
-    }
+  if (button?.prefix && typeof button.execute === "function") {
+    client.buttonHandlersByPrefix.push(button);
   }
 }
 
@@ -48,17 +46,22 @@ let db;
 
   client.on(Events.InteractionCreate, async (interaction) => {
     if (!db) db = await connectToDatabase();
+    const user = await getOrCreateUser(interaction.user, interaction.member);
+
     if (interaction.isButton()) {
-      const user = await getOrCreateUser(interaction.user, interaction.member);
+      const matchedHandler = client.buttonHandlersByPrefix.find((handler) =>
+        interaction.customId.startsWith(handler.prefix)
+      );
+
+      if (!matchedHandler) return;
+
+      const value = interaction.customId.slice(matchedHandler.prefix.length); // grab suffix
       const tags = await db.collection("tags").find().toArray();
 
-      const buttonHandler = client.buttons.get(interaction.customId);
-      if (!buttonHandler) return;
-
       try {
-        await buttonHandler.execute(interaction, { db, user, tags });
+        await matchedHandler.execute(interaction, { db, user, tags, value });
       } catch (err) {
-        console.error("Error executing command:", err);
+        console.error("Error executing button handler:", err);
         await interaction.reply({
           content: "`❌ There was an error.`",
           ephemeral: true,
@@ -67,13 +70,13 @@ let db;
     }
 
     if (interaction.isChatInputCommand()) {
+      // daily bonus constants
       const users = db.collection("users");
       const missions = db.collection("missions");
-
-      const user = await getOrCreateUser(interaction.user, interaction.member);
-
       const lastClaim = user.last_daily_bonus ? new Date(user.last_daily_bonus) : null;
       const resetTime = getResetTimePST();
+
+      // daily bonus logic
 
       if (!lastClaim || lastClaim < resetTime) {
         console.log("Daily Login from:", user.display_name);
@@ -117,14 +120,13 @@ let db;
         );
 
         const helpText = formatHelpText("use /mission add to start the day!");
+        await interaction.deferReply();
 
-        await interaction.reply({
+        await interaction.followUp({
           content: `## \`✨\` *\`Daily Login Bonus!\`* \`✨\`
 ||\`🔥 +${bonus} PPts \`||  \`🌊 Energy Restored!\`
 *\`‼️ ${resetDailyMissions.modifiedCount} New Daily Missions Available\`*${helpText}`,
         });
-      } else {
-        await interaction.deferReply();
       }
 
       const command = client.commands.get(interaction.commandName);
@@ -134,7 +136,7 @@ let db;
         await command.execute(interaction);
       } catch (error) {
         console.error("`❌ Error executing command:`", error);
-        await interaction.followUp({
+        await interaction.reply({
           content: "There was an error!",
         });
       }

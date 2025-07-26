@@ -62,5 +62,5 @@ export async function execute(interaction) {
 > **\`Locked in on:  \`** ${displayLockedInMission}
 ${targetExists ? "" : displayMissions}`;
 
-  await interaction.followUp({ content: statusUpdate });
+  await interaction.reply({ content: statusUpdate });
 }

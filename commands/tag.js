@@ -19,7 +19,7 @@ export async function execute(interaction) {
   const user = await getOrCreateUser(interaction.user, interaction.member);
 
   if (!user.tags || user.tags.length === 0) {
-    await interaction.followUp({
+    await interaction.reply({
       content: "`❌ You don't have any tags yet.`",
     });
     return;
@@ -29,7 +29,7 @@ export async function execute(interaction) {
     // validate the tag code exists in tag database
     const tag = await tags.findOne({ code: tagCode });
     if (!tag) {
-      await interaction.followUp({
+      await interaction.reply({
         content: `\`❌ Tag \` \`${tagCode}\` \`does not exist.\``,
       });
       return;
@@ -37,7 +37,7 @@ export async function execute(interaction) {
 
     // Check if the user owns the tag
     if (!user.tags || !user.tags.includes(tagCode)) {
-      await interaction.followUp({
+      await interaction.reply({
         content: `\`❌ You do not own the tag\` \`${tag.name}\``,
       });
       return;
@@ -46,7 +46,7 @@ export async function execute(interaction) {
     // Update the user's active tag
     await users.updateOne({ _id: user._id }, { $set: { active_tag: tagCode, last_updated: new Date() } });
 
-    await interaction.followUp({
+    await interaction.reply({
       content: `\`✅ Your active tag has been set to:\` \`${tag.name}\``,
     });
   }
@@ -58,7 +58,7 @@ export async function execute(interaction) {
     return `-# \`${t.code}\` ${formatDisplayTag(t)} ${isActive}`;
   });
 
-  await interaction.followUp({
+  await interaction.reply({
     content: `## \`${user.display_name}'s tag inventory:\`\n${formatted.join("\n")}`,
     ephemeral: true,
   });

@@ -34,7 +34,7 @@ export async function execute(interaction) {
       }
     );
 
-    return interaction.followUp(`\`All conditions cleared.\``);
+    return interaction.reply(`\`All conditions cleared.\``);
   }
 
   const expiresAt = new Date(Date.now() + timer * 60 * 60 * 1000); // convert hours to ms
@@ -48,7 +48,7 @@ export async function execute(interaction) {
       }
     );
 
-    return interaction.followUp(`\`Condition\` ${formatCondition(newCondition)} \`expired.\``);
+    return interaction.reply(`\`Condition\` ${formatCondition(newCondition)} \`expired.\``);
   }
 
   await users.findOneAndUpdate(
@@ -70,7 +70,5 @@ export async function execute(interaction) {
     "use /condition with the same name to update the condition's timer or change it from positive to negative."
   );
 
-  return interaction.followUp(
-    `\`Condition\` ${formatCondition(newCondition)} \`added for ${timer} hour(s).\`${helpText}`
-  );
+  return interaction.reply(`\`Condition\` ${formatCondition(newCondition)} \`added for ${timer} hour(s).\`${helpText}`);
 }
