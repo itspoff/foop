@@ -15,13 +15,7 @@ import {
 import connectToDatabase from "../db.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
 import { generateUniqueCode } from "../utils/generateUniqueCode.js";
-import {
-  capitalizeFirstLetter,
-  formatDisplayMission,
-  formatHelpText,
-  formatMission,
-  showMissionList,
-} from "../utils/formatLabels.js";
+import { capitalizeFirstLetter, formatHelpText, formatMission } from "../utils/formatLabels.js";
 import { formatTime } from "../utils/formatTime.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 
@@ -163,10 +157,27 @@ async function handleLockin(interaction, user, missions) {
   }
 
   await missions.updateOne({ _id: mission._id }, { $set: { locked_in_at: new Date() }, $inc: { attempts: 1 } });
-  const helpText = formatHelpText("use /mission checkout at any time to take a break.");
+
+  // return interaction.reply({
+  //   content: "`Locked in on:` `🔐` " + formatMission(mission) + helpText,
+  // });
+  const text = new TextDisplayBuilder().setContent("`Locked in on:` `🔐` " + formatMission(mission));
+
+  const checkOutButton = new ButtonBuilder()
+    .setCustomId(`checkout_${code}`)
+    .setLabel("💨 Check Out")
+    .setStyle(ButtonStyle.Secondary);
+
+  const missionsButton = new ButtonBuilder()
+    .setCustomId(`missions_`)
+    .setLabel("📖 Show Missions")
+    .setStyle(ButtonStyle.Secondary);
+
+  const row = new ActionRowBuilder().addComponents(checkOutButton, missionsButton);
 
   return interaction.reply({
-    content: "`Locked in on:` `🔐` " + formatMission(mission) + helpText,
+    components: [text, row],
+    flags: MessageFlags.IsComponentsV2,
   });
 }
 
@@ -184,7 +195,6 @@ async function handleCheckout(interaction, user, missions) {
   if (!mission) {
     const file = new AttachmentBuilder("assets/poff-icon.png", { name: "poff-icon.png" });
     return interaction.reply({
-      // content: "`🗨️` `can you lock the fuck in`",
       components: [lockInMessage],
       flags: MessageFlags.IsComponentsV2,
       files: [file],

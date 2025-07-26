@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, MessageFlags } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, TextDisplayBuilder } from "discord.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 import { formatMission } from "../utils/formatLabels.js";
 import { formatTime } from "../utils/formatTime.js";
@@ -9,12 +9,6 @@ export default {
     const users = db.collection("users");
     const missions = db.collection("missions");
     const code = value;
-
-    const disabledRow = new ActionRowBuilder().addComponents(
-      ButtonBuilder.from(interaction.message.components[1].components[0]).setDisabled(true),
-      ButtonBuilder.from(interaction.message.components[1].components[1]).setDisabled(true),
-      ButtonBuilder.from(interaction.message.components[1].components[2]).setDisabled(true)
-    );
 
     if (!/^\d{4}$/.test(code)) {
       return interaction.reply({
@@ -84,12 +78,22 @@ export default {
     const msg = completeMissionMsg + bonusMessage;
 
     await interaction.update({
-      components: [interaction.message.components[0], disabledRow],
+      components: [interaction.message.components[0]],
       flags: MessageFlags.IsComponentsV2,
     });
 
+    const text = new TextDisplayBuilder().setContent(msg);
+
+    const missionsButton = new ButtonBuilder()
+      .setCustomId(`missions_`)
+      .setLabel("📖 Show Missions")
+      .setStyle(ButtonStyle.Secondary);
+
+    const row = new ActionRowBuilder().addComponents(missionsButton);
+
     return interaction.followUp({
-      content: msg,
+      components: [text, row],
+      flags: MessageFlags.IsComponentsV2,
     });
   },
 };

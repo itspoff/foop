@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, MessageFlags } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, TextDisplayBuilder } from "discord.js";
 import { capitalizeFirstLetter } from "../utils/formatLabels.js";
 
 export default {
@@ -6,11 +6,6 @@ export default {
   async execute(interaction, { db, user, value }) {
     const missions = db.collection("missions");
     const code = value;
-    const disabledRow = new ActionRowBuilder().addComponents(
-      ButtonBuilder.from(interaction.message.components[1].components[0]).setDisabled(true),
-      ButtonBuilder.from(interaction.message.components[1].components[1]).setDisabled(true),
-      ButtonBuilder.from(interaction.message.components[1].components[2]).setDisabled(true)
-    );
 
     if (!/^\d{4}$/.test(code)) {
       return interaction.reply({
@@ -41,12 +36,24 @@ export default {
 
     await missions.deleteOne({ _id: mission._id });
     await interaction.update({
-      components: [interaction.message.components[0], disabledRow],
+      components: [interaction.message.components[0]],
       flags: MessageFlags.IsComponentsV2,
     });
 
+    const text = new TextDisplayBuilder().setContent(
+      `\`Mission\` \`🗑️\` \`${capitalizeFirstLetter(mission.name)}\` \`has been deleted.\``
+    );
+
+    const missionsButton = new ButtonBuilder()
+      .setCustomId(`missions_`)
+      .setLabel("📖 Show Missions")
+      .setStyle(ButtonStyle.Secondary);
+
+    const row = new ActionRowBuilder().addComponents(missionsButton);
+
     return interaction.followUp({
-      content: `\`Mission\` \`🗑️\` \`${capitalizeFirstLetter(mission.name)}\` \`has been deleted.\``,
+      components: [text, row],
+      flags: MessageFlags.IsComponentsV2,
     });
   },
 };
