@@ -18,6 +18,7 @@ import { generateUniqueCode } from "../utils/generateUniqueCode.js";
 import { capitalizeFirstLetter, formatHelpText, formatMission } from "../utils/formatLabels.js";
 import { formatTime } from "../utils/formatTime.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
+import { getMissionButtonRow } from "../utils/buttonRows.js";
 
 export const data = new SlashCommandBuilder()
   .setName("mission")
@@ -73,7 +74,7 @@ export async function execute(interaction) {
     return handlers[sub]();
   }
 
-  return interaction.reply({ content: "Unknown subcommand." });
+  return interaction.reply({ content: "`❌ Unknown subcommand.`" });
 }
 
 async function handleAdd(interaction, user, missions) {
@@ -95,24 +96,8 @@ async function handleAdd(interaction, user, missions) {
   await missions.insertOne(mission);
 
   const text = new TextDisplayBuilder().setContent("`Added new mission:` `⭕️` " + formatMission(mission));
-  const exampleSeparator = new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small);
 
-  const lockInButton = new ButtonBuilder()
-    .setCustomId(`lockin_${code}`)
-    .setLabel("🔐 Lock In")
-    .setStyle(ButtonStyle.Secondary);
-
-  const completeButton = new ButtonBuilder()
-    .setCustomId(`complete_${code}`)
-    .setLabel("🐾 Complete")
-    .setStyle(ButtonStyle.Secondary);
-
-  const deleteButton = new ButtonBuilder()
-    .setCustomId(`delete_${code}`)
-    .setLabel("💢 Delete")
-    .setStyle(ButtonStyle.Danger);
-
-  const row = new ActionRowBuilder().addComponents(lockInButton, completeButton, deleteButton);
+  const row = getMissionButtonRow(code);
 
   await interaction.reply({
     components: [text, row],
@@ -159,17 +144,7 @@ async function handleLockin(interaction, user, missions) {
 
   const text = new TextDisplayBuilder().setContent("`Locked in on:` `🔐` " + formatMission(mission));
 
-  const checkOutButton = new ButtonBuilder()
-    .setCustomId(`checkout_${code}`)
-    .setLabel("💨 Check Out")
-    .setStyle(ButtonStyle.Secondary);
-
-  const completeButton = new ButtonBuilder()
-    .setCustomId(`complete_${code}`)
-    .setLabel("🐾 Complete")
-    .setStyle(ButtonStyle.Secondary);
-
-  const row = new ActionRowBuilder().addComponents(checkOutButton, completeButton);
+  const row = getMissionButtonRow(code, { disableLockIn: true }, false);
 
   return interaction.reply({
     components: [text, row],
@@ -223,27 +198,7 @@ async function handleCheckout(interaction, user, missions) {
       ")`"
   );
 
-  const lockInButton = new ButtonBuilder()
-    .setCustomId(`lockin_${code}`)
-    .setLabel("🔐 Lock In")
-    .setStyle(ButtonStyle.Secondary);
-
-  const completeButton = new ButtonBuilder()
-    .setCustomId(`complete_${code}`)
-    .setLabel("🐾 Complete")
-    .setStyle(ButtonStyle.Secondary);
-
-  const deleteButton = new ButtonBuilder()
-    .setCustomId(`delete_${code}`)
-    .setLabel("💢 Delete")
-    .setStyle(ButtonStyle.Danger);
-
-  const missionsButton = new ButtonBuilder()
-    .setCustomId(`missions_`)
-    .setLabel("📖 Show Missions")
-    .setStyle(ButtonStyle.Secondary);
-
-  const row = new ActionRowBuilder().addComponents(lockInButton, completeButton, deleteButton, missionsButton);
+  const row = getMissionButtonRow(code);
 
   return interaction.reply({
     components: [text, row],
@@ -323,13 +278,7 @@ async function handleComplete(interaction, user, missions, users) {
   const msg = completeMissionMsg + bonusMessage;
 
   const text = new TextDisplayBuilder().setContent(msg);
-
-  const missionsButton = new ButtonBuilder()
-    .setCustomId(`missions_`)
-    .setLabel("📖 Show Missions")
-    .setStyle(ButtonStyle.Secondary);
-
-  const row = new ActionRowBuilder().addComponents(missionsButton);
+  const row = getMissionButtonRow(code, { disableLockIn: true, disableComplete: true });
 
   return interaction.reply({
     components: [text, row],
@@ -378,7 +327,7 @@ async function handleDelete(interaction, user, missions) {
     .setLabel("📖 Show Missions")
     .setStyle(ButtonStyle.Secondary);
 
-  const row = new ActionRowBuilder().addComponents(missionsButton);
+  const row = getMissionButtonRow(code, { disableLockIn: true, disableComplete: true, disableDelete: true });
 
   return interaction.reply({
     components: [text, row],

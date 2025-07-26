@@ -11,6 +11,7 @@ import {
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 import { formatMission } from "../utils/formatLabels.js";
 import { formatTime } from "../utils/formatTime.js";
+import { getMissionButtonRow } from "../utils/buttonRows.js";
 
 export default {
   prefix: "checkout_",
@@ -74,27 +75,7 @@ export default {
         ")`"
     );
 
-    const lockInButton = new ButtonBuilder()
-      .setCustomId(`lockin_${code}`)
-      .setLabel("🔐 Lock In")
-      .setStyle(ButtonStyle.Secondary);
-
-    const completeButton = new ButtonBuilder()
-      .setCustomId(`complete_${code}`)
-      .setLabel("🐾 Complete")
-      .setStyle(ButtonStyle.Secondary);
-
-    const deleteButton = new ButtonBuilder()
-      .setCustomId(`delete_${code}`)
-      .setLabel("💢 Delete")
-      .setStyle(ButtonStyle.Danger);
-
-    const missionsButton = new ButtonBuilder()
-      .setCustomId(`missions_`)
-      .setLabel("📖 Show Missions")
-      .setStyle(ButtonStyle.Secondary);
-
-    const row = new ActionRowBuilder().addComponents(lockInButton, completeButton, deleteButton, missionsButton);
+    const row = getMissionButtonRow(code);
 
     return interaction.followUp({
       components: [text, row],

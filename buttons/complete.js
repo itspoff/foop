@@ -2,6 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, TextDisplay
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 import { formatMission } from "../utils/formatLabels.js";
 import { formatTime } from "../utils/formatTime.js";
+import { getMissionButtonRow } from "../utils/buttonRows.js";
 
 export default {
   prefix: "complete_",
@@ -85,12 +86,7 @@ export default {
 
     const text = new TextDisplayBuilder().setContent(msg);
 
-    const missionsButton = new ButtonBuilder()
-      .setCustomId(`missions_`)
-      .setLabel("📖 Show Missions")
-      .setStyle(ButtonStyle.Secondary);
-
-    const row = new ActionRowBuilder().addComponents(missionsButton);
+    const row = getMissionButtonRow(code, { disableLockIn: true, disableComplete: true });
 
     return interaction.followUp({
       components: [text, row],

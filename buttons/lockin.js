@@ -1,5 +1,6 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, TextDisplayBuilder } from "discord.js";
 import { formatHelpText, formatMission } from "../utils/formatLabels.js";
+import { getMissionButtonRow } from "../utils/buttonRows.js";
 
 export default {
   prefix: "lockin_",
@@ -43,17 +44,7 @@ export default {
 
     const text = new TextDisplayBuilder().setContent("`Locked in on:` `🔐` " + formatMission(mission));
 
-    const checkOutButton = new ButtonBuilder()
-      .setCustomId(`checkout_${code}`)
-      .setLabel("💨 Check Out")
-      .setStyle(ButtonStyle.Secondary);
-
-    const completeButton = new ButtonBuilder()
-      .setCustomId(`complete_${code}`)
-      .setLabel("🐾 Complete")
-      .setStyle(ButtonStyle.Secondary);
-
-    const row = new ActionRowBuilder().addComponents(checkOutButton, completeButton);
+    const row = getMissionButtonRow(code, { disableLockIn: true }, false);
 
     return interaction.followUp({
       components: [text, row],

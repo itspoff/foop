@@ -1,5 +1,6 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, TextDisplayBuilder } from "discord.js";
 import { capitalizeFirstLetter } from "../utils/formatLabels.js";
+import { getMissionButtonRow } from "../utils/buttonRows.js";
 
 export default {
   prefix: "delete_",
@@ -46,12 +47,7 @@ export default {
       `\`Mission\` \`🗑️\` \`${capitalizeFirstLetter(mission.name)}\` \`has been deleted.\``
     );
 
-    const missionsButton = new ButtonBuilder()
-      .setCustomId(`missions_`)
-      .setLabel("📖 Show Missions")
-      .setStyle(ButtonStyle.Secondary);
-
-    const row = new ActionRowBuilder().addComponents(missionsButton);
+    const row = getMissionButtonRow(code, { disableLockIn: true, disableComplete: true, disableDelete: true });
 
     return interaction.followUp({
       components: [text, row],
