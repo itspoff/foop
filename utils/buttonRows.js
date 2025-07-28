@@ -7,6 +7,7 @@ export function getMissionButtonRow(code, options = {}, isLockIn = true) {
     disableComplete = false,
     disableDelete = false,
     disableMissions = false,
+    disableClose = false,
   } = options;
 
   const lockInButton = new ButtonBuilder()
@@ -39,13 +40,19 @@ export function getMissionButtonRow(code, options = {}, isLockIn = true) {
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableMissions);
 
+  const closeButton = new ButtonBuilder()
+    .setCustomId(`close_`)
+    .setLabel("✖️ Close")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableClose);
+
   return isLockIn
-    ? new ActionRowBuilder().addComponents(lockInButton, completeButton, deleteButton, missionsButton)
-    : new ActionRowBuilder().addComponents(checkOutButton, completeButton, deleteButton, missionsButton);
+    ? new ActionRowBuilder().addComponents(lockInButton, completeButton, deleteButton, missionsButton, closeButton)
+    : new ActionRowBuilder().addComponents(checkOutButton, completeButton, deleteButton, missionsButton, closeButton);
 }
 
 export function getStatusButtonRow(user, isOtherUser, lockedInMission, options = {}) {
-  const { disableCheer = false, disablePackage = true } = options;
+  const { disableCheer = false, disablePackage = true, disableClose = false } = options;
   const code = lockedInMission ? lockedInMission.code : "0000";
 
   const cheerButton = new ButtonBuilder()
@@ -60,12 +67,16 @@ export function getStatusButtonRow(user, isOtherUser, lockedInMission, options =
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disablePackage);
 
-  return new ActionRowBuilder().addComponents(cheerButton, packageButton);
+  const closeButton = new ButtonBuilder()
+    .setCustomId(`close_`)
+    .setLabel("✖️ Close")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableClose);
+
+  return new ActionRowBuilder().addComponents(cheerButton, packageButton, closeButton);
 }
 
 export function getConfirmCheerRow(user, code, userId) {
-  // TODO: need target.name, user.ppts
-
   return new SectionBuilder()
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(`\`Spend 250 Ppts to cheer?\`\n-# \`You currently have: ${user.ppts} Ppts\``)
