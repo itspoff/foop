@@ -41,7 +41,7 @@ export function formatReason(reason) {
 
   const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
   const sentence = capitalized.endsWith(".", "?", "!") ? capitalized : capitalized + ".";
-  return `\`💬 ${sentence}\``;
+  return `\`💬\` \`${sentence}\``;
 }
 
 export function formatConditionList(conditions) {

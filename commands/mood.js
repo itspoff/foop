@@ -1,4 +1,11 @@
-import { InteractionContextType, SlashCommandBuilder } from "discord.js";
+import {
+  InteractionContextType,
+  MessageFlags,
+  SectionBuilder,
+  SlashCommandBuilder,
+  TextDisplayBuilder,
+  ThumbnailBuilder,
+} from "discord.js";
 import connectToDatabase from "../db.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
 import { formatMood, formatReason } from "../utils/formatLabels.js";
@@ -37,17 +44,16 @@ export async function execute(interaction) {
 
   await users.updateOne({ _id: user._id }, { $set: { mood: newMood, last_updated: new Date() } });
 
-  const moodUpdate = `${formatReason(reason)}
-\`Mood went ${value}!\`
-\`Mood is now\` ${formatMood(newMood)}`;
+  const msg = new TextDisplayBuilder().setContent(
+    `${formatReason(reason)}\n> \`Mood went ${value}\`\n> \`Mood is now\` ${formatMood(newMood)}`
+  );
+  const thumbnail = new ThumbnailBuilder()
+    .setDescription("user display avatar")
+    .setURL(interaction.user.displayAvatarURL());
+  const lockInMessage = new SectionBuilder().addTextDisplayComponents(msg).setThumbnailAccessory(thumbnail);
 
-  // const msg = [];
-  // msg.push(`\`\`\`ansi`);
-  // if (reason) msg.push(formatReason(reason));
-  // const moodMsg = value === "down" ? `Mood went [2;34mdown[0m.` : `Mood went [2;33mup[0m.`;
-
-  // msg.push(moodMsg);
-  // msg.push(`\`\`\``);
-
-  await interaction.reply({ content: moodUpdate });
+  return interaction.reply({
+    components: [lockInMessage],
+    flags: MessageFlags.IsComponentsV2,
+  });
 }
