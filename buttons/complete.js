@@ -42,6 +42,40 @@ export default {
       }
     );
 
+    // check if this completes all daily missions
+
+    const incompleteCount = await missions.countDocuments({
+      user_id: user._id,
+      type: "daily",
+      is_complete: { $ne: true },
+    });
+    const completedAllDaily = incompleteCount === 0;
+    let dailyBonus = 0;
+
+    if (completedAllDaily) {
+      // check if any daily mission was already rewarded
+      const alreadyRewarded = await missions.findOne({
+        user_id: user._id,
+        type: "daily",
+        rewarded_all_dailies: true,
+      });
+
+      if (!alreadyRewarded) {
+        dailyBonus = 50;
+        await users.updateOne(
+          { _id: user._id },
+          {
+            $set: { last_updated: new Date() },
+            $inc: { ppts: dailyBonus },
+          }
+        );
+
+        await missions.updateOne({ _id: mission._id }, { $set: { rewarded_all_dailies: true } });
+      }
+    }
+
+    // calculate user energy and ppts gain
+
     var bonus = 12 + Math.floor(Math.random() * 13);
     var cost = 10 + Math.floor(Math.random() * 11);
     if (user.energy - cost < 0) {
@@ -52,13 +86,13 @@ export default {
       bonus = 0;
     }
     const cheerCount = mission.cheers ? mission.cheers.length : 0;
-    const totalBonus = Math.floor(bonus * (totalTime > 300 ? 1.35 : 1) * (cheerCount + 1));
+    const totalBonus = Math.floor(bonus * (totalTime > 300 ? 1.35 : 1) * (cheerCount + 1) + dailyBonus);
 
     await users.updateOne(
       { _id: user._id },
       {
         $set: { last_updated: new Date() },
-        $inc: { ppts: bonus, energy: -cost },
+        $inc: { ppts: totalBonus, energy: -cost },
       }
     );
 
@@ -68,12 +102,12 @@ export default {
         : formatMission(mission) + " `🐾 Completed in ⏱️ " + formatTime(totalTime) + "!`";
 
     const bonusMessage =
-      bonus > 0
+      totalBonus > 0
         ? "\n" +
           `> -# \`Reward: ${bonus}\` ${totalTime > 300 ? "`🍵 Focused (x1.35)`" : ""} ${
             cheerCount > 0 ? `\`👏 Cheer (x${cheerCount + 1})\`` : ""
-          }\n` +
-          `> -# \`Energy: ${user.energy - cost}(-${cost})\` \`Ppts: ${user.ppts + bonus}(+${totalBonus})\``
+          } ${dailyBonus > 0 ? `\`🎯 All dailies complete! +${dailyBonus}\`` : ""} \n` +
+          `> -# \`Energy: ${user.energy - cost}(-${cost})\` \`Ppts: ${user.ppts + totalBonus}(+${totalBonus})\``
         : "";
 
     const msg = completeMissionMsg + bonusMessage;
@@ -85,7 +119,6 @@ export default {
     });
 
     const text = new TextDisplayBuilder().setContent(msg);
-
     const row = getMissionButtonRow(code, { disableLockIn: true, disableComplete: true });
 
     return interaction.followUp({
