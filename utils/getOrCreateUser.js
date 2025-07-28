@@ -56,3 +56,26 @@ export async function getOrCreateUser(discordUser, guildMember = null) {
 
   return user;
 }
+
+export async function getExistingUserFromId(userId) {
+  const db = await connectToDatabase();
+  const users = db.collection("users");
+  const user = await users.findOne({ _id: userId });
+
+  if (!user) {
+    console.log(`Invalid user`);
+    return null;
+  }
+
+  const now = new Date();
+
+  // Clean expired conditions if needed
+  const cleanedConditions = (user.conditions || []).filter((c) => new Date(c.expires_at) > now);
+
+  if (cleanedConditions.length !== (user.conditions || []).length) {
+    await users.updateOne({ _id: userId }, { $set: { conditions: cleanedConditions } });
+    user.conditions = cleanedConditions;
+  }
+
+  return user;
+}

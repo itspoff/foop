@@ -1,4 +1,4 @@
-import { ButtonBuilder, ButtonStyle, ActionRowBuilder } from "discord.js";
+import { ButtonBuilder, ButtonStyle, ActionRowBuilder, SectionBuilder } from "discord.js";
 
 export function getMissionButtonRow(code, options = {}, isLockIn = true) {
   const {
@@ -18,7 +18,7 @@ export function getMissionButtonRow(code, options = {}, isLockIn = true) {
   const checkOutButton = new ButtonBuilder()
     .setCustomId(`checkout_${code}`)
     .setLabel("💨 Check out")
-    .setStyle(ButtonStyle.Secondary)
+    .setStyle(ButtonStyle.Primary)
     .setDisabled(disableCheckOut);
 
   const completeButton = new ButtonBuilder()
@@ -44,17 +44,33 @@ export function getMissionButtonRow(code, options = {}, isLockIn = true) {
     : new ActionRowBuilder().addComponents(checkOutButton, completeButton, deleteButton, missionsButton);
 }
 
-export function getStatusButtonRow() {
+export function getStatusButtonRow(user, isOtherUser, lockedInMission, options = {}) {
+  const { disableCheer = false, disablePackage = true } = options;
+  const code = lockedInMission ? lockedInMission.code : "0000";
+
   const cheerButton = new ButtonBuilder()
-    .setCustomId(`cheer_${""}}`)
+    .setCustomId(`cheer_${code}_${user._id}`)
     .setLabel("👏 Cheer")
-    .setStyle(ButtonStyle.Primary);
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableCheer);
 
   const packageButton = new ButtonBuilder()
     .setCustomId(`package_${""}}`)
     .setLabel("📦 Deliver a package")
     .setStyle(ButtonStyle.Secondary)
-    .setDisabled(true);
+    .setDisabled(disablePackage);
 
   return new ActionRowBuilder().addComponents(cheerButton, packageButton);
+}
+
+export function getConfirmCheerRow(user, code, userId) {
+  // TODO: need target.name, user.ppts
+
+  return new SectionBuilder()
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(`\`Spend 250 Ppts to cheer?\`\n-# \`You currently have: ${user.ppts} Ppts\``)
+    )
+    .setButtonAccessory((button) =>
+      button.setCustomId(`cheer_${code}_${userId}_confirm`).setLabel("⭕️ Confirm").setStyle(ButtonStyle.Danger)
+    );
 }

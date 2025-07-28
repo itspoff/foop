@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, InteractionContextType } from "discord.js";
+import { SlashCommandBuilder, InteractionContextType, MessageFlags, TextDisplayBuilder } from "discord.js";
 import connectToDatabase from "../db.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
 import {
@@ -11,6 +11,7 @@ import {
   formatConditionList,
 } from "../utils/formatLabels.js";
 import { timeSince } from "../utils/formatTime.js";
+import { getStatusButtonRow } from "../utils/buttonRows.js";
 
 export const data = new SlashCommandBuilder()
   .setName("status")
@@ -20,47 +21,57 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
   const db = await connectToDatabase();
-  const tags = db.collection("tags");
-  const missions = db.collection("missions");
+  const tagsCollection = db.collection("tags");
+  const missionsCollection = db.collection("missions");
 
-  // config: privacy settings?
+  // Determine whose status we're checking
+  const selectedUser = interaction.options.getUser("user");
+  const targetUser = selectedUser || interaction.user;
 
-  const target = interaction.options.getUser("user") || interaction.user;
-  const targetExists = !!interaction.options.getUser("user");
+  const isOtherUser = !!selectedUser && interaction.user.id !== selectedUser.id;
 
-  const user = await getOrCreateUser(target);
-  const conditions = user.conditions;
+  const user = await getOrCreateUser(targetUser);
+  const displayName = formatDisplayName(user.display_name || interaction.user.globalName);
+  const mood = formatMood(user.mood || "normal");
+  const energy = formatEnergy(user.energy ?? 100);
+  const ppts = user.ppts;
+  const lastUpdated = user.last_updated ? timeSince(user.last_updated) : "unknown";
 
-  const lockedInMission = await missions.findOne({
+  // Display current tag
+  const activeTag = user.active_tag ? await tagsCollection.findOne({ code: user.active_tag }) : null;
+  const displayTag = activeTag ? formatDisplayTag(activeTag) : "";
+
+  // Display locked-in mission (if any)
+  const lockedInMission = await missionsCollection.findOne({
     user_id: user._id,
     locked_in_at: { $ne: null },
   });
-
-  // header
-  const displayName = formatDisplayName(user.display_name || interaction.user.globalName);
-
-  const mood = formatMood(user.mood || "normal");
-  const energy = formatEnergy(user.energy ?? 100);
-
-  const activeTag = user.active_tag ? await tags.findOne({ code: user.active_tag }) : null;
-  const tag = activeTag ? formatDisplayTag(activeTag) : "";
-  const lastUpdated = user.last_updated ? timeSince(user.last_updated) : "unknown";
-  const ppts = user.ppts;
-
-  // display bar
-
-  const displayConditions = formatConditionList(conditions);
   const displayLockedInMission = formatLockedInMission(lockedInMission);
 
-  // missions
+  // Conditions
+  const displayConditions = formatConditionList(user.conditions);
 
-  const displayMissions = await showMissionList(interaction, user, missions, null, "", false);
-
+  // Header
   const statusUpdate = `## ${displayName}  ${mood}  ${energy}  
--#  ${tag ? `${tag}  |` : ""}  \`Last Updated: ${lastUpdated} ago\`  |  \`PPts: ${ppts}\`
+-#  ${displayTag ? `${displayTag}  |` : ""}  \`Last Updated: ${lastUpdated} ago\`  |  \`PPts: ${ppts}\`
 > **\`Conditions:    \`** ${displayConditions}
-> **\`Locked in on:  \`** ${displayLockedInMission}
-${targetExists ? "" : displayMissions}`;
+> **\`Locked in on:  \`** ${displayLockedInMission}`;
 
-  await interaction.reply({ content: statusUpdate });
+  // Missions (only for self-view)
+  const displayMissions = isOtherUser
+    ? ""
+    : await showMissionList(interaction, user, missionsCollection, null, "", false);
+
+  const targetUserId = isOtherUser;
+
+  const footer = isOtherUser
+    ? getStatusButtonRow(user, isOtherUser, lockedInMission, { disableCheer: !lockedInMission })
+    : new TextDisplayBuilder().setContent(displayMissions);
+
+  const header = new TextDisplayBuilder().setContent(statusUpdate);
+
+  return interaction.reply({
+    components: [header, footer],
+    flags: MessageFlags.IsComponentsV2,
+  });
 }

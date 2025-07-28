@@ -14,7 +14,7 @@ async function connectToDatabase() {
   if (!dbInstance) {
     await client.connect();
     dbInstance = client.db(process.env.MONGO_DB || "uma_cluster_1");
-    console.log("✅ Connected to MongoDB");
+    console.log("Connected to MongoDB");
   }
   return dbInstance;
 }

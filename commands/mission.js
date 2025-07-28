@@ -250,8 +250,8 @@ async function handleComplete(interaction, user, missions, users) {
     cost = 0;
     bonus = 0;
   }
-  const cheer = false; // TODO: /cheer
-  const totalBonus = Math.floor(bonus * (totalTime > 300 ? 1.35 : 1));
+  const cheerCount = mission.cheers ? mission.cheers.length : 0;
+  const totalBonus = Math.floor(bonus * (totalTime > 300 ? 1.35 : 1) * (cheerCount + 1));
 
   await users.updateOne(
     { _id: user._id },
@@ -270,7 +270,7 @@ async function handleComplete(interaction, user, missions, users) {
     bonus > 0
       ? "\n" +
         `> -# \`Reward: ${bonus}\` ${totalTime > 300 ? "`🍵 Focused (x1.35)`" : ""} ${
-          cheer ? "`👏 Cheer (x2)`" : ""
+          cheerCount > 0 ? `\`👏 Cheer (x${cheerCount + 1})\`` : ""
         }\n` +
         `> -# \`Energy: ${user.energy - cost}(-${cost})\` \`Ppts: ${user.ppts + bonus}(+${totalBonus})\``
       : "";

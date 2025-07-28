@@ -51,7 +51,7 @@ const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
       body: commandJSONs,
     });
 
-    console.log("✅ Successfully reloaded all commands.");
+    console.log("Successfully reloaded all commands.");
   } catch (error) {
     console.error("❌ Error deploying commands:", error);
   }
