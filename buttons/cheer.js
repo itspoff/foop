@@ -14,7 +14,6 @@ export default {
     const userId = values[1];
 
     const targetUser = await getExistingUserFromId(userId);
-    console.log(targetUser);
     if (!targetUser) {
       return interaction.reply({
         content: "> `❌ Target user does not exist`",

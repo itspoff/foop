@@ -3,7 +3,6 @@ import { config } from "dotenv";
 import connectToDatabase from "./db.js";
 import fs from "node:fs";
 import { getOrCreateUser } from "./utils/getOrCreateUser.js";
-import getRandomTag from "./utils/getRandomTag.js";
 import { formatHelpText, formatPulledTag } from "./utils/formatLabels.js";
 import { getResetTimePST } from "./utils/formatTime.js";
 import { formatReminder } from "./utils/formatReminder.js";

@@ -1,6 +1,7 @@
 import { InteractionContextType, MessageFlags, SlashCommandBuilder, TextDisplayBuilder } from "discord.js";
 import connectToDatabase from "../db.js";
 import * as chrono from "chrono-node";
+import { fromZonedTime } from "date-fns-tz";
 import { formatReminder } from "../utils/formatReminder.js";
 import { getReminderRow } from "../utils/buttonRows.js";
 
@@ -17,13 +18,13 @@ export async function execute(interaction) {
   const db = await connectToDatabase();
   const timeInput = interaction.options.getString("time");
   const reminderText = interaction.options.getString("reminder").toLowerCase();
-  const remindAt = chrono.parseDate(timeInput, new Date(), { forwardDate: true });
+  const pacificNow = fromZonedTime(new Date(), "America/Los_Angeles");
+
+  const remindAt = chrono.parseDate(timeInput, pacificNow, { forwardDate: true });
 
   if (!remindAt) {
     return interaction.reply({ content: "> `❌ Invalid time input.`", ephemeral: true });
   }
-
-  console.log(interaction.channel_id);
 
   const newReminder = {
     user_id: interaction.user.id,
