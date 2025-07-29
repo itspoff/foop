@@ -6,6 +6,7 @@ import { getOrCreateUser } from "./utils/getOrCreateUser.js";
 import getRandomTag from "./utils/getRandomTag.js";
 import { formatHelpText, formatPulledTag } from "./utils/formatLabels.js";
 import { getResetTimePST } from "./utils/formatTime.js";
+import { formatReminder } from "./utils/formatReminder.js";
 
 config();
 
@@ -144,3 +145,28 @@ let db;
 
   await client.login(process.env.BOT_TOKEN);
 })();
+
+// check for reminders
+setInterval(async () => {
+  const now = new Date();
+  const reminders = await db
+    .collection("reminders")
+    .find({
+      remind_at: { $lte: now },
+      sent: false,
+    })
+    .toArray();
+
+  for (const reminder of reminders) {
+    try {
+      const channel = await client.channels.fetch(reminder.channel_id);
+      await channel.send({
+        content: `<@${reminder.user_id}> \`You have a reminder!\` \n> ${formatReminder(reminder)}`,
+      });
+
+      await db.collection("reminders").updateOne({ _id: reminder._id }, { $set: { sent: true } });
+    } catch (err) {
+      console.error("Failed to send reminder:", err);
+    }
+  }
+}, 60 * 1000);

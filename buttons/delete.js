@@ -16,21 +16,22 @@ export default {
     }
 
     const mission = await missions.findOne({ code });
+
     if (!mission) {
       return interaction.reply({
         content: `> \`❌ No mission found with code ${code}.\``,
         ephemeral: true,
       });
     }
-    if (mission.is_system) {
-      return interaction.reply({
-        content: "> `⚠️ You can't delete a system mission.`",
-        ephemeral: true,
-      });
-    }
     if (mission.user_id !== user._id) {
       return interaction.reply({
         content: "> `❌ You don't have permission to delete this mission.`",
+        ephemeral: true,
+      });
+    }
+    if (mission.is_system) {
+      return interaction.reply({
+        content: "> `⚠️ You can't delete a system mission.`",
         ephemeral: true,
       });
     }

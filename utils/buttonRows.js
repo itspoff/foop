@@ -85,3 +85,24 @@ export function getConfirmCheerRow(user, code, userId) {
       button.setCustomId(`cheer_${code}_${userId}_confirm`).setLabel("⭕️ Confirm").setStyle(ButtonStyle.Danger)
     );
 }
+
+export function getReminderRow(discordUser, reminder, options = {}) {
+  const { disableJoin = true, disableCancel = false } = options;
+  const reminderId = reminder ? reminder._id : "";
+  const userId = discordUser ? discordUser.id : "";
+  console.log(userId);
+
+  const joinButton = new ButtonBuilder()
+    .setCustomId(`join_${reminderId}_${userId}`)
+    .setLabel("🙌 Remind me too!")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableJoin);
+
+  const cancelButton = new ButtonBuilder()
+    .setCustomId(`cancel_${reminderId}_${userId}`)
+    .setLabel("🚫 Cancel")
+    .setStyle(ButtonStyle.Danger)
+    .setDisabled(disableCancel);
+
+  return new ActionRowBuilder().addComponents(joinButton, cancelButton);
+}
