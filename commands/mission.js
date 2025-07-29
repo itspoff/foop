@@ -251,7 +251,6 @@ async function handleComplete(interaction, user, missions, users) {
 
   const completedAllDaily = incompleteCount === 0;
   let dailyBonus = 0;
-  console.log(completedAllDaily, incompleteCount);
   if (completedAllDaily) {
     // check if any daily mission was already rewarded
     const alreadyRewarded = await missions.findOne({
@@ -259,7 +258,6 @@ async function handleComplete(interaction, user, missions, users) {
       is_daily: true,
       rewarded_all_dailies: true,
     });
-    console.log(alreadyRewarded);
     if (!alreadyRewarded) {
       dailyBonus = 50;
       await users.updateOne(
