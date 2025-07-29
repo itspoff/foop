@@ -146,7 +146,6 @@ let db;
   await client.login(process.env.BOT_TOKEN);
 })();
 
-// check for reminders
 setInterval(async () => {
   const now = new Date();
   const reminders = await db
@@ -159,14 +158,26 @@ setInterval(async () => {
 
   for (const reminder of reminders) {
     try {
-      const channel = await client.channels.fetch(reminder.channel_id);
-      await channel.send({
-        content: `<@${reminder.user_id}> \`You have a reminder!\` \n> ${formatReminder(reminder)}`,
-      });
+      let channel;
+      try {
+        channel = await client.channels.fetch(reminder.channel_id);
+      } catch (err) {
+        // If channel fetch fails (e.g. Missing Access), we'll fall back to DM
+        console.warn(`Channel not accessible for reminder ${reminder._id}, falling back to DM`);
+      }
+
+      const content = `<@${reminder.user_id}> \`You have a reminder!\` \n> ${formatReminder(reminder)}`;
+
+      if (channel) {
+        await channel.send({ content });
+      } else {
+        const user = await client.users.fetch(reminder.user_id);
+        await user.send({ content });
+      }
 
       await db.collection("reminders").updateOne({ _id: reminder._id }, { $set: { sent: true } });
     } catch (err) {
-      console.error("Failed to send reminder:", err);
+      console.error("❌ Failed to send reminder:", err);
     }
   }
 }, 60 * 1000);

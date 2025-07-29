@@ -23,9 +23,11 @@ export async function execute(interaction) {
     return interaction.reply({ content: "> `❌ Invalid time input.`", ephemeral: true });
   }
 
+  console.log(interaction.channel_id);
+
   const newReminder = {
     user_id: interaction.user.id,
-    channel_id: interaction.channel?.id ?? (await interaction.client.channels.fetch(interaction.channelId))?.id,
+    channel_id: interaction.channel_id,
     reminder: reminderText,
     remind_at: remindAt,
     created_at: new Date(),
