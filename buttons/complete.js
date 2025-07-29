@@ -46,20 +46,21 @@ export default {
 
     const incompleteCount = await missions.countDocuments({
       user_id: user._id,
-      type: "daily",
+      is_daily: true,
       is_complete: { $ne: true },
     });
+
     const completedAllDaily = incompleteCount === 0;
     let dailyBonus = 0;
-
+    console.log(completedAllDaily, incompleteCount);
     if (completedAllDaily) {
       // check if any daily mission was already rewarded
       const alreadyRewarded = await missions.findOne({
         user_id: user._id,
-        type: "daily",
+        is_daily: true,
         rewarded_all_dailies: true,
       });
-
+      console.log(alreadyRewarded);
       if (!alreadyRewarded) {
         dailyBonus = 50;
         await users.updateOne(

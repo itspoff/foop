@@ -241,6 +241,40 @@ async function handleComplete(interaction, user, missions, users) {
     }
   );
 
+  // check if this completes all daily missions
+
+  const incompleteCount = await missions.countDocuments({
+    user_id: user._id,
+    is_daily: true,
+    is_complete: { $ne: true },
+  });
+
+  const completedAllDaily = incompleteCount === 0;
+  let dailyBonus = 0;
+  console.log(completedAllDaily, incompleteCount);
+  if (completedAllDaily) {
+    // check if any daily mission was already rewarded
+    const alreadyRewarded = await missions.findOne({
+      user_id: user._id,
+      is_daily: true,
+      rewarded_all_dailies: true,
+    });
+    console.log(alreadyRewarded);
+    if (!alreadyRewarded) {
+      dailyBonus = 50;
+      await users.updateOne(
+        { _id: user._id },
+        {
+          $set: { last_updated: new Date() },
+          $inc: { ppts: dailyBonus },
+        }
+      );
+
+      await missions.updateOne({ _id: mission._id }, { $set: { rewarded_all_dailies: true } });
+    }
+  }
+
+  // calculate user energy and ppts gain
   var bonus = 12 + Math.floor(Math.random() * 13);
   var cost = 10 + Math.floor(Math.random() * 11);
   if (user.energy - cost < 0) {
@@ -251,13 +285,13 @@ async function handleComplete(interaction, user, missions, users) {
     bonus = 0;
   }
   const cheerCount = mission.cheers ? mission.cheers.length : 0;
-  const totalBonus = Math.floor(bonus * (totalTime > 300 ? 1.35 : 1) * (cheerCount + 1));
+  const totalBonus = Math.floor(bonus * (totalTime > 300 ? 1.35 : 1) * (cheerCount + 1) + dailyBonus);
 
   await users.updateOne(
     { _id: user._id },
     {
       $set: { last_updated: new Date() },
-      $inc: { ppts: bonus, energy: -cost },
+      $inc: { ppts: totalBonus, energy: -cost },
     }
   );
 
@@ -267,12 +301,12 @@ async function handleComplete(interaction, user, missions, users) {
       : formatMission(mission) + " `🐾 Completed in ⏱️ " + formatTime(totalTime) + "!`";
 
   const bonusMessage =
-    bonus > 0
+    totalBonus > 0
       ? "\n" +
         `> -# \`Reward: ${bonus}\` ${totalTime > 300 ? "`🍵 Focused (x1.35)`" : ""} ${
           cheerCount > 0 ? `\`👏 Cheer (x${cheerCount + 1})\`` : ""
-        }\n` +
-        `> -# \`Energy: ${user.energy - cost}(-${cost})\` \`Ppts: ${user.ppts + bonus}(+${totalBonus})\``
+        } ${dailyBonus > 0 ? `\`🎯 All dailies complete! +${dailyBonus}\`` : ""} \n` +
+        `> -# \`Energy: ${user.energy - cost}(-${cost})\` \`Ppts: ${user.ppts + totalBonus}(+${totalBonus})\``
       : "";
 
   const msg = completeMissionMsg + bonusMessage;
@@ -321,11 +355,6 @@ async function handleDelete(interaction, user, missions) {
   const text = new TextDisplayBuilder().setContent(
     `\`Mission\` \`🗑️\` \`${capitalizeFirstLetter(mission.name)}\` \`has been deleted.\``
   );
-
-  const missionsButton = new ButtonBuilder()
-    .setCustomId(`missions_`)
-    .setLabel("📖 Show Missions")
-    .setStyle(ButtonStyle.Secondary);
 
   const row = getMissionButtonRow(code, { disableLockIn: true, disableComplete: true, disableDelete: true });
 
