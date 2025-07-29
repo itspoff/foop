@@ -25,7 +25,7 @@ export async function execute(interaction) {
 
   const newReminder = {
     user_id: interaction.user.id,
-    channel_id: interaction.channel.id,
+    channel_id: interaction.channel?.id ?? (await interaction.client.channels.fetch(interaction.channelId))?.id,
     reminder: reminderText,
     remind_at: remindAt,
     created_at: new Date(),
