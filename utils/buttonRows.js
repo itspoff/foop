@@ -105,3 +105,76 @@ export function getReminderRow(discordUser, reminder, options = {}) {
 
   return new ActionRowBuilder().addComponents(joinButton, cancelButton);
 }
+
+export function getOwnStatusButtonRow(discordUser, options = {}) {
+  const {
+    disableAddMission = false,
+    disableLockIn = false,
+    disableCheckOut = false,
+    disableComplete = false,
+    disableProfile = false,
+    disableClose = false,
+  } = options;
+
+  const newMissionButton = new ButtonBuilder()
+    .setCustomId(`new_`)
+    .setLabel("🌱 New mission")
+    .setStyle(ButtonStyle.Success)
+    .setDisabled(disableAddMission);
+
+  const lockInButton = new ButtonBuilder()
+    .setCustomId(`lockin_`) // if no code?
+    .setLabel("🔐 Lock in")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableLockIn);
+
+  const checkOutButton = new ButtonBuilder()
+    .setCustomId(`checkout_`)
+    .setLabel("💨 Check out")
+    .setStyle(ButtonStyle.Primary)
+    .setDisabled(disableCheckOut);
+
+  const completeButton = new ButtonBuilder()
+    .setCustomId(`complete_`)
+    .setLabel("🐾 Complete")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableComplete);
+
+  const profileButton = new ButtonBuilder()
+    .setCustomId(`profile]_`)
+    .setLabel("👤 My Profile")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableProfile);
+
+  return new ActionRowBuilder().addComponents(
+    newMissionButton,
+    lockInButton,
+    // checkOutButton,
+    completeButton,
+    profileButton
+  );
+}
+
+export function getDailyButtonRow(discordUser, options = {}) {
+  const { disableMail = true, disableGarden = true, disableShop = true } = options;
+
+  const mailboxButton = new ButtonBuilder()
+    .setCustomId(`mail_`)
+    .setLabel("📪 Mailbox")
+    .setStyle(ButtonStyle.Success)
+    .setDisabled(disableMail);
+
+  const gardenButton = new ButtonBuilder()
+    .setCustomId(`garden_`)
+    .setLabel("🐌 Garden")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableGarden);
+
+  const shopButton = new ButtonBuilder()
+    .setCustomId(`shop_`)
+    .setLabel("🛒 Daily Shop")
+    .setStyle(ButtonStyle.Primary)
+    .setDisabled(disableShop);
+
+  return new ActionRowBuilder().addComponents(mailboxButton, gardenButton, shopButton);
+}
