@@ -50,3 +50,7 @@ export function getResetTimePST() {
 
   return resetTime.toJSDate();
 }
+
+export function getCurrentPST() {
+  return DateTime.now().setZone("America/Los_Angeles");
+}

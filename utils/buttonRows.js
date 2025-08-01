@@ -109,11 +109,10 @@ export function getReminderRow(discordUser, reminder, options = {}) {
 export function getOwnStatusButtonRow(discordUser, options = {}) {
   const {
     disableAddMission = false,
-    disableLockIn = false,
-    disableCheckOut = false,
-    disableComplete = false,
-    disableProfile = false,
-    disableClose = false,
+    disableLockIn = true,
+    disableCheckOut = true,
+    disableComplete = true,
+    disableProfile = true,
   } = options;
 
   const newMissionButton = new ButtonBuilder()
@@ -141,7 +140,7 @@ export function getOwnStatusButtonRow(discordUser, options = {}) {
     .setDisabled(disableComplete);
 
   const profileButton = new ButtonBuilder()
-    .setCustomId(`profile]_`)
+    .setCustomId(`profile_`)
     .setLabel("👤 My Profile")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableProfile);

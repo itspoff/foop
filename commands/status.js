@@ -11,7 +11,7 @@ import {
   formatConditionList,
 } from "../utils/formatLabels.js";
 import { timeSince } from "../utils/formatTime.js";
-import { getStatusButtonRow } from "../utils/buttonRows.js";
+import { getOwnStatusButtonRow, getStatusButtonRow } from "../utils/buttonRows.js";
 
 export const data = new SlashCommandBuilder()
   .setName("status")
@@ -64,14 +64,16 @@ export async function execute(interaction) {
 
   const targetUserId = isOtherUser;
 
+  const missions = new TextDisplayBuilder().setContent(displayMissions);
+
   const footer = isOtherUser
     ? getStatusButtonRow(user, isOtherUser, lockedInMission, { disableCheer: !lockedInMission })
-    : new TextDisplayBuilder().setContent(displayMissions);
+    : getOwnStatusButtonRow(user);
 
   const header = new TextDisplayBuilder().setContent(statusUpdate);
 
   return interaction.reply({
-    components: [header, footer],
+    components: [header, missions, footer],
     flags: MessageFlags.IsComponentsV2,
   });
 }
