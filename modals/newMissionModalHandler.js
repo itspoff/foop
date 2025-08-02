@@ -33,7 +33,6 @@ export default {
       is_daily: isDaily,
       is_system: false,
       created_at: getCurrentPST().toJSDate(),
-      updated_at: getCurrentPST().toJSDate(),
       time_taken: null,
       locked_in_at: null,
     };

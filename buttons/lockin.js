@@ -34,7 +34,7 @@ export default {
       });
     }
 
-    await missions.updateOne({ _id: mission._id }, { $set: { locked_in_at: new Date() }, $inc: { attempts: 1 } });
+    await missions.updateOne({ _id: mission._id }, { $set: { locked_in_at: new Date() } });
 
     // remove buttons
     await interaction.update({
