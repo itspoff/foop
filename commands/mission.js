@@ -88,7 +88,7 @@ async function handleAdd(interaction, user, missions) {
     is_complete: false,
     time_taken: null,
     locked_in_at: null,
-    attempts: 0,
+    // attempts: 0,
     is_daily,
     is_system: false,
   };
@@ -140,7 +140,7 @@ async function handleLockin(interaction, user, missions) {
     });
   }
 
-  await missions.updateOne({ _id: mission._id }, { $set: { locked_in_at: new Date() }, $inc: { attempts: 1 } });
+  await missions.updateOne({ _id: mission._id }, { $set: { locked_in_at: new Date() } });
 
   const text = new TextDisplayBuilder().setContent("`Locked in on:` `🔐` " + formatMission(mission));
 

@@ -67,6 +67,12 @@ export function formatCondition(condition) {
   console.log("Could not format condition.");
 }
 
+export function formatThoughtBubble(bubble) {
+  if (bubble) {
+    return `\`💭 ${bubble}\``;
+  }
+}
+
 export async function showMissionList(
   interaction,
   user,

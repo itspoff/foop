@@ -9,9 +9,10 @@ import {
   formatLockedInMission,
   showMissionList,
   formatConditionList,
+  formatThoughtBubble,
 } from "../utils/formatLabels.js";
 import { timeSince } from "../utils/formatTime.js";
-import { getStatusButtonRow } from "../utils/buttonRows.js";
+import { getOwnStatusButtonRow, getStatusButtonRow } from "../utils/buttonRows.js";
 
 export const data = new SlashCommandBuilder()
   .setName("status")
@@ -51,27 +52,29 @@ export async function execute(interaction) {
   // Conditions
   const displayConditions = formatConditionList(user.conditions);
 
+  // thought bubble
+  const thoughtBubble = formatThoughtBubble(user.thought_bubble) ?? "`🧠 Head empty. No thoughts. `";
+
   // Header
   const statusUpdate = `## ${displayName}  ${mood}  ${energy}  
 -#  ${displayTag ? `${displayTag}  |` : ""}  \`Last Updated: ${lastUpdated} ago\`  |  \`PPts: ${ppts}\`
-> **\`Conditions:    \`** ${displayConditions}
-> **\`Locked in on:  \`** ${displayLockedInMission}`;
+> **\`Current thought: \`** ${thoughtBubble}
+> **\`Locked in on:    \`** ${displayLockedInMission}`;
 
-  // Missions (only for self-view)
-  const displayMissions = isOtherUser
-    ? ""
-    : await showMissionList(interaction, user, missionsCollection, null, "", false);
+  const displayMissions = await showMissionList(interaction, user, missionsCollection, null, "", false);
 
   const targetUserId = isOtherUser;
 
+  const missions = new TextDisplayBuilder().setContent(displayMissions);
+
   const footer = isOtherUser
     ? getStatusButtonRow(user, isOtherUser, lockedInMission, { disableCheer: !lockedInMission })
-    : new TextDisplayBuilder().setContent(displayMissions);
+    : getOwnStatusButtonRow(user);
 
   const header = new TextDisplayBuilder().setContent(statusUpdate);
 
   return interaction.reply({
-    components: [header, footer],
+    components: [header, missions, footer],
     flags: MessageFlags.IsComponentsV2,
   });
 }

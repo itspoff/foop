@@ -41,7 +41,6 @@ export async function getOrCreateUser(discordUser, guildMember = null) {
       is_complete: false,
       time_taken: null,
       locked_in_at: null,
-      attempts: 0,
       is_daily: true,
       is_system: true,
     });

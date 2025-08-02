@@ -109,11 +109,10 @@ export function getReminderRow(discordUser, reminder, options = {}) {
 export function getOwnStatusButtonRow(discordUser, options = {}) {
   const {
     disableAddMission = false,
-    disableLockIn = false,
-    disableCheckOut = false,
-    disableComplete = false,
+    disableLockIn = true,
+    disableCheckOut = true,
+    disableComplete = true,
     disableProfile = false,
-    disableClose = false,
   } = options;
 
   const newMissionButton = new ButtonBuilder()
@@ -123,7 +122,7 @@ export function getOwnStatusButtonRow(discordUser, options = {}) {
     .setDisabled(disableAddMission);
 
   const lockInButton = new ButtonBuilder()
-    .setCustomId(`lockin_`) // if no code?
+    .setCustomId(`lockin_`) // if no code? modal?
     .setLabel("🔐 Lock in")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableLockIn);
@@ -141,8 +140,8 @@ export function getOwnStatusButtonRow(discordUser, options = {}) {
     .setDisabled(disableComplete);
 
   const profileButton = new ButtonBuilder()
-    .setCustomId(`profile]_`)
-    .setLabel("👤 My Profile")
+    .setCustomId(`profile_`)
+    .setLabel("👤 My profile")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableProfile);
 
