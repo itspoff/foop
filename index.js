@@ -5,6 +5,7 @@ import fs from "node:fs";
 import { getOrCreateUser } from "./utils/getOrCreateUser.js";
 import { getCurrentPST, getResetTimePST } from "./utils/formatTime.js";
 import { formatReminder } from "./utils/formatReminder.js";
+import { formatHelpText } from "./utils/formatLabels.js";
 
 config();
 
@@ -118,55 +119,55 @@ let db;
 
       // TODO: look at this -- daily bonus logic can still be used for one time daily rewards that reset like the garden
 
-      //       if (!lastClaim || lastClaim < resetTime) {
-      //         console.log("Daily Login from:", user.display_name);
-      //         const bonus = baseDailyBonus + Math.floor(Math.random() * 101);
-      //         await users.updateOne(
-      //           { _id: user._id },
-      //           {
-      //             $inc: { ppts: bonus },
-      //             $set: { energy: 100, mood: "normal", last_daily_bonus: new Date(), last_updated: new Date() },
-      //           }
-      //         );
+      if (!lastClaim || lastClaim < resetTime) {
+        console.log("Daily Login from:", user.display_name);
+        const bonus = baseDailyBonus + Math.floor(Math.random() * 101);
+        await users.updateOne(
+          { _id: user._id },
+          {
+            $inc: { ppts: bonus },
+            $set: { energy: 100, mood: "normal", last_daily_bonus: new Date(), last_updated: new Date() },
+          }
+        );
 
-      //         const resetDailyMissions = await missions.updateMany(
-      //           { user_id: user._id, is_daily: true },
-      //           {
-      //             $set: {
-      //               is_complete: false,
-      //               time_taken: null,
-      //               locked_in_at: null,
-      //             },
-      //           }
-      //         );
+        const resetDailyMissions = await missions.updateMany(
+          { user_id: user._id, is_daily: true },
+          {
+            $set: {
+              is_complete: false,
+              time_taken: null,
+              locked_in_at: null,
+            },
+          }
+        );
 
-      //         console.log("reset %d daily missions", resetDailyMissions.modifiedCount);
+        console.log("reset %d daily missions", resetDailyMissions.modifiedCount);
 
-      //         const clearCompletedMissions = await missions.deleteMany({
-      //           user_id: user._id,
-      //           is_daily: false,
-      //           is_complete: true,
-      //         });
+        const clearCompletedMissions = await missions.deleteMany({
+          user_id: user._id,
+          is_daily: false,
+          is_complete: true,
+        });
 
-      //         console.log("removed %d completed missions", clearCompletedMissions.modifiedCount);
+        console.log("removed %d completed missions", clearCompletedMissions.modifiedCount);
 
-      //         await missions.updateOne(
-      //           { user_id: user._id, name: "daily login" },
-      //           {
-      //             $set: {
-      //               is_complete: true,
-      //             },
-      //           }
-      //         );
+        await missions.updateOne(
+          { user_id: user._id, name: "daily login" },
+          {
+            $set: {
+              is_complete: true,
+            },
+          }
+        );
 
-      //         const helpText = formatHelpText("use /mission add to start the day!");
+        const helpText = formatHelpText("use /mission add to start the day!");
 
-      //         await interaction.followUp({
-      //           content: `## \`✨\` *\`Daily Login Bonus!\`* \`✨\`
-      // ||\`🔥 +${bonus} PPts \`||  \`🌊 Energy Restored!\`
-      // *\`‼️ ${resetDailyMissions.modifiedCount} New Daily Missions Available\`*${helpText}`,
-      // //         });
-      //       }
+        await interaction.followUp({
+          content: `## \`✨\` *\`Daily Login Bonus!\`* \`✨\`
+      ||\`🔥 +${bonus} PPts \`||  \`🌊 Energy Restored!\`
+      *\`‼️ ${resetDailyMissions.modifiedCount} New Daily Missions Available\`*${helpText}`,
+        });
+      }
     }
   });
 
