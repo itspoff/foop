@@ -18,6 +18,7 @@ client.buttons = new Collection();
 client.modalSubmissions = new Collection();
 client.buttonHandlersByPrefix = [];
 client.modalHandlersByPrefix = [];
+client.selectHandlersByPrefix = [];
 
 const buttonFiles = fs.readdirSync("./buttons").filter((file) => file.endsWith(".js"));
 for (const file of buttonFiles) {
@@ -32,6 +33,14 @@ for (const file of modalFiles) {
   const modalHandler = (await import(`./modals/${file}`)).default;
   if (modalHandler?.prefix && typeof modalHandler.execute === "function") {
     client.modalHandlersByPrefix.push(modalHandler);
+  }
+}
+
+const selectFiles = fs.readdirSync("./selects").filter((file) => file.endsWith(".js"));
+for (const file of selectFiles) {
+  const selectHandler = (await import(`./selects/${file}`)).default;
+  if (selectHandler?.prefix && typeof selectHandler.execute === "function") {
+    client.selectHandlersByPrefix.push(selectHandler);
   }
 }
 
@@ -64,7 +73,7 @@ let db;
 
       if (!matchedHandler) return;
 
-      const value = interaction.customId.slice(matchedHandler.prefix.length); // grab suffix
+      const value = interaction.customId.slice(matchedHandler.prefix.length);
       const tags = await db.collection("tags").find().toArray();
 
       try {
@@ -76,16 +85,14 @@ let db;
           ephemeral: true,
         });
       }
-    }
-
-    if (interaction.isModalSubmit()) {
+    } else if (interaction.isModalSubmit()) {
       const matchedHandler = client.modalHandlersByPrefix.find((handler) =>
         interaction.customId.startsWith(handler.prefix)
       );
 
       if (!matchedHandler) return;
 
-      const value = interaction.customId.slice(matchedHandler.prefix.length); // grab suffix
+      const value = interaction.customId.slice(matchedHandler.prefix.length);
 
       try {
         await matchedHandler.execute(interaction, { db, user, value });
@@ -96,14 +103,30 @@ let db;
           ephemeral: true,
         });
       }
-    }
+    } else if (interaction.isStringSelectMenu()) {
+      const matchedHandler = client.selectHandlersByPrefix.find((handler) =>
+        interaction.customId.startsWith(handler.prefix)
+      );
 
-    if (interaction.isChatInputCommand()) {
+      if (!matchedHandler) return;
+
+      const value = interaction.customId.slice(matchedHandler.prefix.length);
+
+      try {
+        await matchedHandler.execute(interaction, { db, user, value });
+      } catch (err) {
+        console.error("Error executing string select menu handler:", err);
+        await interaction.reply({
+          content: "`❌ There was an error.`",
+          ephemeral: true,
+        });
+      }
+    } else if (interaction.isChatInputCommand()) {
       const command = client.commands.get(interaction.commandName);
       if (!command) return;
 
       try {
-        await command.execute(interaction);
+        await command.execute(interaction, db);
       } catch (error) {
         console.error("`❌ Error executing command:`", error);
         await interaction.reply({

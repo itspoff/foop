@@ -82,25 +82,9 @@ export async function showMissionList(
   followUp = true
 ) {
   const all = await missions.find({ user_id: user._id }).toArray();
-
-  const sorted = all.sort((a, b) => {
-    const getPriority = (m) => {
-      if (m.is_daily && m.is_complete) return 0;
-      if (m.is_daily && !m.is_complete) return 1;
-      if (!m.is_daily && m.is_complete) return 2;
-      return 3;
-    };
-
-    const priorityA = getPriority(a);
-    const priorityB = getPriority(b);
-
-    if (priorityA !== priorityB) return priorityA - priorityB;
-
-    return new Date(b.created_at) - new Date(a.created_at);
-  });
+  const sorted = sortMissions(all);
 
   const completed = sorted.filter((m) => m.is_complete);
-
   const dailyMissions = sorted.filter((m) => m.is_daily);
   const otherMissions = sorted.filter((m) => !m.is_daily);
 
@@ -112,15 +96,27 @@ export async function showMissionList(
   const dailyList = dailyMissions.map(formatWithHighlight).join("\n");
   const otherList = otherMissions.map(formatWithHighlight).join("\n");
 
-  const msg = [dailyList, otherList].filter(Boolean).join("\n\n"); // add space if both groups exist
+  const msg = [dailyList, otherList].filter(Boolean).join("\n\n");
 
   const content = `### \`Today's Missions:\` \`${completed.length} / ${sorted.length}\`\n${msg}`;
 
-  if (followUp) {
-    return interaction.reply({ content });
-  } else {
-    return content;
-  }
+  return followUp ? interaction.reply({ content }) : content;
+}
+
+export function sortMissions(missions) {
+  const getPriority = (m) => {
+    if (m.is_daily && m.is_complete) return 0;
+    if (m.is_daily && !m.is_complete) return 1;
+    if (!m.is_daily && m.is_complete) return 2;
+    return 3;
+  };
+
+  return [...missions].sort((a, b) => {
+    const priorityA = getPriority(a);
+    const priorityB = getPriority(b);
+    if (priorityA !== priorityB) return priorityA - priorityB;
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
 }
 
 export function formatMission(mission) {

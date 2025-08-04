@@ -1,4 +1,12 @@
-import { ButtonBuilder, ButtonStyle, ActionRowBuilder, SectionBuilder } from "discord.js";
+import {
+  ButtonBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
+  SectionBuilder,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
+} from "discord.js";
+import { capitalizeFirstLetter, sortMissions } from "./formatLabels.js";
 
 export function getMissionButtonRow(code, options = {}, isLockIn = true) {
   const {
@@ -49,6 +57,34 @@ export function getMissionButtonRow(code, options = {}, isLockIn = true) {
   return isLockIn
     ? new ActionRowBuilder().addComponents(lockInButton, completeButton, deleteButton, missionsButton, cheerButton)
     : new ActionRowBuilder().addComponents(checkOutButton, completeButton, deleteButton, missionsButton, cheerButton);
+}
+
+export const MissionSelectOperation = {
+  COMPLETE: { placeholder: "Select mission(s) to complete.", id: "complete" },
+  DELETE: { placeholder: "Select mission(s) to delete.", id: "delete" },
+  LOCKIN: { placeholder: "Select mission to lock in.", id: "lockin" },
+};
+
+export function getMissionSelector(missions, options = MissionSelectOperation.COMPLETE) {
+  const sortedMissions = sortMissions(missions);
+  const select = new StringSelectMenuBuilder()
+    .setCustomId(`missionSelect_${options.id}`)
+    .setPlaceholder(options.placeholder)
+    .addOptions(
+      sortedMissions.map((mission) => {
+        const desc = mission.is_daily ? "Daily" : " ";
+        return new StringSelectMenuOptionBuilder()
+          .setLabel(capitalizeFirstLetter(mission.name.slice(0, 100)))
+          .setValue(mission.code)
+          .setDescription(mission.description?.slice(0, 100) || desc);
+      })
+    );
+
+  if (options !== MissionSelectOperation.LOCKIN) {
+    select.setMinValues(1).setMaxValues(sortedMissions.length);
+  }
+
+  return new ActionRowBuilder().addComponents(select);
 }
 
 export function getStatusButtonRow(user, isOtherUser, lockedInMission, options = {}) {
