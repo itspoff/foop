@@ -25,7 +25,6 @@ export async function execute(interaction) {
   const tagsCollection = db.collection("tags");
   const missionsCollection = db.collection("missions");
 
-  // Determine whose status we're checking
   const selectedUser = interaction.options.getUser("user");
   const targetUser = selectedUser || interaction.user;
 

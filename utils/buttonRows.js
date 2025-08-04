@@ -7,7 +7,7 @@ export function getMissionButtonRow(code, options = {}, isLockIn = true) {
     disableComplete = false,
     disableDelete = false,
     disableMissions = false,
-    disableClose = false,
+    disableCheer = false,
   } = options;
 
   const lockInButton = new ButtonBuilder()
@@ -40,15 +40,15 @@ export function getMissionButtonRow(code, options = {}, isLockIn = true) {
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableMissions);
 
-  const closeButton = new ButtonBuilder()
-    .setCustomId(`close_`)
-    .setLabel("✖️ Close")
+  const cheerButton = new ButtonBuilder()
+    .setCustomId(`cheer_${code}`)
+    .setLabel("👏 Cheer")
     .setStyle(ButtonStyle.Secondary)
-    .setDisabled(disableClose);
+    .setDisabled(disableCheer);
 
   return isLockIn
-    ? new ActionRowBuilder().addComponents(lockInButton, completeButton, deleteButton, missionsButton, closeButton)
-    : new ActionRowBuilder().addComponents(checkOutButton, completeButton, deleteButton, missionsButton, closeButton);
+    ? new ActionRowBuilder().addComponents(lockInButton, completeButton, deleteButton, missionsButton, cheerButton)
+    : new ActionRowBuilder().addComponents(checkOutButton, completeButton, deleteButton, missionsButton, cheerButton);
 }
 
 export function getStatusButtonRow(user, isOtherUser, lockedInMission, options = {}) {
@@ -76,13 +76,13 @@ export function getStatusButtonRow(user, isOtherUser, lockedInMission, options =
   return new ActionRowBuilder().addComponents(cheerButton, packageButton, closeButton);
 }
 
-export function getConfirmCheerRow(user, code, userId) {
+export function getConfirmCheerRow(user, code) {
   return new SectionBuilder()
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(`\`Spend 250 Ppts to cheer?\`\n-# \`You currently have: ${user.ppts} Ppts\``)
     )
     .setButtonAccessory((button) =>
-      button.setCustomId(`cheer_${code}_${userId}_confirm`).setLabel("⭕️ Confirm").setStyle(ButtonStyle.Danger)
+      button.setCustomId(`cheer_${code}_confirm`).setLabel("⭕️ Confirm").setStyle(ButtonStyle.Danger)
     );
 }
 
@@ -155,7 +155,7 @@ export function getOwnStatusButtonRow(discordUser, options = {}) {
 }
 
 export function getDailyButtonRow(discordUser, options = {}) {
-  const { disableMail = true, disableGarden = true, disableShop = true } = options;
+  const { disableMail = true, disableGarden = true, disableShop = true, disableProfile = false } = options;
 
   const mailboxButton = new ButtonBuilder()
     .setCustomId(`mail_`)
@@ -175,5 +175,11 @@ export function getDailyButtonRow(discordUser, options = {}) {
     .setStyle(ButtonStyle.Primary)
     .setDisabled(disableShop);
 
-  return new ActionRowBuilder().addComponents(mailboxButton, gardenButton, shopButton);
+  const profileButton = new ButtonBuilder()
+    .setCustomId(`profile_`)
+    .setLabel("👤 My profile")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableProfile);
+
+  return new ActionRowBuilder().addComponents(mailboxButton, gardenButton, shopButton, profileButton);
 }

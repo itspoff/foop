@@ -118,7 +118,7 @@ export default {
     });
 
     const text = new TextDisplayBuilder().setContent(msg);
-    const row = getMissionButtonRow(code, { disableLockIn: true, disableComplete: true });
+    const row = getMissionButtonRow(code, { disableLockIn: true, disableComplete: true, disableCheer: true });
 
     return interaction.followUp({
       components: [text, row],

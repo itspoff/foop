@@ -48,7 +48,12 @@ export default {
       `\`Mission\` \`🗑️\` \`${capitalizeFirstLetter(mission.name)}\` \`has been deleted.\``
     );
 
-    const row = getMissionButtonRow(code, { disableLockIn: true, disableComplete: true, disableDelete: true });
+    const row = getMissionButtonRow(code, {
+      disableLockIn: true,
+      disableComplete: true,
+      disableDelete: true,
+      disableCheer: true,
+    });
 
     return interaction.followUp({
       components: [text, row],

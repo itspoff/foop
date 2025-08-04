@@ -1,7 +1,5 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, TextDisplayBuilder } from "discord.js";
+import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { capitalizeFirstLetter } from "../utils/formatLabels.js";
-import { getMissionButtonRow } from "../utils/buttonRows.js";
-import { formatReminder } from "../utils/formatReminder.js";
 import { ObjectId } from "mongodb";
 
 export default {

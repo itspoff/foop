@@ -11,15 +11,6 @@ export default {
 
     const values = value.split("_");
     const code = values[0];
-    const userId = values[1];
-
-    const targetUser = await getExistingUserFromId(userId);
-    if (!targetUser) {
-      return interaction.reply({
-        content: "> `❌ Target user does not exist`",
-        ephemeral: true,
-      });
-    }
 
     const mission = await missions.findOne({
       code,
@@ -55,27 +46,17 @@ export default {
 
       const text = new TextDisplayBuilder().setContent(`> \`Cheered for\` ${formatMission(mission)}`);
 
-      const statusButtonRow = getStatusButtonRow(user, false, mission, {
-        disableCheer: true,
-      });
-
-      await interaction.update({
-        components: [interaction.message.components[0], statusButtonRow],
-        flags: MessageFlags.IsComponentsV2,
-      });
-
-      return interaction.followUp({
+      return interaction.update({
         components: [text],
         flags: MessageFlags.IsComponentsV2,
-        ephemeral: true,
       });
     }
 
     // Default: confirm menu pop up
-    const confirmCheerRow = getConfirmCheerRow(user, code, userId);
+    const confirmCheerRow = getConfirmCheerRow(user, code);
 
-    await interaction.update({
-      components: [interaction.message.components[0], confirmCheerRow],
+    await interaction.reply({
+      components: [confirmCheerRow],
       flags: MessageFlags.IsComponentsV2,
     });
   },

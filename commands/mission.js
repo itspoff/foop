@@ -310,7 +310,7 @@ async function handleComplete(interaction, user, missions, users) {
   const msg = completeMissionMsg + bonusMessage;
 
   const text = new TextDisplayBuilder().setContent(msg);
-  const row = getMissionButtonRow(code, { disableLockIn: true, disableComplete: true });
+  const row = getMissionButtonRow(code, { disableLockIn: true, disableComplete: true, disableCheer: true });
 
   return interaction.reply({
     components: [text, row],
@@ -354,7 +354,12 @@ async function handleDelete(interaction, user, missions) {
     `\`Mission\` \`🗑️\` \`${capitalizeFirstLetter(mission.name)}\` \`has been deleted.\``
   );
 
-  const row = getMissionButtonRow(code, { disableLockIn: true, disableComplete: true, disableDelete: true });
+  const row = getMissionButtonRow(code, {
+    disableLockIn: true,
+    disableComplete: true,
+    disableDelete: true,
+    disableCheer: true,
+  });
 
   return interaction.reply({
     components: [text, row],
