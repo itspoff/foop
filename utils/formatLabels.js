@@ -124,15 +124,15 @@ export function formatMission(mission) {
   return `\`${capitalizeFirstLetter(mission.name)}\` \`🏷️${code}\``;
 }
 
-export function formatDisplayMission(mission) {
+export function formatDisplayMission(mission, quoted = true) {
   var emoji = mission.is_complete ? "💮" : "⭕️";
   if (mission.locked_in_at) {
     emoji = "🔐";
   }
   const code = mission.code || "0000";
-  return `> \`${emoji}\`  ${mission.is_complete ? "~~" : ""}\`${capitalizeFirstLetter(mission.name)}\`${
-    mission.is_complete ? "~~" : ""
-  } \`🏷️${code}\``;
+  return `${quoted ? "> " : ""}\`${emoji}\`  ${mission.is_complete ? "~~" : ""}\`${capitalizeFirstLetter(
+    mission.name
+  )}\`${mission.is_complete ? "~~" : ""} \`🏷️${code}\``;
 }
 
 export function formatLockedInMission(mission) {

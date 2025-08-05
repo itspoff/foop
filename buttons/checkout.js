@@ -12,6 +12,7 @@ import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 import { formatMission } from "../utils/formatLabels.js";
 import { formatTime } from "../utils/formatTime.js";
 import { getMissionButtonRow } from "../utils/buttonRows.js";
+import { getMissionCard } from "../components/missionComponents.js";
 
 export default {
   prefix: "checkout_",
@@ -59,14 +60,19 @@ export default {
       }
     );
 
-    // remove buttons from prev msg
+    const updatedMission = await missions.findOne({
+      user_id: user._id,
+      _id: mission._id,
+    });
+
+    const missionCard = getMissionCard(updatedMission);
     await interaction.update({
-      components: [interaction.message.components[0]],
+      components: [missionCard],
       flags: MessageFlags.IsComponentsV2,
     });
 
     const text = new TextDisplayBuilder().setContent(
-      "`Checked out on:` `⭕️` " +
+      "`💨 Checked out on:` " +
         formatMission(mission) +
         " `⏱️ " +
         formatTime(totalTime) +
@@ -75,10 +81,8 @@ export default {
         ")`"
     );
 
-    const row = getMissionButtonRow(code);
-
     return interaction.followUp({
-      components: [text, row],
+      components: [text],
       flags: MessageFlags.IsComponentsV2,
     });
   },

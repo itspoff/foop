@@ -1,4 +1,11 @@
-import { SlashCommandBuilder, InteractionContextType, MessageFlags, TextDisplayBuilder } from "discord.js";
+import {
+  SlashCommandBuilder,
+  InteractionContextType,
+  MessageFlags,
+  TextDisplayBuilder,
+  SectionBuilder,
+  ThumbnailBuilder,
+} from "discord.js";
 import connectToDatabase from "../db.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
 import {
@@ -29,6 +36,7 @@ export async function execute(interaction) {
   const targetUser = selectedUser || interaction.user;
 
   const isOtherUser = !!selectedUser && interaction.user.id !== selectedUser.id;
+  const avatarURL = isOtherUser ? selectedUser.displayAvatarURL() : interaction.user.displayAvatarURL();
 
   const user = await getOrCreateUser(targetUser);
   const displayName = formatDisplayName(user.display_name || interaction.user.globalName);
@@ -62,8 +70,6 @@ export async function execute(interaction) {
 
   const displayMissions = await showMissionList(interaction, user, missionsCollection, null, "", false);
 
-  const targetUserId = isOtherUser;
-
   const missions = new TextDisplayBuilder().setContent(displayMissions);
 
   const footer = isOtherUser
@@ -72,8 +78,11 @@ export async function execute(interaction) {
 
   const header = new TextDisplayBuilder().setContent(statusUpdate);
 
+  const thumbnail = new ThumbnailBuilder().setDescription("test").setURL(avatarURL);
+  const headerSection = new SectionBuilder().addTextDisplayComponents(header).setThumbnailAccessory(thumbnail);
+
   return interaction.reply({
-    components: [header, missions, footer],
+    components: [headerSection, missions, footer],
     flags: MessageFlags.IsComponentsV2,
   });
 }

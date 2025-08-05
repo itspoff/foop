@@ -3,6 +3,7 @@ import { getCurrentPST } from "../utils/formatTime.js";
 import { generateUniqueCode } from "../utils/generateUniqueCode.js";
 import { formatMission } from "../utils/formatLabels.js";
 import { getMissionButtonRow } from "../utils/buttonRows.js";
+import { getMissionCard } from "../components/missionComponents.js";
 
 export default {
   prefix: "new_modal_submit",
@@ -38,13 +39,10 @@ export default {
     };
 
     await missions.insertOne(mission);
-
-    const text = new TextDisplayBuilder().setContent("`Added new mission:` `⭕️` " + formatMission(mission));
-
-    const row = getMissionButtonRow(missionCode);
+    const missionCard = getMissionCard(mission);
 
     await interaction.reply({
-      components: [text, row],
+      components: [missionCard],
       flags: MessageFlags.IsComponentsV2,
     });
   },

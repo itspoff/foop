@@ -1,23 +1,12 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, TextDisplayBuilder } from "discord.js";
-import { formatHelpText, formatMission } from "../utils/formatLabels.js";
-import { getMissionButtonRow } from "../utils/buttonRows.js";
+import { MessageFlags, TextDisplayBuilder } from "discord.js";
+import { formatMission } from "../utils/formatLabels.js";
+import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 
 export default {
   prefix: "lockin_",
   async execute(interaction, { db, user, value }) {
     const missions = db.collection("missions");
     const code = value;
-
-    const mission = await missions.findOne({ code, user_id: user._id });
-    if (!mission) return interaction.reply({ content: "> `❌ Mission not found.`", ephemeral: true });
-
-    if (mission.is_complete)
-      return interaction.reply({
-        content: `\`💦\` \`no!! you can't lock in on a completed task...\` \n> ${formatMission(
-          mission
-        )} \`is already complete.\``,
-        ephemeral: true,
-      });
 
     const alreadyLocked = await missions.findOne({
       user_id: user._id,
@@ -27,28 +16,59 @@ export default {
 
     if (alreadyLocked) {
       return interaction.reply({
-        content: `\`⚠️ You are already locked in on:\` \`🔐\` ${formatMission(alreadyLocked)} ${formatHelpText(
-          "use /mission checkout before locking in on a new mission."
-        )}`,
+        content: `\`⚠️ You are already locked in on:\` \`🔐\` ${formatMission(alreadyLocked)}`,
         ephemeral: true,
       });
     }
 
-    await missions.updateOne({ _id: mission._id }, { $set: { locked_in_at: new Date() } });
+    if (code) {
+      const mission = await missions.findOne({ code });
+      if (!mission) {
+        return interaction.reply({
+          content: `> \`❌ No mission found with code ${code}.\``,
+          ephemeral: true,
+        });
+      }
+      if (mission.user_id !== user._id) {
+        return interaction.reply({
+          content: "> `❌ You don't have permission to delete this mission.`",
+          ephemeral: true,
+        });
+      }
+      if (mission) {
+        await missions.updateOne({ code }, { $set: { locked_in_at: new Date() } });
+        const text = new TextDisplayBuilder().setContent("`🔐 Locked in on:` " + formatMission(mission));
+        const updatedMission = await missions.findOne({
+          user_id: user._id,
+          code,
+        });
+        const missionCard = getMissionCard(updatedMission);
+        await interaction.update({
+          components: [missionCard],
+          flags: MessageFlags.IsComponentsV2,
+        });
 
-    // remove buttons
-    await interaction.update({
-      components: [interaction.message.components[0]],
-      flags: MessageFlags.IsComponentsV2,
-    });
+        return interaction.followUp({
+          components: [text],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
+    }
 
-    const text = new TextDisplayBuilder().setContent("`Locked in on:` `🔐` " + formatMission(mission));
+    const missionArray = await missions.find({ user_id: user._id, is_complete: { $ne: true } }).toArray();
+    if (missionArray.length === 0) {
+      return interaction.reply({
+        content: "> `❌ No missions to lock in on.`",
+        ephemeral: true,
+      });
+    }
 
-    const row = getMissionButtonRow(code, { disableLockIn: true }, false);
+    const text = new TextDisplayBuilder().setContent("## `🔐 Mission Lock In`");
+    const selector = getMissionSelector(missionArray, MissionSelectOperations.LOCKIN);
 
-    return interaction.followUp({
-      components: [text, row],
-      flags: MessageFlags.IsComponentsV2,
+    return interaction.reply({
+      components: [text, selector],
+      flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
     });
   },
 };

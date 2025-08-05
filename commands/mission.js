@@ -144,7 +144,7 @@ async function handleLockin(interaction, user, missions) {
 
   const text = new TextDisplayBuilder().setContent("`Locked in on:` `🔐` " + formatMission(mission));
 
-  const row = getMissionButtonRow(code, { disableLockIn: true }, false);
+  const row = getMissionButtonRow(code, { disableLockIn: true, showCheckOut: true });
 
   return interaction.reply({
     components: [text, row],

@@ -14,7 +14,7 @@ export function formatTime(seconds) {
   if (mins) result.push(`${mins}m`);
   if (secs) result.push(`${secs}s`);
 
-  return result.join(" ") || "0s";
+  return result.join(" ") || "None";
 }
 
 export function timeSince(date) {
