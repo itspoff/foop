@@ -42,6 +42,7 @@ export default {
           {
             $set: {
               is_complete: true,
+              locked_in_at: null,
               completed_at: now,
             },
           }

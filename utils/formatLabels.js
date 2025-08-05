@@ -125,10 +125,13 @@ export function formatMission(mission) {
 }
 
 export function formatDisplayMission(mission, quoted = true) {
-  var emoji = mission.is_complete ? "💮" : "⭕️";
+  let emoji = "⭕️";
   if (mission.locked_in_at) {
     emoji = "🔐";
+  } else if (mission.is_complete) {
+    emoji = "💮";
   }
+
   const code = mission.code || "0000";
   return `${quoted ? "> " : ""}\`${emoji}\`  ${mission.is_complete ? "~~" : ""}\`${capitalizeFirstLetter(
     mission.name

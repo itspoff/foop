@@ -105,7 +105,7 @@ export default {
         totalTime > 300 ? "`🍵 Focused (x1.35)`" : "",
         cheerCount > 0 ? `\`👏 Cheer (x${cheerCount + 1})\`` : "",
         dailyBonus > 0 ? `\`🎯 All dailies complete! +${dailyBonus}\`` : "",
-        `> -# \`Energy: ${user.energy - cost}(-${cost})\` \`Ppts: ${user.ppts + totalBonus}(+${totalBonus})\``,
+        `\n> -# \`Energy: ${user.energy - cost}(-${cost})\` \`Ppts: ${user.ppts + totalBonus}(+${totalBonus})\``,
       ]
         .filter(Boolean)
         .join(" ");
@@ -129,7 +129,7 @@ export default {
     const missionArray = await missions.find({ user_id: user._id, is_complete: { $ne: true } }).toArray();
     if (missionArray.length === 0) {
       return interaction.reply({
-        content: "> `❌ No imcomplete missions found.`",
+        content: "> `❌ No incomplete missions found.`",
         ephemeral: true,
       });
     }
