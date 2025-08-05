@@ -128,7 +128,8 @@ export function formatDisplayMission(mission, quoted = true) {
   let emoji = "⭕️";
   if (mission.locked_in_at) {
     emoji = "🔐";
-  } else if (mission.is_complete) {
+  }
+  if (mission.is_complete) {
     emoji = "💮";
   }
 
