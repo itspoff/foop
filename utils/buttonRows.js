@@ -10,7 +10,7 @@ export function getMissionButtonRow(code, options = {}) {
     showCheckOut = false,
   } = options;
 
-  const lockInButton = new ButtonBuilder()
+  let lockInButton = new ButtonBuilder()
     .setCustomId(`lockin_${code}`)
     .setLabel("🔐 Lock in")
     .setStyle(ButtonStyle.Secondary)
@@ -21,6 +21,10 @@ export function getMissionButtonRow(code, options = {}) {
     .setLabel("💨 Check out")
     .setStyle(ButtonStyle.Primary)
     .setDisabled(disableCheckOut);
+
+  if (showCheckOut) {
+    lockInButton = checkOutButton;
+  }
 
   const completeButton = new ButtonBuilder()
     .setCustomId(`complete_${code}`)
@@ -40,9 +44,7 @@ export function getMissionButtonRow(code, options = {}) {
     .setStyle(ButtonStyle.Danger)
     .setDisabled(disableDelete);
 
-  return showCheckOut
-    ? new ActionRowBuilder().addComponents(checkOutButton, completeButton, cheerButton, deleteButton)
-    : new ActionRowBuilder().addComponents(lockInButton, completeButton, cheerButton, deleteButton);
+  return new ActionRowBuilder().addComponents(lockInButton, completeButton, cheerButton, deleteButton);
 }
 
 export function getStatusButtonRow(user, isOtherUser, lockedInMission, options = {}) {
@@ -100,14 +102,15 @@ export function getReminderRow(discordUser, reminder, options = {}) {
   return new ActionRowBuilder().addComponents(joinButton, cancelButton);
 }
 
-export function getOwnStatusButtonRow(discordUser, options = {}) {
+export function getOwnStatusButtonRow(user, options = {}) {
   const {
     disableAddMission = false,
     disableLockIn = false,
-    disableCheckOut = true,
+    disableCheckOut = false,
     disableComplete = false,
     disableView = false,
     disableProfile = false,
+    showCheckOut = false,
   } = options;
 
   const newMissionButton = new ButtonBuilder()
@@ -116,7 +119,7 @@ export function getOwnStatusButtonRow(discordUser, options = {}) {
     .setStyle(ButtonStyle.Success)
     .setDisabled(disableAddMission);
 
-  const lockInButton = new ButtonBuilder()
+  let lockInButton = new ButtonBuilder()
     .setCustomId(`lockin_`)
     .setLabel("🔐 Lock in")
     .setStyle(ButtonStyle.Secondary)
@@ -127,6 +130,10 @@ export function getOwnStatusButtonRow(discordUser, options = {}) {
     .setLabel("💨 Check out")
     .setStyle(ButtonStyle.Primary)
     .setDisabled(disableCheckOut);
+
+  if (showCheckOut) {
+    lockInButton = checkOutButton;
+  }
 
   const completeButton = new ButtonBuilder()
     .setCustomId(`complete_`)
@@ -141,7 +148,7 @@ export function getOwnStatusButtonRow(discordUser, options = {}) {
     .setDisabled(disableView);
 
   const profileButton = new ButtonBuilder()
-    .setCustomId(`profile_`)
+    .setCustomId(`profile_${user._id}`)
     .setLabel("👤 My profile")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableProfile);
@@ -149,7 +156,6 @@ export function getOwnStatusButtonRow(discordUser, options = {}) {
   return new ActionRowBuilder().addComponents(
     newMissionButton,
     lockInButton,
-    // checkOutButton,
     completeButton,
     viewButton,
     profileButton

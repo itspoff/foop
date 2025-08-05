@@ -1,4 +1,7 @@
+import { MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import { timeSince } from "./formatTime.js";
+import { getOrCreateUser } from "./getOrCreateUser.js";
+import { getOwnStatusButtonRow, getStatusButtonRow } from "./buttonRows.js";
 
 export function formatMood(mood) {
   const moodMap = {
@@ -154,4 +157,52 @@ export function capitalizeFirstLetter(string) {
 
 export function formatHelpText(string) {
   return `\n-# *${string}*`;
+}
+
+export async function getStatusMessage(discordUser, interaction, db) {
+  const tagsCollection = db.collection("tags");
+  const missionsCollection = db.collection("missions");
+
+  const user = await getOrCreateUser(discordUser);
+  const isOtherUser = interaction.user.id !== discordUser.id;
+  const avatarURL = discordUser.displayAvatarURL();
+
+  const displayName = formatDisplayName(user.display_name || discordUser.globalName);
+  const mood = formatMood(user.mood || "normal");
+  const energy = formatEnergy(user.energy ?? 100);
+  const ppts = user.ppts;
+  const lastUpdated = user.last_updated ? timeSince(user.last_updated) : "unknown";
+
+  const activeTag = user.active_tag ? await tagsCollection.findOne({ code: user.active_tag }) : null;
+  const displayTag = activeTag ? formatDisplayTag(activeTag) : "";
+
+  const lockedInMission = await missionsCollection.findOne({
+    user_id: user._id,
+    locked_in_at: { $ne: null },
+  });
+  const displayLockedInMission = formatLockedInMission(lockedInMission);
+
+  const displayConditions = formatConditionList(user.conditions);
+  const thoughtBubble = formatThoughtBubble(user.thought_bubble) ?? "`🧠 Head empty. No thoughts.`";
+
+  // Header Text
+  const statusUpdate = `## ${displayName}  ${mood}  ${energy}  
+-#  ${displayTag ? `${displayTag}  |` : ""}  \`Last Updated: ${lastUpdated} ago\`  |  \`PPts: ${ppts}\`
+> **\`Current thought: \`** ${thoughtBubble}
+> **\`Locked in on:    \`** ${displayLockedInMission}`;
+
+  const displayMissions = await showMissionList(interaction, user, missionsCollection, null, "", false);
+  const missions = new TextDisplayBuilder().setContent(displayMissions);
+  const header = new TextDisplayBuilder().setContent(statusUpdate);
+  const thumbnail = new ThumbnailBuilder().setDescription("Status").setURL(avatarURL);
+  const headerSection = new SectionBuilder().addTextDisplayComponents(header).setThumbnailAccessory(thumbnail);
+
+  const footer = isOtherUser
+    ? getStatusButtonRow(user, isOtherUser, lockedInMission, { disableCheer: !lockedInMission })
+    : getOwnStatusButtonRow(user, { showCheckOut: !!lockedInMission });
+
+  return {
+    components: [headerSection, missions, footer],
+    flags: MessageFlags.IsComponentsV2,
+  };
 }

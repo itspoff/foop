@@ -3,10 +3,11 @@ import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from
 export default {
   prefix: "profile_",
 
-  async execute(interaction, { db, user }) {
+  async execute(interaction, { db, user, value }) {
     const prevName = user.display_name;
     const prevBubble = user.thought_bubble ?? "";
-    const modal = new ModalBuilder().setCustomId("profile_modal_submit").setTitle("My profile");
+    const buttonOwnerId = value;
+    const modal = new ModalBuilder().setCustomId(`profile_${buttonOwnerId}`).setTitle("My profile");
 
     const nameInput = new TextInputBuilder()
       .setCustomId("profile_display_name")
@@ -18,10 +19,10 @@ export default {
     const bubbleInput = new TextInputBuilder()
       .setCustomId("profile_bubble")
       .setLabel("What's on your mind?")
-      .setStyle(TextInputStyle.Paragraph)
+      .setStyle(TextInputStyle.Short)
       .setValue(prevBubble)
       .setRequired(false)
-      .setMaxLength(300);
+      .setMaxLength(100);
 
     const row1 = new ActionRowBuilder().addComponents(nameInput);
     const row2 = new ActionRowBuilder().addComponents(bubbleInput);

@@ -1,12 +1,14 @@
 import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { getCurrentPST } from "../utils/formatTime.js";
+import { getStatusMessage } from "../utils/formatLabels.js";
 
 export default {
   prefix: "profile_",
 
-  async execute(interaction, { db, user }) {
+  async execute(interaction, { db, user, value }) {
     const newName = interaction.fields.getTextInputValue("profile_display_name");
     const newBubble = interaction.fields.getTextInputValue("profile_bubble");
+    const buttonOwnerId = value;
 
     await db.collection("users").updateOne(
       { _id: user._id },
@@ -19,11 +21,15 @@ export default {
       }
     );
 
-    const text = new TextDisplayBuilder().setContent("> `Profile updated.`");
-
-    await interaction.reply({
-      components: [text],
-      flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
-    });
+    if (buttonOwnerId === user._id) {
+      const editedStatus = await getStatusMessage(interaction.user, interaction, db);
+      await interaction.update(editedStatus);
+    } else {
+      const text = new TextDisplayBuilder().setContent(`> \`Profile updated for ${user.display_name}.\``);
+      await interaction.reply({
+        components: [text],
+        flags: [MessageFlags.IsComponentsV2],
+      });
+    }
   },
 };
