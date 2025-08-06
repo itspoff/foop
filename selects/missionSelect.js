@@ -1,5 +1,5 @@
 import { MessageFlags, TextDisplayBuilder } from "discord.js";
-import { formatMission } from "../utils/formatLabels.js";
+import { formatMission, getStatusMessage } from "../utils/formatLabels.js";
 import { getMissionCard } from "../components/missionComponents.js";
 import { calculateMissionRewards, formatMissionRewardMessage } from "../utils/missionRewards.js";
 import { getCurrentPST } from "../utils/formatTime.js";
@@ -39,9 +39,10 @@ export default {
         });
       }
       await missions.updateOne({ _id: selectedMissions[0]._id }, { $set: { locked_in_at: new Date() } });
+
       const updatedMission = await missions.findOne({ _id: selectedMissions[0]._id, locked_in_at: { $ne: null } });
       const missionCard = await getMissionCard(updatedMission);
-      return interaction.reply({
+      return interaction.update({
         components: [missionCard],
         flags: MessageFlags.IsComponentsV2,
       });

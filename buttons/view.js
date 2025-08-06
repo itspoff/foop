@@ -12,7 +12,7 @@ export default {
 
     return interaction.reply({
       components: [text, selector],
-      flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+      flags: [MessageFlags.IsComponentsV2],
     });
   },
 };

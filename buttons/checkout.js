@@ -9,7 +9,7 @@ import {
   ThumbnailBuilder,
 } from "discord.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
-import { formatMission } from "../utils/formatLabels.js";
+import { formatMission, getStatusMessage } from "../utils/formatLabels.js";
 import { formatTime } from "../utils/formatTime.js";
 import { getMissionButtonRow } from "../utils/buttonRows.js";
 import { getMissionCard } from "../components/missionComponents.js";
@@ -18,7 +18,9 @@ export default {
   prefix: "checkout_",
   async execute(interaction, { db, user, value }) {
     const missions = db.collection("missions");
-    const code = value;
+    const values = value.split("_");
+    const code = values[0];
+    const parent = values[1];
 
     const mission = await missions.findOne({
       user_id: user._id,
@@ -67,11 +69,16 @@ export default {
       _id: mission._id,
     });
 
-    const missionCard = await getMissionCard(updatedMission);
-    await interaction.update({
-      components: [missionCard],
-      flags: MessageFlags.IsComponentsV2,
-    });
+    if (parent === "status") {
+      const updatedStatus = getStatusMessage(interaction.user, interaction, db);
+      await interaction.update(updatedStatus);
+    } else {
+      const missionCard = await getMissionCard(updatedMission);
+      await interaction.update({
+        components: [missionCard],
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
 
     const text = new TextDisplayBuilder().setContent(
       "`💨 Checked out on:` " +

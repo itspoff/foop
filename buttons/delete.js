@@ -46,7 +46,7 @@ export default {
 
     return interaction.reply({
       components: [selector],
-      flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+      flags: [MessageFlags.IsComponentsV2],
     });
   },
 };

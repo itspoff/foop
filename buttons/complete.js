@@ -69,19 +69,19 @@ export default {
       );
       user = await users.findOne({ _id: user._id });
 
-      const rewardMessage = formatMissionRewardMessage({ ...rewardData, mission, user });
+      const rewardMessage = formatMissionRewardMessage({ ...rewardData, totalTime, mission, user });
 
       if (parent === "status") {
         const updatedStatus = await getStatusMessage(interaction.user, interaction, db);
         await interaction.update(updatedStatus);
+      } else {
+        const updatedMission = await missions.findOne({ user_id: user._id, code });
+        const missionCard = await getMissionCard(updatedMission);
+        await interaction.update({
+          components: [missionCard],
+          flags: MessageFlags.IsComponentsV2,
+        });
       }
-
-      const updatedMission = await missions.findOne({ user_id: user._id, code });
-      const missionCard = await getMissionCard(updatedMission);
-      await interaction.update({
-        components: [missionCard],
-        flags: MessageFlags.IsComponentsV2,
-      });
 
       const text = new TextDisplayBuilder().setContent(rewardMessage);
       return interaction.followUp({
@@ -103,7 +103,7 @@ export default {
 
     return interaction.reply({
       components: [text, selector],
-      flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+      flags: [MessageFlags.IsComponentsV2],
     });
   },
 };
