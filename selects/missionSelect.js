@@ -9,12 +9,10 @@ export default {
   async execute(interaction, { db, user, value }) {
     const users = db.collection("users");
     const selectedCodes = interaction.values;
-    const missionsCollection = db.collection("missions");
+    const missions = db.collection("missions");
 
     // Fetch selected missions
-    const selectedMissions = await missionsCollection
-      .find({ user_id: user._id, code: { $in: selectedCodes } })
-      .toArray();
+    const selectedMissions = await missions.find({ user_id: user._id, code: { $in: selectedCodes } }).toArray();
 
     if (selectedMissions.length === 0) {
       return interaction.reply({
@@ -26,18 +24,32 @@ export default {
     let resultMessage = "";
 
     if (value === "lockin") {
-      await Promise.all(
-        selectedMissions.map((mission) =>
-          missionsCollection.updateOne({ _id: mission._id }, { $set: { locked_in_at: new Date() } })
-        )
-      );
-      resultMessage = "`🔐 Locked in on:` " + formatMission(selectedMissions[0]);
+      const alreadyLocked = await missions.findOne({
+        user_id: user._id,
+        locked_in_at: { $ne: null },
+      });
+
+      if (alreadyLocked) {
+        return interaction.reply({
+          content: `\`⚠️ You are already locked in on:\` \`🔐\` ${formatMission(alreadyLocked)}`,
+          ephemeral: true,
+        });
+      }
+      await missions.updateOne({ _id: selectedMissions[0]._id }, { $set: { locked_in_at: new Date() } });
+      const updatedMission = await missions.findOne({ _id: selectedMissions[0]._id, locked_in_at: { $ne: null } });
+      const missionCard = await getMissionCard(updatedMission);
+      return interaction.reply({
+        components: [missionCard],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      // resultMessage = "`🔐 Locked in on:` " + formatMission(selectedMissions[0]);
     } else if (value === "complete") {
       const now = new Date();
       const rewardMessages = [];
 
       for (const mission of selectedMissions) {
-        await missionsCollection.updateOne(
+        await missions.updateOne(
           { _id: mission._id },
           {
             $set: {
@@ -67,14 +79,12 @@ export default {
 
       resultMessage = rewardMessages.join("\n");
     } else if (value === "delete") {
-      const results = await Promise.all(
-        selectedMissions.map((mission) => missionsCollection.deleteOne({ _id: mission._id }))
-      );
+      const results = await Promise.all(selectedMissions.map((mission) => missions.deleteOne({ _id: mission._id })));
       const deletedCount = results.reduce((sum, res) => sum + res.deletedCount, 0);
       resultMessage = `\`💢 ${deletedCount} mission(s) deleted:\``;
     } else if (value === "view") {
       const mission = selectedMissions[0];
-      const missionCard = getMissionCard(mission);
+      const missionCard = await getMissionCard(mission);
       return interaction.reply({
         components: [missionCard],
         flags: MessageFlags.IsComponentsV2,

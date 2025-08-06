@@ -67,7 +67,7 @@ export default {
       _id: mission._id,
     });
 
-    const missionCard = getMissionCard(updatedMission);
+    const missionCard = await getMissionCard(updatedMission);
     await interaction.update({
       components: [missionCard],
       flags: MessageFlags.IsComponentsV2,

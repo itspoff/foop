@@ -11,7 +11,6 @@ export default {
     const alreadyLocked = await missions.findOne({
       user_id: user._id,
       locked_in_at: { $ne: null },
-      is_complete: false,
     });
 
     if (alreadyLocked) {
@@ -42,7 +41,7 @@ export default {
           user_id: user._id,
           code,
         });
-        const missionCard = getMissionCard(updatedMission);
+        const missionCard = await getMissionCard(updatedMission);
         await interaction.update({
           components: [missionCard],
           flags: MessageFlags.IsComponentsV2,

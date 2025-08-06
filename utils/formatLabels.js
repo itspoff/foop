@@ -148,7 +148,7 @@ export function formatLockedInMission(mission) {
   }
 
   const code = mission.code || "0000";
-  return `\`📌 ${capitalizeFirstLetter(mission.name)}\` \`🏷️${code}\`  \`⏱️ ${timeSince(mission.locked_in_at)}\``;
+  return `\`🔐\` \`${capitalizeFirstLetter(mission.name)}\` \`🏷️${code}\`  \`⏱️ ${timeSince(mission.locked_in_at)}\``;
 }
 
 export function capitalizeFirstLetter(string) {

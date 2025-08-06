@@ -4,11 +4,15 @@ import {
   ActionRowBuilder,
   ContainerBuilder,
   TextDisplayBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
 } from "discord.js";
 import { sortMissions, capitalizeFirstLetter, formatDisplayMission } from "../utils/formatLabels.js";
 import { DateTime } from "luxon";
 import { getMissionButtonRow } from "../utils/buttonRows.js";
 import { formatTime } from "../utils/formatTime.js";
+import { getExistingUserFromId } from "../utils/getOrCreateUser.js";
 
 export const MissionSelectOperations = {
   COMPLETE: { placeholder: "Select mission(s) to complete.", id: "complete" },
@@ -47,31 +51,28 @@ export function getMissionSelector(missionArray, options = MissionSelectOperatio
   return new ActionRowBuilder().addComponents(select);
 }
 
-export function getMissionCard(mission) {
+export async function getMissionCard(mission) {
   const createdAtFormatted = DateTime.fromJSDate(mission.created_at).toFormat("yyyy-MM-dd HH:mm");
-  let isDaily = mission.is_daily;
-  let stats = `> \`🏷️\` \`Created at:      \` \`${createdAtFormatted}\``;
-  if (isDaily) {
-    stats = `
-> \`🏷️\` \`Created at:      \` \`${createdAtFormatted}\`
-> \`💯\` \`Daily Mission    \``;
-  } else {
-    stats = `
-> \`🏷️\` \`Created at:      \` \`${createdAtFormatted}\`
-> \`⏱️\` \`Time Elapsed:    \` \`${formatTime(mission.time_taken)}\``;
+  let cheerNames = "";
+  if (Array.isArray(mission.cheers) && mission.cheers.length > 0) {
+    const cheerUsers = await Promise.all(mission.cheers.map((userId) => getExistingUserFromId(userId)));
+    cheerNames = cheerUsers.map((user) => user?.display_name ?? "Unknown").join(", ");
   }
+  let stats = `
+> \`🏷️\` \`Created at:      \` \`${createdAtFormatted}\`${
+    mission.is_daily ? `\n> \`💯\` \`Completion Rate: \` \`N/A\`` : ""
+  }
+> \`⏱️\` \`Time Elapsed:    \` \`${formatTime(mission.time_taken)}\`${
+    cheerNames.length ? `\n\`👏 ${cheerNames} cheered for this mission!\`` : ""
+  }
+`;
+
   const cardText = `## ${formatDisplayMission(mission, false)}
 ${mission.description ? `*\`${mission.description}\`*` : ""}
 ${stats}
   `;
-  let {
-    disableLockIn = false,
-    disableCheckOut = false,
-    disableComplete = false,
-    disableDelete = false,
-    disableCheer = false,
-    showCheckOut = false,
-  } = {};
+
+  let { disableLockIn = false, disableComplete = false, disableCheer = false, showCheckOut = false } = {};
 
   if (mission.locked_in_at) {
     showCheckOut = true;
@@ -91,4 +92,55 @@ ${stats}
     .addActionRowComponents(buttons);
 
   return missionCard;
+}
+
+const placeholders = [
+  "", // default
+  "Has anyone said you're the BEST yet today?",
+  "Good good study, day day up.",
+  "Is this task bothering you?",
+  "You can do this, I believe in you!",
+  "MY GOAT",
+  "Sending you energy to get through the day!",
+  "uuuuuuuuu umapyoi! umayaoi!",
+  "It's what Himmel the Hero would have done.",
+  "你来啦！小可爱！",
+];
+
+export function createNewMissionModal() {
+  const placeholder =
+    Math.random() < 0.3 ? placeholders[0] : placeholders[Math.floor(Math.random() * (placeholders.length - 1)) + 1];
+
+  const modal = new ModalBuilder().setCustomId("new_modal_submit").setTitle("Yeah—add this to the list.");
+
+  const titleInput = new TextInputBuilder()
+    .setCustomId("new_input_title")
+    .setLabel("Mission Title")
+    .setStyle(TextInputStyle.Short)
+    .setPlaceholder(placeholder)
+    .setRequired(true);
+
+  const dailyInput = new TextInputBuilder()
+    .setCustomId("new_input_daily")
+    .setLabel("Is this task daily? (T/F)")
+    .setStyle(TextInputStyle.Short)
+    .setValue("F")
+    .setPlaceholder("(Type T/F)")
+    .setRequired(true)
+    .setMaxLength(1)
+    .setMinLength(1);
+
+  const descInput = new TextInputBuilder()
+    .setCustomId("new_input_desc")
+    .setLabel("Description")
+    .setStyle(TextInputStyle.Paragraph)
+    .setRequired(false);
+
+  modal.addComponents(
+    new ActionRowBuilder().addComponents(titleInput),
+    new ActionRowBuilder().addComponents(dailyInput),
+    new ActionRowBuilder().addComponents(descInput)
+  );
+
+  return modal;
 }

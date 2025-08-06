@@ -16,9 +16,10 @@ import connectToDatabase from "../db.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
 import { generateUniqueCode } from "../utils/generateUniqueCode.js";
 import { capitalizeFirstLetter, formatHelpText, formatMission } from "../utils/formatLabels.js";
-import { formatTime } from "../utils/formatTime.js";
+import { formatTime, getCurrentPST } from "../utils/formatTime.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 import { getMissionButtonRow } from "../utils/buttonRows.js";
+import { createNewMissionModal } from "../components/missionComponents.js";
 
 export const data = new SlashCommandBuilder()
   .setName("mission")
@@ -62,7 +63,7 @@ export async function execute(interaction) {
   const sub = interaction.options.getSubcommand();
 
   const handlers = {
-    add: () => handleAdd(interaction, user, missions),
+    add: () => handleAdd(interaction),
     lockin: () => handleLockin(interaction, user, missions),
     checkout: () => handleCheckout(interaction, user, missions),
     complete: () => handleComplete(interaction, user, missions, users),
@@ -77,32 +78,9 @@ export async function execute(interaction) {
   return interaction.reply({ content: "`❌ Unknown subcommand.`" });
 }
 
-async function handleAdd(interaction, user, missions) {
-  const code = await generateUniqueCode(missions);
-  const name = interaction.options.getString("name").toLowerCase();
-  const is_daily = interaction.options.getBoolean("daily") ?? false;
-  const mission = {
-    user_id: user._id,
-    code,
-    name,
-    is_complete: false,
-    time_taken: null,
-    locked_in_at: null,
-    // attempts: 0,
-    is_daily,
-    is_system: false,
-  };
-
-  await missions.insertOne(mission);
-
-  const text = new TextDisplayBuilder().setContent("`Added new mission:` `⭕️` " + formatMission(mission));
-
-  const row = getMissionButtonRow(code);
-
-  await interaction.reply({
-    components: [text, row],
-    flags: MessageFlags.IsComponentsV2,
-  });
+async function handleAdd(interaction) {
+  const modal = createNewMissionModal();
+  return interaction.showModal(modal);
 }
 
 async function handleLockin(interaction, user, missions) {

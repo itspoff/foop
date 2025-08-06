@@ -1,8 +1,6 @@
-import { MessageFlags, TextDisplayBuilder } from "discord.js";
+import { MessageFlags } from "discord.js";
 import { getCurrentPST } from "../utils/formatTime.js";
 import { generateUniqueCode } from "../utils/generateUniqueCode.js";
-import { formatMission } from "../utils/formatLabels.js";
-import { getMissionButtonRow } from "../utils/buttonRows.js";
 import { getMissionCard } from "../components/missionComponents.js";
 
 export default {
@@ -36,10 +34,11 @@ export default {
       created_at: getCurrentPST().toJSDate(),
       time_taken: null,
       locked_in_at: null,
+      cheers: [],
     };
 
     await missions.insertOne(mission);
-    const missionCard = getMissionCard(mission);
+    const missionCard = await getMissionCard(mission);
 
     await interaction.reply({
       components: [missionCard],
