@@ -6,7 +6,7 @@ export default {
   async execute(interaction, { db, user, value }) {
     const prevName = user.display_name;
     const prevBubble = user.thought_bubble ?? "";
-    const prevDailyResetHour = user.daily_reset_hour.toString() ?? "5";
+    const prevDailyResetHour = (user.daily_reset_hour ?? 5).toString();
     const buttonOwnerId = value;
     const modal = new ModalBuilder().setCustomId(`profile_${buttonOwnerId}`).setTitle("My profile");
 
