@@ -39,8 +39,8 @@ export function getDailyReport(user, discordUser, dailyMissions, allMissions) {
 > \`All missions:        \` \` ${allCompleted} / ${allMissions.length}\`
 > \`Locked in for:       \` \` ${formatTime(totalTimeTaken)}\`
 
-> \`Ppts gained:         \` \` +${pptsGained}\`
-> \`Cheers received:     \` \` ${cheers}\` 
+> \`Ppts gained:         \` \`  +${pptsGained}\`
+> \`Cheers received:     \` \`    ${cheers}\` 
 
 `;
 

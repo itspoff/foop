@@ -223,7 +223,7 @@ setInterval(async () => {
     try {
       const discordUser = await client.users.fetch(user._id.toString());
       const dailyMissions = await missions.find({ user_id: user._id, is_daily: true }).toArray();
-      const allMissions = await missions.find({ user_id: user._id, is_daily: true }).toArray();
+      const allMissions = await missions.find({ user_id: user._id }).toArray();
 
       const dailyReport = getDailyReport(user, discordUser, dailyMissions, allMissions);
 
