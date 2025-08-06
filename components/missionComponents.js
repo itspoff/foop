@@ -72,10 +72,10 @@ ${mission.description ? `*\`${mission.description}\`*` : ""}
 ${stats}
   `;
 
-  let { disableLockIn = false, disableComplete = false, disableCheer = false, showCheckOut = false } = {};
+  let { disableLockIn = false, disableComplete = false, disableCheer = false, lockedInMission = false } = {};
 
   if (mission.locked_in_at) {
-    showCheckOut = true;
+    lockedInMission = true;
   } else {
     disableCheer = true;
   }
@@ -84,7 +84,7 @@ ${stats}
     disableComplete = true;
     disableCheer = true;
   }
-  const buttons = getMissionButtonRow(mission.code, { showCheckOut, disableLockIn, disableComplete, disableCheer });
+  const buttons = getMissionButtonRow(mission.code, { lockedInMission, disableLockIn, disableComplete, disableCheer });
 
   const missionCard = new ContainerBuilder()
     .addTextDisplayComponents((textDisplay) => textDisplay.setContent(cardText))

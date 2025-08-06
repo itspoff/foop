@@ -35,6 +35,11 @@ export default {
       time_taken: null,
       locked_in_at: null,
       cheers: [],
+      ...(isDaily && {
+        level: 1,
+        xp: 0,
+        max_level: 5,
+      }),
     };
 
     await missions.insertOne(mission);

@@ -199,7 +199,7 @@ export async function getStatusMessage(discordUser, interaction, db) {
 
   const footer = isOtherUser
     ? getStatusButtonRow(user, isOtherUser, lockedInMission, { disableCheer: !lockedInMission })
-    : getOwnStatusButtonRow(user, { showCheckOut: !!lockedInMission });
+    : getOwnStatusButtonRow(user, { lockedInMission });
 
   return {
     components: [headerSection, missions, footer],

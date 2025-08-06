@@ -1,8 +1,9 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, TextDisplayBuilder } from "discord.js";
+import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
-import { formatMission } from "../utils/formatLabels.js";
-import { formatTime } from "../utils/formatTime.js";
+import { formatMission, getStatusMessage } from "../utils/formatLabels.js";
+import { formatTime, getCurrentPST } from "../utils/formatTime.js";
 import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
+import { calculateMissionRewards, formatMissionRewardMessage } from "../utils/missionRewards.js";
 
 export default {
   prefix: "complete_",
@@ -10,25 +11,14 @@ export default {
   async execute(interaction, { db, user, value }) {
     const users = db.collection("users");
     const missions = db.collection("missions");
-    const code = value;
+    const values = value.split("_");
+    const code = values[0];
+    const parent = values[1];
 
     if (code) {
-      if (!/^\d{4}$/.test(code)) {
-        return interaction.reply({
-          content: "> `❌ Invalid 4-digit number code (e.g., 1234).`",
-          ephemeral: true,
-        });
-      }
-
-      const mission = await missions.findOne({ code, user_id: user._id });
-      if (!mission) return interaction.reply({ content: "> `❌ Mission not found.`", ephemeral: true });
-
-      if (mission.is_complete) {
-        return interaction.reply({
-          content: `${formatMission(mission)} \`is already complete.\``,
-          ephemeral: true,
-        });
-      }
+      const mission = await missions.findOne({ code, user_id: user._id, is_complete: { $ne: true } });
+      if (!mission)
+        return interaction.reply({ content: "> `❌ Mission not found or already complete.`", ephemeral: true });
 
       const totalTime = mission.locked_in_at
         ? calculateTotalTimeTaken(mission.locked_in_at, mission.time_taken)
@@ -41,6 +31,7 @@ export default {
             is_complete: true,
             locked_in_at: null,
             time_taken: totalTime,
+            completed_at: getCurrentPST().toJSDate(),
           },
         }
       );
@@ -63,63 +54,36 @@ export default {
 
         if (!alreadyRewarded) {
           dailyBonus = 50;
-          await users.updateOne(
-            { _id: user._id },
-            {
-              $set: { last_updated: new Date() },
-              $inc: { ppts: dailyBonus },
-            }
-          );
-
           await missions.updateOne({ _id: mission._id }, { $set: { rewarded_all_dailies: true } });
         }
       }
 
-      let bonus = 12 + Math.floor(Math.random() * 13); // 12–24
-      let cost = 10 + Math.floor(Math.random() * 11); // 10–20
-
-      if (user.energy - cost < 0) cost = user.energy;
-      if (user.energy === 0) {
-        cost = 0;
-        bonus = 0;
-      }
-
-      const cheerCount = mission.cheers?.length || 0;
-      const focusedMultiplier = totalTime > 300 ? 1.35 : 1;
-      const totalBonus = Math.floor(bonus * focusedMultiplier * (cheerCount + 1) + dailyBonus);
+      const rewardData = calculateMissionRewards({ mission, user, totalTime, dailyBonus });
 
       await users.updateOne(
         { _id: user._id },
         {
           $set: { last_updated: new Date() },
-          $inc: { ppts: totalBonus, energy: -cost },
+          $inc: { ppts: rewardData.totalBonus, energy: -rewardData.cost },
         }
       );
+      user = await users.findOne({ _id: user._id });
 
-      const completeMessage = totalTime
-        ? `${formatMission(mission)} \`🐾 Completed in ⏱️ ${formatTime(totalTime)}!\``
-        : `${formatMission(mission)} \`🐾 Completed!\``;
+      const rewardMessage = formatMissionRewardMessage({ ...rewardData, mission, user });
 
-      const rewardLines = [
-        `> -# \`Reward: ${bonus}\``,
-        totalTime > 300 ? "`🍵 Focused (x1.35)`" : "",
-        cheerCount > 0 ? `\`👏 Cheer (x${cheerCount + 1})\`` : "",
-        dailyBonus > 0 ? `\`🎯 All dailies complete! +${dailyBonus}\`` : "",
-        `\n> -# \`Energy: ${user.energy - cost}(-${cost})\` \`Ppts: ${user.ppts + totalBonus}(+${totalBonus})\``,
-      ]
-        .filter(Boolean)
-        .join(" ");
-
-      const text = new TextDisplayBuilder().setContent(`${completeMessage}\n${rewardLines}`);
+      if (parent === "status") {
+        const updatedStatus = await getStatusMessage(interaction.user, interaction, db);
+        await interaction.update(updatedStatus);
+      }
 
       const updatedMission = await missions.findOne({ user_id: user._id, code });
-      const missionCard = getMissionCard(updatedMission);
-
+      const missionCard = await getMissionCard(updatedMission);
       await interaction.update({
         components: [missionCard],
         flags: MessageFlags.IsComponentsV2,
       });
 
+      const text = new TextDisplayBuilder().setContent(rewardMessage);
       return interaction.followUp({
         components: [text],
         flags: MessageFlags.IsComponentsV2,

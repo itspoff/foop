@@ -13,8 +13,9 @@ export function calculateMissionRewards({ mission, user, totalTime = 0, dailyBon
     bonus = 0;
   }
 
-  const cheerCount = mission.cheers ? mission.cheers.length : 0;
-  const totalBonus = Math.floor(bonus * (totalTime > 300 ? 1.35 : 1) * (cheerCount + 1) + dailyBonus);
+  const cheerCount = mission.cheers?.length || 0;
+  const focusedMultiplier = totalTime > 300 ? 1.35 : 1;
+  const totalBonus = Math.floor(bonus * focusedMultiplier * (cheerCount + 1) + dailyBonus);
 
   return {
     cost,

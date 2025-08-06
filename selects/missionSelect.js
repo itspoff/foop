@@ -2,6 +2,8 @@ import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { formatMission } from "../utils/formatLabels.js";
 import { getMissionCard } from "../components/missionComponents.js";
 import { calculateMissionRewards, formatMissionRewardMessage } from "../utils/missionRewards.js";
+import { getCurrentPST } from "../utils/formatTime.js";
+import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 
 export default {
   prefix: "missionSelect_",
@@ -33,6 +35,7 @@ export default {
         return interaction.reply({
           content: `\`⚠️ You are already locked in on:\` \`🔐\` ${formatMission(alreadyLocked)}`,
           ephemeral: true,
+          // TODO: add checkout
         });
       }
       await missions.updateOne({ _id: selectedMissions[0]._id }, { $set: { locked_in_at: new Date() } });
@@ -42,27 +45,48 @@ export default {
         components: [missionCard],
         flags: MessageFlags.IsComponentsV2,
       });
-
-      // resultMessage = "`🔐 Locked in on:` " + formatMission(selectedMissions[0]);
     } else if (value === "complete") {
-      const now = new Date();
       const rewardMessages = [];
 
       for (const mission of selectedMissions) {
+        const totalTime = mission.locked_in_at
+          ? calculateTotalTimeTaken(mission.locked_in_at, mission.time_taken)
+          : mission.time_taken || 0;
+
         await missions.updateOne(
           { _id: mission._id },
           {
             $set: {
               is_complete: true,
               locked_in_at: null,
-              completed_at: now,
+              time_taken: totalTime,
+              completed_at: getCurrentPST().toJSDate(),
             },
           }
         );
 
-        const totalTime = mission.locked_in_at ? Math.round((now - new Date(mission.locked_in_at)) / 1000) : 0;
+        const incompleteCount = await missions.countDocuments({
+          user_id: user._id,
+          is_daily: true,
+          is_complete: { $ne: true },
+        });
 
-        const dailyBonus = true;
+        const completedAllDaily = incompleteCount === 0;
+        let dailyBonus = 0;
+
+        if (completedAllDaily) {
+          const alreadyRewarded = await missions.findOne({
+            user_id: user._id,
+            is_daily: true,
+            rewarded_all_dailies: true,
+          });
+
+          if (!alreadyRewarded) {
+            dailyBonus = 50;
+            await missions.updateOne({ _id: mission._id }, { $set: { rewarded_all_dailies: true } });
+          }
+        }
+
         const rewardData = calculateMissionRewards({ mission, user, totalTime, dailyBonus });
 
         await users.updateOne(
@@ -73,10 +97,9 @@ export default {
           }
         );
         user = await users.findOne({ _id: user._id });
-        const rewardMessage = formatMissionRewardMessage({ ...rewardData, mission, user });
+        const rewardMessage = formatMissionRewardMessage({ ...rewardData, totalTime, mission, user });
         rewardMessages.push(rewardMessage);
       }
-
       resultMessage = rewardMessages.join("\n");
     } else if (value === "delete") {
       const results = await Promise.all(selectedMissions.map((mission) => missions.deleteOne({ _id: mission._id })));
