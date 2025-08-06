@@ -1,9 +1,10 @@
-import { MessageFlags, TextDisplayBuilder } from "discord.js";
+import { ButtonStyle, MessageFlags, SectionBuilder, TextDisplayBuilder } from "discord.js";
 import { formatMission, getStatusMessage } from "../utils/formatLabels.js";
 import { getMissionCard } from "../components/missionComponents.js";
 import { calculateMissionRewards, formatMissionRewardMessage } from "../utils/missionRewards.js";
 import { getCurrentPST } from "../utils/formatTime.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
+import { getConfirmCheckOutRow } from "../utils/buttonRows.js";
 
 export default {
   prefix: "missionSelect_",
@@ -17,10 +18,11 @@ export default {
     const selectedMissions = await missions.find({ user_id: user._id, code: { $in: selectedCodes } }).toArray();
 
     if (selectedMissions.length === 0) {
-      return interaction.reply({
-        content: "❌ Couldn't find any selected missions.",
+      await interaction.reply({
+        content: "❌ This selector is outdated!",
         ephemeral: true,
       });
+      return interaction.deleteReply();
     }
 
     let resultMessage = "";
@@ -32,12 +34,13 @@ export default {
       });
 
       if (alreadyLocked) {
+        const confirmCheckOut = getConfirmCheckOutRow(user, alreadyLocked);
         return interaction.reply({
-          content: `\`⚠️ You are already locked in on:\` \`🔐\` ${formatMission(alreadyLocked)}`,
-          ephemeral: true,
-          // TODO: add checkout
+          components: [confirmCheckOut],
+          flags: MessageFlags.IsComponentsV2,
         });
       }
+
       await missions.updateOne({ _id: selectedMissions[0]._id }, { $set: { locked_in_at: new Date() } });
 
       const updatedMission = await missions.findOne({ _id: selectedMissions[0]._id, locked_in_at: { $ne: null } });
@@ -54,25 +57,13 @@ export default {
           ? calculateTotalTimeTaken(mission.locked_in_at, mission.time_taken)
           : mission.time_taken || 0;
 
-        await missions.updateOne(
-          { _id: mission._id },
-          {
-            $set: {
-              is_complete: true,
-              locked_in_at: null,
-              time_taken: totalTime,
-              completed_at: getCurrentPST().toJSDate(),
-            },
-          }
-        );
-
         const incompleteCount = await missions.countDocuments({
           user_id: user._id,
           is_daily: true,
           is_complete: { $ne: true },
         });
 
-        const completedAllDaily = incompleteCount === 0;
+        const completedAllDaily = incompleteCount === 1;
         let dailyBonus = 0;
 
         if (completedAllDaily) {
@@ -89,14 +80,26 @@ export default {
         }
 
         const rewardData = calculateMissionRewards({ mission, user, totalTime, dailyBonus });
-
+        await missions.updateOne(
+          { _id: mission._id },
+          {
+            $set: {
+              is_complete: true,
+              locked_in_at: null,
+              time_taken: totalTime,
+              completed_at: getCurrentPST().toJSDate(),
+              ppts_gained: rewardData.totalBonus,
+            },
+          }
+        );
         await users.updateOne(
           { _id: user._id },
           {
-            $set: { last_updated: new Date() },
+            $set: { last_updated: getCurrentPST().toJSDate() },
             $inc: { ppts: rewardData.totalBonus, energy: -rewardData.cost },
           }
         );
+
         user = await users.findOne({ _id: user._id });
         const rewardMessage = formatMissionRewardMessage({ ...rewardData, totalTime, mission, user });
         rewardMessages.push(rewardMessage);

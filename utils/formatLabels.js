@@ -118,7 +118,7 @@ export function sortMissions(missions) {
     const priorityA = getPriority(a);
     const priorityB = getPriority(b);
     if (priorityA !== priorityB) return priorityA - priorityB;
-    return new Date(b.created_at) - new Date(a.created_at);
+    return new Date(b.date_created) - new Date(a.date_created);
   });
 }
 

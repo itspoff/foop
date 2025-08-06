@@ -1,10 +1,20 @@
+import { ButtonStyle, MessageFlags, SectionBuilder } from "discord.js";
 import { createNewMissionModal } from "../components/missionComponents.js";
+import { getConfirmStatusRow } from "../utils/buttonRows.js";
 
 export default {
   prefix: "new_",
 
-  async execute(interaction, { db, user }) {
+  async execute(interaction, { db, user, value }) {
+    if (!value.endsWith(interaction.user.id)) {
+      const openStatus = getConfirmStatusRow(user);
+      return interaction.reply({
+        components: [openStatus],
+        flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+      });
+    }
+
     const modal = createNewMissionModal();
-    await interaction.showModal(modal);
+    return interaction.showModal(modal);
   },
 };

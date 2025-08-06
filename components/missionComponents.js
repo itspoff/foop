@@ -34,11 +34,15 @@ export function getMissionSelector(missionArray, options = MissionSelectOperatio
     .setPlaceholder(options.placeholder)
     .addOptions(
       sortedMissions.map((mission) => {
-        const desc = mission.is_daily ? "Daily" : " ";
+        let desc = [];
+        if (mission.description) desc.push(mission.descrption?.slice(0, 20) + " ");
+        if (mission.is_daily) desc.push("Daily ");
+        if (mission.locked_in_at) desc.push("Locked In");
+        const descString = desc.join(" - ");
         return new StringSelectMenuOptionBuilder()
           .setLabel(capitalizeFirstLetter(mission.name.slice(0, 100)))
           .setValue(mission.code)
-          .setDescription(mission.description?.slice(0, 100) || desc);
+          .setDescription(descString || " ");
       })
     );
 
@@ -52,7 +56,7 @@ export function getMissionSelector(missionArray, options = MissionSelectOperatio
 }
 
 export async function getMissionCard(mission) {
-  const createdAtFormatted = DateTime.fromJSDate(mission.created_at).toFormat("yyyy-MM-dd HH:mm");
+  const createdAtFormatted = DateTime.fromJSDate(mission.date_created).toFormat("yyyy-MM-dd HH:mm");
   let cheerNames = "";
   if (Array.isArray(mission.cheers) && mission.cheers.length > 0) {
     const cheerUsers = await Promise.all(mission.cheers.map((userId) => getExistingUserFromId(userId)));
@@ -84,7 +88,12 @@ ${stats}
     disableComplete = true;
     disableCheer = true;
   }
-  const buttons = getMissionButtonRow(mission.code, { lockedInMission, disableLockIn, disableComplete, disableCheer });
+  const buttons = getMissionButtonRow(mission.code, mission.user_id, {
+    lockedInMission,
+    disableLockIn,
+    disableComplete,
+    disableCheer,
+  });
 
   const missionCard = new ContainerBuilder()
     .addTextDisplayComponents((textDisplay) => textDisplay.setContent(cardText))

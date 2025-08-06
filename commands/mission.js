@@ -114,7 +114,7 @@ async function handleLockin(interaction, user, missions) {
 
   const text = new TextDisplayBuilder().setContent("`Locked in on:` `🔐` " + formatMission(mission));
 
-  const row = getMissionButtonRow(code, { disableLockIn: true, lockedInMission: true });
+  const row = getMissionButtonRow(code, user._id, { disableLockIn: true, lockedInMission: true });
 
   return interaction.reply({
     components: [text, row],
@@ -168,7 +168,7 @@ async function handleCheckout(interaction, user, missions) {
       ")`"
   );
 
-  const row = getMissionButtonRow(code);
+  const row = getMissionButtonRow(code, user._id);
 
   return interaction.reply({
     components: [text, row],
@@ -280,7 +280,7 @@ async function handleComplete(interaction, user, missions, users) {
   const msg = completeMissionMsg + bonusMessage;
 
   const text = new TextDisplayBuilder().setContent(msg);
-  const row = getMissionButtonRow(code, { disableLockIn: true, disableComplete: true, disableCheer: true });
+  const row = getMissionButtonRow(code, user._id, { disableLockIn: true, disableComplete: true, disableCheer: true });
 
   return interaction.reply({
     components: [text, row],
@@ -324,7 +324,7 @@ async function handleDelete(interaction, user, missions) {
     `\`Mission\` \`🗑️\` \`${capitalizeFirstLetter(mission.name)}\` \`has been deleted.\``
   );
 
-  const row = getMissionButtonRow(code, {
+  const row = getMissionButtonRow(code, user._id, {
     disableLockIn: true,
     disableComplete: true,
     disableDelete: true,

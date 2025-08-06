@@ -1,28 +1,56 @@
 import { SectionBuilder, SeparatorBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
-import { getDailyButtonRow } from "../utils/buttonRows.js";
+import { formatTime, getCurrentPST } from "../utils/formatTime.js";
 
-export function getDailyReport(discordUser, user) {
-  const text = `## \`📋 Daily Report\`
--# \`Monday, August 1\` \`💮\` \`Day Cleared!\`
+export function getDailyReport(user, discordUser, dailyMissions, allMissions) {
+  const now = getCurrentPST();
+  const date = now.toLocaleString({
+    weekday: "long",
+    month: "long",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
-> \`Daily missions:      \` \` 7 / 7\` \`🔥 x15\`
-> \`All missions:        \` \`14 /14\` \`⭐ NEW RECORD\`
-> \`Locked in for:       \` \` 6 :10\`
+  const dailiesCompleted = dailyMissions.filter((m) => m.is_complete).length;
+  const allCompleted = allMissions.filter((m) => m.is_complete).length;
+  let totalTimeTaken = 0;
+  let pptsGained = 0;
+  let cheers = 0;
+  for (const mission of allMissions) {
+    if (mission.time_taken) {
+      totalTimeTaken += mission.time_taken;
+    }
+    if (mission.ppts_gained) {
+      pptsGained += mission.ppts_gained;
+    }
+    if (mission.cheers) {
+      cheers += mission.cheers.length;
+    }
+  }
 
-> \`Ppts gained:         \` \`  +882\`
-> \`Cheers received:     \` \`     2\` 
+  const allDailiesCompleted = dailiesCompleted === dailyMissions.length;
+
+  const text = `## \`📋 Daily Report for ${user.display_name}\`
+-# \`${date}\` \`💮\` \`Day Cleared!\`
+
+> \`Daily missions:      \` \` ${dailiesCompleted} / ${dailyMissions.length}\` ${
+    allDailiesCompleted ? `\`🔥 x${user.daily_streak + 1}\`` : ""
+  }
+> \`All missions:        \` \` ${allCompleted} / ${allMissions.length}\`
+> \`Locked in for:       \` \` ${formatTime(totalTimeTaken)}\`
+
+> \`Ppts gained:         \` \` +${pptsGained}\`
+> \`Cheers received:     \` \` ${cheers}\` 
 
 `;
 
   const msg = new TextDisplayBuilder().setContent(text);
-  const separator = new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small);
-  const thumbnail = new ThumbnailBuilder().setDescription("test").setURL(user.displayAvatarURL());
-  const dailyReport = new SectionBuilder().addTextDisplayComponents(msg).setThumbnailAccessory(thumbnail);
-  const discordUser = discordUser;
-  const buttons = getDailyButtonRow(discordUser);
+  const thumbnail = new ThumbnailBuilder()
+    .setDescription("test")
+    .setURL(user.display_avatar_url || discordUser.displayAvatarURL());
+  const section = new SectionBuilder().addTextDisplayComponents(msg).setThumbnailAccessory(thumbnail);
   return {
-    dailyReport,
-    separator,
-    buttons,
+    section,
+    allDailiesCompleted,
   };
 }

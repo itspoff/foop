@@ -1,5 +1,6 @@
 import getRandomTag from "../utils/getRandomTag.js";
 import { formatPulledTag } from "../utils/formatLabels.js";
+import { getCurrentPST } from "../utils/formatTime.js";
 
 export default {
   prefix: "pull_",
@@ -27,7 +28,7 @@ export default {
     await users.updateOne(
       { _id: user._id },
       {
-        $set: { last_updated: new Date() },
+        $set: { last_updated: getCurrentPST().toJSDate() },
         $inc: { ppts: -cost },
         $addToSet: { tags: { $each: newTagCodes } },
       }

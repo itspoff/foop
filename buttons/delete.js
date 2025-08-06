@@ -1,15 +1,24 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, TextDisplayBuilder } from "discord.js";
 import { capitalizeFirstLetter } from "../utils/formatLabels.js";
-import { getMissionButtonRow } from "../utils/buttonRows.js";
+import { getConfirmStatusRow, getMissionButtonRow } from "../utils/buttonRows.js";
 import { getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 
 export default {
   prefix: "delete_",
   async execute(interaction, { db, user, value }) {
+    if (!value.endsWith(interaction.user.id)) {
+      const openStatus = getConfirmStatusRow(user);
+      return interaction.reply({
+        components: [openStatus],
+        flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+      });
+    }
     const missions = db.collection("missions");
-    const code = value;
+    const values = value.split("_");
+    const code = values[0];
+    const parent = values[1];
 
-    if (code) {
+    if (/^\d{4}$/.test(code)) {
       const mission = await missions.findOne({ code });
       if (!mission) {
         return interaction.reply({

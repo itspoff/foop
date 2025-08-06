@@ -1,12 +1,22 @@
-import { MessageFlags, TextDisplayBuilder } from "discord.js";
+import { ButtonStyle, MessageFlags, SectionBuilder, TextDisplayBuilder } from "discord.js";
 import { formatMission } from "../utils/formatLabels.js";
 import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
+import { getConfirmCheckOutRow, getConfirmStatusRow } from "../utils/buttonRows.js";
 
 export default {
   prefix: "lockin_",
   async execute(interaction, { db, user, value }) {
+    if (!value.endsWith(interaction.user.id)) {
+      const openStatus = getConfirmStatusRow(user);
+      return interaction.reply({
+        components: [openStatus],
+        flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+      });
+    }
     const missions = db.collection("missions");
-    const code = value;
+    const values = value.split("_");
+    const code = values[0];
+    const parent = values[1];
 
     const alreadyLocked = await missions.findOne({
       user_id: user._id,
@@ -14,13 +24,13 @@ export default {
     });
 
     if (alreadyLocked) {
+      const confirmCheckOut = getConfirmCheckOutRow(user, alreadyLocked);
       return interaction.reply({
-        content: `\`⚠️ You are already locked in on:\` \`🔐\` ${formatMission(alreadyLocked)}`,
-        ephemeral: true,
+        components: [confirmCheckOut],
+        flags: MessageFlags.IsComponentsV2,
       });
     }
-
-    if (code) {
+    if (/^\d{4}$/.test(code)) {
       const mission = await missions.findOne({ code });
       if (!mission) {
         return interaction.reply({

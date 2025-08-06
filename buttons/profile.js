@@ -6,6 +6,7 @@ export default {
   async execute(interaction, { db, user, value }) {
     const prevName = user.display_name;
     const prevBubble = user.thought_bubble ?? "";
+    const prevDailyResetHour = user.daily_reset_hour.toString() ?? "5";
     const buttonOwnerId = value;
     const modal = new ModalBuilder().setCustomId(`profile_${buttonOwnerId}`).setTitle("My profile");
 
@@ -24,9 +25,18 @@ export default {
       .setRequired(false)
       .setMaxLength(100);
 
+    const resetTimeInput = new TextInputBuilder()
+      .setCustomId("profile_reset_hour")
+      .setLabel("Daily reset hour in PST (integer from 0-23)")
+      .setStyle(TextInputStyle.Short)
+      .setValue(prevDailyResetHour)
+      .setRequired(true)
+      .setMaxLength(2);
+
     const row1 = new ActionRowBuilder().addComponents(nameInput);
     const row2 = new ActionRowBuilder().addComponents(bubbleInput);
-    modal.addComponents(row1, row2);
+    const row3 = new ActionRowBuilder().addComponents(resetTimeInput);
+    modal.addComponents(row1, row2, row3);
 
     await interaction.showModal(modal);
   },

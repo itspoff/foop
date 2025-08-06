@@ -11,6 +11,7 @@ export default {
 
     const values = value.split("_");
     const code = values[0];
+    const parent = values[1];
 
     const mission = await missions.findOne({
       code,
@@ -23,28 +24,29 @@ export default {
         ephemeral: true,
       });
     }
+    if (user.ppts < 250) {
+      return interaction.reply({
+        content: "> `❌ You don't have enough points to cheer!`",
+        ephemeral: true,
+      });
+    }
 
-    // Handle confirmation
-    if (value.endsWith("confirm")) {
-      if (user.ppts < 250) {
-        return interaction.reply({
-          content: "> `❌ You don't have enough points to cheer!`",
-          ephemeral: true,
-        });
-      }
+    const alreadyCheered = mission.cheers?.includes(user._id);
+    if (alreadyCheered) {
+      return interaction.reply({
+        content: "> `❌ You already cheered for this mission.`",
+        ephemeral: true,
+      });
+    }
 
-      const alreadyCheered = mission.cheers?.includes(user._id);
-      if (alreadyCheered) {
-        return interaction.reply({
-          content: "> `❌ You already cheered for this mission.`",
-          ephemeral: true,
-        });
-      }
-
+    if (parent === "confirm") {
       await users.updateOne({ _id: user._id }, { $inc: { ppts: -250 } });
       await missions.updateOne({ code }, { $addToSet: { cheers: user._id } });
 
-      const text = new TextDisplayBuilder().setContent(`> \`Cheered for\` ${formatMission(mission)}`);
+      const text = new TextDisplayBuilder().setContent(
+        `\`LET'S GOOOOOOOO!!! 💢💢💢\`
+> \`${user.display_name} cheered for\` ${formatMission(mission)}`
+      );
 
       return interaction.update({
         components: [text],

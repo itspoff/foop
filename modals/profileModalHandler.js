@@ -8,6 +8,7 @@ export default {
   async execute(interaction, { db, user, value }) {
     const newName = interaction.fields.getTextInputValue("profile_display_name");
     const newBubble = interaction.fields.getTextInputValue("profile_bubble");
+    const newResetHour = parseInt(interaction.fields.getTextInputValue("profile_reset_hour"));
     const buttonOwnerId = value;
 
     await db.collection("users").updateOne(
@@ -17,6 +18,7 @@ export default {
           display_name: newName,
           thought_bubble: newBubble,
           last_updated: getCurrentPST().toJSDate(),
+          daily_reset_hour: newResetHour,
         },
       }
     );

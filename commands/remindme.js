@@ -4,6 +4,7 @@ import * as chrono from "chrono-node";
 import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 import { formatReminder } from "../utils/formatReminder.js";
 import { getReminderRow } from "../utils/buttonRows.js";
+import { getCurrentPST } from "../utils/formatTime.js";
 
 export const data = new SlashCommandBuilder()
   .setName("remindme")
@@ -18,9 +19,9 @@ export async function execute(interaction) {
   const db = await connectToDatabase();
   const timeInput = interaction.options.getString("time");
   const reminderText = interaction.options.getString("reminder").toLowerCase();
-  const pacificNow = toZonedTime(new Date(), "America/Los_Angeles");
+  const now = getCurrentPST();
 
-  const remindAt = chrono.parseDate(timeInput, pacificNow, { forwardDate: true });
+  const remindAt = chrono.parseDate(timeInput, now.toJSDate(), { forwardDate: true });
 
   if (!remindAt) {
     return interaction.reply({ content: "> `❌ Invalid time input.`", ephemeral: true });
@@ -28,14 +29,15 @@ export async function execute(interaction) {
 
   const newReminder = {
     user_id: interaction.user.id,
-    channel_id: interaction.channel_id,
+    channel_id: interaction.channelId,
     reminder: reminderText,
     remind_at: remindAt,
-    created_at: new Date(),
+    date_created: now.toJSDate(),
     sent: false,
   };
 
   await db.collection("reminders").insertOne(newReminder);
+
   const textContent = formatReminder(newReminder);
   const text = new TextDisplayBuilder().setContent(textContent);
   const buttons = getReminderRow(interaction.user, newReminder);

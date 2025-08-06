@@ -9,6 +9,7 @@ import {
 import connectToDatabase from "../db.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
 import { formatMood, formatReason } from "../utils/formatLabels.js";
+import { getCurrentPST } from "../utils/formatTime.js";
 
 export const data = new SlashCommandBuilder()
   .setName("mood")
@@ -42,7 +43,7 @@ export async function execute(interaction) {
     newMood = moods[Math.max(currentMoodIndex - 1, 0)];
   }
 
-  await users.updateOne({ _id: user._id }, { $set: { mood: newMood, last_updated: new Date() } });
+  await users.updateOne({ _id: user._id }, { $set: { mood: newMood, last_updated: getCurrentPST().toJSDate() } });
 
   const msg = new TextDisplayBuilder().setContent(
     `${formatReason(reason)}\n> \`Mood went ${value}\`\n> \`Mood is now\` ${formatMood(newMood)}`

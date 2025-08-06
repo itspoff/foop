@@ -1,6 +1,7 @@
 import { ButtonBuilder, ButtonStyle, ActionRowBuilder, SectionBuilder } from "discord.js";
+import { formatMission } from "./formatLabels.js";
 
-export function getMissionButtonRow(code, options = {}) {
+export function getMissionButtonRow(code, userId, options = {}) {
   const {
     disableLockIn = false,
     disableCheckOut = false,
@@ -11,20 +12,20 @@ export function getMissionButtonRow(code, options = {}) {
   } = options;
 
   let lockInButton = new ButtonBuilder()
-    .setCustomId(`lockin_${code}`)
+    .setCustomId(`lockin_${code}_${userId}`)
     .setLabel("🔐 Lock in")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableLockIn);
 
   let completeButton = new ButtonBuilder()
-    .setCustomId(`complete_${code}`)
+    .setCustomId(`complete_${code}_${userId}`)
     .setLabel("🐾 Complete")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableComplete);
 
   if (lockedInMission) {
     const checkOutButton = new ButtonBuilder()
-      .setCustomId(`checkout_${code}`)
+      .setCustomId(`checkout_${code}_card_${userId}`)
       .setLabel("💨 Check out")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(disableCheckOut);
@@ -33,13 +34,13 @@ export function getMissionButtonRow(code, options = {}) {
   }
 
   const cheerButton = new ButtonBuilder()
-    .setCustomId(`cheer_${code}`)
+    .setCustomId(`cheer_${code}_card_${userId}`)
     .setLabel("👏 Cheer")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableCheer);
 
   const deleteButton = new ButtonBuilder()
-    .setCustomId(`delete_${code}`)
+    .setCustomId(`delete_${code}_card_${userId}`)
     .setLabel("💢 Delete")
     .setStyle(ButtonStyle.Danger)
     .setDisabled(disableDelete);
@@ -49,7 +50,7 @@ export function getMissionButtonRow(code, options = {}) {
 
 export function getStatusButtonRow(user, isOtherUser, lockedInMission, options = {}) {
   const { disableCheer = false, disablePackage = true, disableClose = false } = options;
-  const code = lockedInMission ? lockedInMission.code : "0000";
+  const code = lockedInMission ? lockedInMission.code : "0";
 
   const cheerButton = new ButtonBuilder()
     .setCustomId(`cheer_${code}_${user._id}`)
@@ -78,7 +79,36 @@ export function getConfirmCheerRow(user, code) {
       textDisplay.setContent(`\`Spend 250 Ppts to cheer?\`\n-# \`You currently have: ${user.ppts} Ppts\``)
     )
     .setButtonAccessory((button) =>
-      button.setCustomId(`cheer_${code}_confirm`).setLabel("⭕️ Confirm").setStyle(ButtonStyle.Danger)
+      button.setCustomId(`cheer_${code}_confirm_${user._id}`).setLabel("⭕️ Confirm").setStyle(ButtonStyle.Danger)
+    );
+}
+
+export function getConfirmStatusRow(user) {
+  return new SectionBuilder()
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(
+        `\`This isn't your button!\`
+            \n\`Open your status?\``
+      )
+    )
+    .setButtonAccessory((button) =>
+      button.setCustomId(`status_confirm_${user._id}`).setLabel("🧻 Status").setStyle(ButtonStyle.Success)
+    );
+}
+
+export function getConfirmCheckOutRow(user, mission) {
+  const alreadyLocked = mission;
+  return new SectionBuilder()
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(
+        `\`You are already locked in on:\` \`🔐\` ${formatMission(alreadyLocked)}\n\`Check out of this mission?\``
+      )
+    )
+    .setButtonAccessory((button) =>
+      button
+        .setCustomId(`checkout_${alreadyLocked.code}_confirm_${user._id}`)
+        .setLabel("💨 Check out")
+        .setStyle(ButtonStyle.Primary)
     );
 }
 
@@ -103,6 +133,8 @@ export function getReminderRow(discordUser, reminder, options = {}) {
 }
 
 export function getOwnStatusButtonRow(user, options = {}) {
+  const userId = user._id;
+
   const {
     disableAddMission = false,
     disableLockIn = false,
@@ -114,46 +146,46 @@ export function getOwnStatusButtonRow(user, options = {}) {
   } = options;
 
   const newMissionButton = new ButtonBuilder()
-    .setCustomId(`new_`)
+    .setCustomId(`new_${userId}`)
     .setLabel("🌱 New mission")
     .setStyle(ButtonStyle.Success)
     .setDisabled(disableAddMission);
 
   let lockInButton = new ButtonBuilder()
-    .setCustomId(`lockin_`)
+    .setCustomId(`lockin_0_${userId}`)
     .setLabel("🔐 Lock in")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableLockIn);
 
   let completeButton = new ButtonBuilder()
-    .setCustomId(`complete_`)
+    .setCustomId(`complete_0_${userId}`)
     .setLabel("🐾 Complete")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableComplete);
 
   if (lockedInMission) {
     const checkOutButton = new ButtonBuilder()
-      .setCustomId(`checkout_${lockedInMission.code}_status`)
+      .setCustomId(`checkout_${lockedInMission.code}_status_${userId}`)
       .setLabel("💨 Check out")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(disableCheckOut);
 
     lockInButton = checkOutButton;
     completeButton = new ButtonBuilder()
-      .setCustomId(`complete_${lockedInMission.code}_status`)
+      .setCustomId(`complete_${lockedInMission.code}_status_${userId}`)
       .setLabel("🐾 Complete")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(disableComplete);
   }
 
   const viewButton = new ButtonBuilder()
-    .setCustomId(`view_`)
+    .setCustomId(`view_${userId}`)
     .setLabel("📇 View")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableView);
 
   const profileButton = new ButtonBuilder()
-    .setCustomId(`profile_${user._id}`)
+    .setCustomId(`profile_${userId}`)
     .setLabel("👤 My profile")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableProfile);

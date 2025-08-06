@@ -1,5 +1,6 @@
 import connectToDatabase from "../db.js";
 import { generateUniqueCode } from "../utils/generateUniqueCode.js";
+import { getCurrentPST } from "./formatTime.js";
 
 export async function getOrCreateUser(discordUser, guildMember = null) {
   const db = await connectToDatabase();
@@ -11,15 +12,18 @@ export async function getOrCreateUser(discordUser, guildMember = null) {
 
   let user = await users.findOne({ _id: userId });
 
-  const now = new Date();
+  const now = getCurrentPST();
 
   if (!user) {
     const newUser = {
       _id: userId,
       discord_id: userId,
       display_name,
-      date_created: now,
-      last_updated: now,
+      display_avatar_url: discordUser.displayAvatarUrl(),
+      thought_bubble: null,
+      date_created: now.toJSDate(),
+      last_updated: now.toJSDate(),
+      daily_reset_hour: 5,
       mood: "normal",
       energy: 100,
       conditions: [],
@@ -38,11 +42,17 @@ export async function getOrCreateUser(discordUser, guildMember = null) {
       user_id: userId,
       code,
       name: "daily login",
+      description: "Use me once every day!",
+      date_created: now.toJSDate(),
       is_complete: false,
-      time_taken: null,
-      locked_in_at: null,
       is_daily: true,
       is_system: true,
+      time_taken: null,
+      locked_in_at: null,
+      cheers: [],
+      level: 1,
+      xp: 0,
+      max_level: 5,
     });
   }
 
