@@ -249,7 +249,7 @@ setInterval(async () => {
         userUpdate.$set.daily_streak = 0;
       }
 
-      await users.updateOne({ _id: user._id }, { update });
+      await users.updateOne({ _id: user._id }, { userUpdate });
 
       const resetDailyMissions = await missions.updateMany(
         { user_id: user._id, is_daily: true },
