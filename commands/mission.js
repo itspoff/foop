@@ -25,15 +25,7 @@ export const data = new SlashCommandBuilder()
   .setName("mission")
   .setDescription("Manage your missions")
   .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel])
-  .addSubcommand((sub) =>
-    sub
-      .setName("add")
-      .setDescription("Add a new mission.")
-      .addStringOption((opt) => opt.setName("name").setDescription("Mission name").setRequired(true))
-      .addBooleanOption((opt) =>
-        opt.setName("daily").setDescription("Set the mission to repeat daily").setRequired(false)
-      )
-  )
+  .addSubcommand((sub) => sub.setName("add").setDescription("Add a new mission."))
   .addSubcommand((sub) =>
     sub
       .setName("lockin")
