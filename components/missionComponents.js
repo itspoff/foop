@@ -35,7 +35,7 @@ export function getMissionSelector(missionArray, options = MissionSelectOperatio
     .addOptions(
       sortedMissions.map((mission) => {
         let desc = [];
-        if (mission.description) desc.push(mission.descrption?.slice(0, 20) + " ");
+        if (mission.description) desc.push(mission.description?.slice(0, 100) + " ");
         if (mission.is_daily) desc.push("Daily ");
         if (mission.locked_in_at) desc.push("Locked In");
         const descString = desc.join(" - ");
@@ -57,6 +57,7 @@ export function getMissionSelector(missionArray, options = MissionSelectOperatio
 
 export async function getMissionCard(mission) {
   const createdAtFormatted = DateTime.fromJSDate(mission.date_created).toFormat("yyyy-MM-dd HH:mm");
+  const completionRate = (((mission.completed_count ?? 0) / (mission.count ?? 1)) * 100).toFixed(2);
   let cheerNames = "";
   if (Array.isArray(mission.cheers) && mission.cheers.length > 0) {
     const cheerUsers = await Promise.all(mission.cheers.map((userId) => getExistingUserFromId(userId)));
@@ -64,7 +65,11 @@ export async function getMissionCard(mission) {
   }
   let stats = `
 > \`🏷️\` \`Created at:      \` \`${createdAtFormatted}\`${
-    mission.is_daily ? `\n> \`💯\` \`Completion Rate: \` \`N/A\`` : ""
+    mission.is_daily
+      ? `\n> \`💯\` \`Completion Rate: \` \`${completionRate}%\`\n> \`🌼\` \`Level:           \` \`${
+          mission.level ?? 0
+        }\``
+      : ""
   }
 > \`⏱️\` \`Time Elapsed:    \` \`${formatTime(mission.time_taken)}\`${
     cheerNames.length ? `\n\`👏 ${cheerNames} cheered for this mission!\`` : ""

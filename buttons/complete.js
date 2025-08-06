@@ -25,6 +25,7 @@ export default {
 
     if (/^\d{4}$/.test(code)) {
       const mission = await missions.findOne({ code, user_id: user._id, is_complete: { $ne: true } });
+      const isDaily = mission.is_daily;
       if (!mission)
         return interaction.reply({ content: "> `❌ Mission not found or already complete.`", ephemeral: true });
 
@@ -32,13 +33,14 @@ export default {
         ? calculateTotalTimeTaken(mission.locked_in_at, mission.time_taken)
         : mission.time_taken || 0;
 
-      const incompleteCount = await missions.countDocuments({
+      const otherIncompleteDailies = await missions.countDocuments({
         user_id: user._id,
         is_daily: true,
-        is_complete: { $ne: true },
+        is_complete: false,
+        _id: { $ne: mission._id },
       });
 
-      const completedAllDaily = incompleteCount === 1;
+      const completedAllDaily = otherIncompleteDailies === 0;
       let dailyBonus = 0;
 
       if (completedAllDaily) {
@@ -50,23 +52,26 @@ export default {
 
         if (!alreadyRewarded) {
           dailyBonus = 50;
-          await missions.updateOne({ _id: mission._id }, { $set: { rewarded_all_dailies: true } });
         }
       }
 
       const rewardData = calculateMissionRewards({ mission, user, totalTime, dailyBonus });
-      await missions.updateOne(
-        { _id: mission._id },
-        {
-          $set: {
-            is_complete: true,
-            locked_in_at: null,
-            time_taken: totalTime,
-            completed_at: getCurrentPST().toJSDate(),
-            ppts_gained: rewardData.totalBonus,
-          },
-        }
-      );
+      const updatedMission = {
+        $set: {
+          is_complete: true,
+          locked_in_at: null,
+          time_taken: totalTime,
+          completed_at: getCurrentPST().toJSDate(),
+          ppts_gained: rewardData.totalBonus,
+          ...(completedAllDaily && { rewarded_all_dailies: true }),
+        },
+      };
+
+      if (isDaily) {
+        updatedMission.$inc = { exp: rewardData.totalBonus };
+      }
+
+      await missions.updateOne({ _id: mission._id }, updatedMission);
       await users.updateOne(
         { _id: user._id },
         {

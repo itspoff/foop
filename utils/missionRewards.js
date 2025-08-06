@@ -53,3 +53,23 @@ export function formatMissionRewardMessage({
 
   return completeMissionMsg + bonusMessage;
 }
+
+export function calculateLevelUp(mission) {
+  if (!mission.is_daily) return 0;
+  if (mission.level >= mission.max_level) return 0;
+  let level = mission.level ?? 1;
+  let xp = mission.xp ?? 0;
+  while (true) {
+    const xpToNextLevel = 5 * 2 ** mission.level;
+    if (xp > xpToNextLevel && mission.level < mission.max_level) {
+      xp -= xpToNextLevel;
+      level++;
+    } else {
+      break;
+    }
+  }
+  return {
+    level,
+    xp,
+  };
+}

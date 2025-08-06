@@ -16,6 +16,7 @@ import { formatReminder } from "./utils/formatReminder.js";
 import { formatHelpText } from "./utils/formatLabels.js";
 import { getDailyReport } from "./components/dailyReport.js";
 import { getDailyButtonRow } from "./utils/buttonRows.js";
+import { calculateLevelUp } from "./utils/missionRewards.js";
 
 config();
 
@@ -147,8 +148,11 @@ let db;
 
       // daily login
       const missions = db.collection("missions");
+      const users = db.collection("users");
+
       const lastClaim = user.last_daily_bonus ? new Date(user.last_daily_bonus) : null;
-      const resetTime = getResetTimePST();
+      const userResetHour = typeof user.daily_reset_hour === "number" ? user.daily_reset_hour : 0;
+      const resetTime = getResetTimePST(userResetHour);
 
       if (!lastClaim || lastClaim < resetTime) {
         console.log("Daily Login from:", user.display_name);
@@ -159,6 +163,18 @@ let db;
           {
             $set: {
               is_complete: true,
+            },
+          }
+        );
+
+        await users.updateOne(
+          { _id: user._id },
+          {
+            $inc: {
+              ppts: bonus,
+            },
+            $set: {
+              last_daily_bonus: getCurrentPST().toJSDate(),
             },
           }
         );
@@ -227,13 +243,6 @@ setInterval(async () => {
 
       const dailyReport = getDailyReport(user, discordUser, dailyMissions, allMissions);
 
-      const separator = new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small);
-      const buttons = getDailyButtonRow(discordUser);
-      await discordUser.send({
-        components: [dailyReport.section, separator, buttons],
-        flags: [MessageFlags.IsComponentsV2],
-      });
-
       const userUpdate = {
         $set: {
           energy: 100,
@@ -252,26 +261,46 @@ setInterval(async () => {
 
       await users.updateOne({ _id: user._id }, userUpdate);
 
-      const resetDailyMissions = await missions.updateMany(
-        { user_id: user._id, is_daily: true },
-        {
+      for (const daily of dailyMissions) {
+        let updatedMission = {
           $set: {
             is_complete: false,
             locked_in_at: null,
             time_taken: null,
             ppts_gained: null,
             cheers: [],
+            rewarded_all_dailies: false,
           },
+        };
+        if (daily.is_complete) {
+          const levelUp = calculateLevelUp(daily);
+          updatedMission.$set.level = levelUp.level;
+          updatedMission.$set.xp = levelUp.xp;
+          updatedMission.$inc = {
+            count: 1,
+            completed_count: 1,
+          };
+        } else {
+          updatedMission.$inc = {
+            count: 1,
+          };
         }
-      );
-      console.log("reset %d daily missions", resetDailyMissions.modifiedCount);
+        await missions.updateOne({ _id: daily._id, user_id: user._id }, updatedMission);
+      }
 
-      const clearCompletedMissions = await missions.deleteMany({
+      await missions.deleteMany({
         user_id: user._id,
         is_daily: false,
         is_complete: true,
       });
-      console.log("removed %d completed missions", clearCompletedMissions.modifiedCount);
+      console.log(`Reset missions for ${user.display_name}`);
+
+      const separator = new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small);
+      const buttons = getDailyButtonRow(discordUser);
+      await discordUser.send({
+        components: [dailyReport.section, separator, buttons],
+        flags: [MessageFlags.IsComponentsV2],
+      });
       console.log(`Sent daily message to ${user.display_name || user._id}`);
     } catch (err) {
       console.error(`❌ Failed to send daily message to ${user._id}:`, err);

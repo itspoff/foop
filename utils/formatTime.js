@@ -34,11 +34,11 @@ export function timeSince(date) {
   return `${Math.floor(days)}d`;
 }
 
-export function getResetTimePST() {
+export function getResetTimePST(hour = 0) {
   const now = DateTime.now().setZone("America/Los_Angeles");
 
   let resetTime = now.set({
-    hour: 5,
+    hour,
     minute: 0,
     second: 0,
     millisecond: 0,

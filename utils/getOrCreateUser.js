@@ -13,13 +13,14 @@ export async function getOrCreateUser(discordUser, guildMember = null) {
   let user = await users.findOne({ _id: userId });
 
   const now = getCurrentPST();
+  const avatarURL = discordUser.displayAvatarURL();
 
   if (!user) {
     const newUser = {
       _id: userId,
       discord_id: userId,
       display_name,
-      display_avatar_url: discordUser.displayAvatarUrl(),
+      display_avatar_url: avatarURL,
       thought_bubble: null,
       date_created: now.toJSDate(),
       last_updated: now.toJSDate(),
@@ -53,6 +54,8 @@ export async function getOrCreateUser(discordUser, guildMember = null) {
       level: 1,
       xp: 0,
       max_level: 5,
+      count: 0,
+      completed_count: 0,
     });
   }
 

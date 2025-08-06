@@ -35,6 +35,8 @@ export default {
       time_taken: null,
       locked_in_at: null,
       ppts_gained: 0,
+      count: 0,
+      completed_count: 0,
       cheers: [],
       ...(isDaily && {
         level: 1,
