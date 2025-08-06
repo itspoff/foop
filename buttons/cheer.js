@@ -40,7 +40,7 @@ export default {
     }
 
     if (parent === "confirm") {
-      await users.updateOne({ _id: user._id }, { $inc: { ppts: -250 } });
+      await users.updateOne({ _id: user._id }, { $inc: { ppts: -25 } });
       await missions.updateOne({ code }, { $addToSet: { cheers: user._id } });
 
       const text = new TextDisplayBuilder().setContent(

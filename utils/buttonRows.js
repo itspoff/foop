@@ -76,7 +76,7 @@ export function getStatusButtonRow(user, isOtherUser, lockedInMission, options =
 export function getConfirmCheerRow(user, code) {
   return new SectionBuilder()
     .addTextDisplayComponents((textDisplay) =>
-      textDisplay.setContent(`\`Spend 250 Ppts to cheer?\`\n-# \`You currently have: ${user.ppts} Ppts\``)
+      textDisplay.setContent(`\`Spend 25 Ppts to cheer?\`\n-# \`You currently have: ${user.ppts} Ppts\``)
     )
     .setButtonAccessory((button) =>
       button.setCustomId(`cheer_${code}_confirm_${user._id}`).setLabel("⭕️ Confirm").setStyle(ButtonStyle.Danger)
