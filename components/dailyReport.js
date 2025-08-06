@@ -31,7 +31,7 @@ export function getDailyReport(user, discordUser, dailyMissions, allMissions) {
   const allDailiesCompleted = dailiesCompleted === dailyMissions.length;
 
   const text = `## \`📋 Daily Report for ${user.display_name}\`
--# \`${date}\` \n\`💮\` \`Previous Day Cleared!\`
+-# \`${date}\` \n -# \`💮\` \`Previous Day Cleared!\`
 
 > \`Daily missions:      \` \` ${dailiesCompleted} / ${dailyMissions.length}\` ${
     allDailiesCompleted ? `\`🔥 x${user.daily_streak ? user.daily_streak + 1 : 1}\`` : ""

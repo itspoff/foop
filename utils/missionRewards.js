@@ -49,7 +49,7 @@ export function formatMissionRewardMessage({
     (totalTime > 300 ? " `🍵 Focused (x1.35)`" : "") +
     (cheerCount > 0 ? ` \`👏 Cheer (x${cheerCount + 1})\`` : "") +
     (dailyBonus > 0 ? ` \`🎯 All dailies complete! +${dailyBonus}\`` : "") +
-    `\n> -# \`Energy: ${user.energy - cost}(-${cost})\` \`Ppts: ${user.ppts + totalBonus}(+${totalBonus})\``;
+    `\n> -# \`Energy: ${user.energy}(-${cost})\` \`Ppts: ${user.ppts}(+${totalBonus})\``;
 
   return completeMissionMsg + bonusMessage;
 }

@@ -260,6 +260,7 @@ setInterval(async () => {
             locked_in_at: null,
             time_taken: null,
             ppts_gained: null,
+            cheers: [],
           },
         }
       );
