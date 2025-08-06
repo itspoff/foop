@@ -274,6 +274,7 @@ setInterval(async () => {
         };
         if (daily.is_complete) {
           const levelUp = calculateLevelUp(daily);
+          console.log(levelUp);
           updatedMission.$set.level = levelUp.level;
           updatedMission.$set.xp = levelUp.xp;
           updatedMission.$inc = {

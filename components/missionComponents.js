@@ -57,7 +57,17 @@ export function getMissionSelector(missionArray, options = MissionSelectOperatio
 
 export async function getMissionCard(mission) {
   const createdAtFormatted = DateTime.fromJSDate(mission.date_created).toFormat("yyyy-MM-dd HH:mm");
-  const completionRate = (((mission.completed_count ?? 0) / (mission.count ?? 1)) * 100).toFixed(2);
+  let count = 1;
+  if (mission.count && mission.count > 0) {
+    count = mission.count;
+  }
+  let completionRate = "Unknown";
+  if (mission.completed_count === 0) {
+    completionRate = "0.00%";
+  } else if (mission.count && mission.count > 0) {
+    completionRate = (((mission.completed_count ?? 0) / mission.count) * 100).toFixed(2) + "%";
+  }
+
   let cheerNames = "";
   if (Array.isArray(mission.cheers) && mission.cheers.length > 0) {
     const cheerUsers = await Promise.all(mission.cheers.map((userId) => getExistingUserFromId(userId)));
@@ -66,7 +76,7 @@ export async function getMissionCard(mission) {
   let stats = `
 > \`🏷️\` \`Created at:      \` \`${createdAtFormatted}\`${
     mission.is_daily
-      ? `\n> \`💯\` \`Completion Rate: \` \`${completionRate}%\`\n> \`🌼\` \`Level:           \` \`${
+      ? `\n> \`💯\` \`Completion Rate: \` \`${completionRate}\`\n> \`🌼\` \`Level:           \` \`${
           mission.level ?? 0
         }\``
       : ""

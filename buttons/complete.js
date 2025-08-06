@@ -68,7 +68,7 @@ export default {
       };
 
       if (isDaily) {
-        updatedMission.$inc = { exp: rewardData.totalBonus };
+        updatedMission.$inc = { xp: rewardData.totalBonus };
       }
 
       await missions.updateOne({ _id: mission._id }, updatedMission);
@@ -81,7 +81,7 @@ export default {
       );
 
       user = await users.findOne({ _id: user._id });
-      const rewardMessage = formatMissionRewardMessage({ ...rewardData, totalTime, mission, user });
+      const rewardMessage = formatMissionRewardMessage({ ...rewardData, mission, user, totalTime, dailyBonus });
 
       if (parent === "status") {
         const updatedStatus = await getStatusMessage(interaction.user, interaction, db);
