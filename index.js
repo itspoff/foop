@@ -243,13 +243,14 @@ setInterval(async () => {
           last_daily_sent: now.toJSDate(),
         },
       };
+
       if (dailyReport.allDailiesCompleted) {
         userUpdate.$inc = { daily_streak: 1 };
       } else {
         userUpdate.$set.daily_streak = 0;
       }
 
-      await users.updateOne({ _id: user._id }, { userUpdate });
+      await users.updateOne({ _id: user._id }, userUpdate);
 
       const resetDailyMissions = await missions.updateMany(
         { user_id: user._id, is_daily: true },
