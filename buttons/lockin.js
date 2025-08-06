@@ -2,6 +2,7 @@ import { ButtonStyle, MessageFlags, SectionBuilder, TextDisplayBuilder } from "d
 import { formatMission } from "../utils/formatLabels.js";
 import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 import { getConfirmCheckOutRow, getConfirmStatusRow } from "../utils/buttonRows.js";
+import { getCurrentPST } from "../utils/formatTime.js";
 
 export default {
   prefix: "lockin_",
@@ -45,7 +46,7 @@ export default {
         });
       }
       if (mission) {
-        await missions.updateOne({ code }, { $set: { locked_in_at: new Date() } });
+        await missions.updateOne({ code }, { $set: { locked_in_at: getCurrentPST().toJSDate() } });
         const text = new TextDisplayBuilder().setContent("`🔐 Locked in on:` " + formatMission(mission));
         const updatedMission = await missions.findOne({
           user_id: user._id,

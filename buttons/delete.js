@@ -50,11 +50,12 @@ export default {
     }
 
     const missionArray = await missions.find({ user_id: user._id }).toArray();
+
     const text = new TextDisplayBuilder().setContent("## `💢 Mission Delete`");
     const selector = getMissionSelector(missionArray, MissionSelectOperations.DELETE);
 
     return interaction.reply({
-      components: [selector],
+      components: [text, selector],
       flags: [MessageFlags.IsComponentsV2],
     });
   },

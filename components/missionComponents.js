@@ -131,7 +131,7 @@ const placeholders = [
   "你来啦！小可爱！",
 ];
 
-export function createNewMissionModal() {
+export function createNewMissionModal(value = "") {
   const placeholder =
     Math.random() < 0.3 ? placeholders[0] : placeholders[Math.floor(Math.random() * (placeholders.length - 1)) + 1];
 
@@ -142,6 +142,7 @@ export function createNewMissionModal() {
     .setLabel("Mission Title")
     .setStyle(TextInputStyle.Short)
     .setPlaceholder(placeholder)
+    .setValue(value)
     .setRequired(true);
 
   const dailyInput = new TextInputBuilder()

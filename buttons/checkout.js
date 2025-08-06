@@ -63,11 +63,6 @@ export default {
       }
     );
 
-    const updatedMission = await missions.findOne({
-      user_id: user._id,
-      _id: mission._id,
-    });
-
     const text = new TextDisplayBuilder().setContent(
       "`💨 Checked out on:` " +
         formatMission(mission) +
@@ -87,6 +82,10 @@ export default {
         flags: MessageFlags.IsComponentsV2,
       });
     } else {
+      const updatedMission = await missions.findOne({
+        user_id: user._id,
+        _id: mission._id,
+      });
       const missionCard = await getMissionCard(updatedMission);
       await interaction.update({
         components: [missionCard],
