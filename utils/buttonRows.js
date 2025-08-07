@@ -49,7 +49,7 @@ export function getMissionButtonRow(code, userId, options = {}) {
 }
 
 export function getStatusButtonRow(user, isOtherUser, lockedInMission, options = {}) {
-  const { disableCheer = false, disablePackage = true, disableClose = false } = options;
+  const { disableCheer = false, disablePackage = true, disableProfile = false } = options;
   const code = lockedInMission ? lockedInMission.code : "0";
 
   const cheerButton = new ButtonBuilder()
@@ -64,13 +64,13 @@ export function getStatusButtonRow(user, isOtherUser, lockedInMission, options =
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disablePackage);
 
-  const closeButton = new ButtonBuilder()
-    .setCustomId(`close_`)
-    .setLabel("✖️ Close")
+  const profileButton = new ButtonBuilder()
+    .setCustomId(`profile_${user._id}`)
+    .setLabel("👤 My profile")
     .setStyle(ButtonStyle.Secondary)
-    .setDisabled(disableClose);
+    .setDisabled(disableProfile);
 
-  return new ActionRowBuilder().addComponents(cheerButton, packageButton, closeButton);
+  return new ActionRowBuilder().addComponents(cheerButton, packageButton, profileButton);
 }
 
 export function getConfirmCheerRow(user, code) {

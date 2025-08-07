@@ -13,7 +13,6 @@ import fs from "node:fs";
 import { getOrCreateUser } from "./utils/getOrCreateUser.js";
 import { getCurrentPST, getResetTimePST } from "./utils/formatTime.js";
 import { formatReminder } from "./utils/formatReminder.js";
-import { formatHelpText } from "./utils/formatLabels.js";
 import { getDailyReport } from "./components/dailyReport.js";
 import { getDailyButtonRow } from "./utils/buttonRows.js";
 import { calculateLevelUp } from "./utils/missionRewards.js";
