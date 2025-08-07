@@ -8,7 +8,7 @@ export function calculateMissionRewards({ mission, user, totalTime = 0, dailyBon
   if (user.energy - cost < 0) {
     cost = user.energy;
   }
-  if (user.energy === 0) {
+  if (user.energy === 0 && !mission.is_daily) {
     cost = 0;
     bonus = 0;
   }

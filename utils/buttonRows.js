@@ -86,10 +86,7 @@ export function getConfirmCheerRow(user, code) {
 export function getConfirmStatusRow(user) {
   return new SectionBuilder()
     .addTextDisplayComponents((textDisplay) =>
-      textDisplay.setContent(
-        `\`This isn't your button!\`
-            \n\`Open your status?\``
-      )
+      textDisplay.setContent(`\`This isn't your button!\`\n\`Open your status?\``)
     )
     .setButtonAccessory((button) =>
       button.setCustomId(`status_confirm_${user._id}`).setLabel("🧻 Status").setStyle(ButtonStyle.Success)
