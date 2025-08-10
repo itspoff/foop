@@ -58,6 +58,5 @@ export async function execute(interaction) {
 
   await interaction.reply({
     content: `## \`${user.display_name}'s tag inventory:\`\n${formatted.join("\n")}`,
-    ephemeral: true,
   });
 }

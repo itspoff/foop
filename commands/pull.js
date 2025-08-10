@@ -20,6 +20,5 @@ export async function execute(interaction) {
   await interaction.reply({
     content: ggstBanner,
     components: [row],
-    ephemeral: true,
   });
 }
