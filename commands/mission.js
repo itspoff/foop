@@ -82,7 +82,12 @@ export async function execute(interaction) {
 
 async function handleAdd(interaction) {
   const title = interaction.options.getString("title");
-  const modal = createNewMissionModal(title);
+  let modal;
+  if (title) {
+    modal = createNewMissionModal(title);
+  } else {
+    modal = createNewMissionModal();
+  }
   return interaction.showModal(modal);
 }
 

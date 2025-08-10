@@ -105,14 +105,26 @@ export default {
         rewardMessages.push(rewardMessage);
       }
       resultMessage = rewardMessages.join("\n");
+      const text = new TextDisplayBuilder().setContent(resultMessage);
+
+      return interaction.update({
+        components: [text],
+        flags: MessageFlags.IsComponentsV2,
+      });
     } else if (value === "delete") {
       const results = await Promise.all(selectedMissions.map((mission) => missions.deleteOne({ _id: mission._id })));
       const deletedCount = results.reduce((sum, res) => sum + res.deletedCount, 0);
       resultMessage = `\`💢 ${deletedCount} mission(s) deleted:\``;
+      const text = new TextDisplayBuilder().setContent(resultMessage);
+
+      return interaction.update({
+        components: [text],
+        flags: MessageFlags.IsComponentsV2,
+      });
     } else if (value === "view") {
       const mission = selectedMissions[0];
       const missionCard = await getMissionCard(mission);
-      return interaction.reply({
+      return interaction.update({
         components: [missionCard],
         flags: MessageFlags.IsComponentsV2,
       });

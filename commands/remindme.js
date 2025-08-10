@@ -27,6 +27,9 @@ export async function execute(interaction) {
     return interaction.reply({ content: "> `❌ Invalid time input.`", ephemeral: true });
   }
 
+  // TODO:
+  // make user_id: [] or add new field? then user_id becomes owner_id?
+
   const newReminder = {
     user_id: interaction.user.id,
     channel_id: interaction.channelId,

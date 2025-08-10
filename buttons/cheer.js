@@ -57,6 +57,8 @@ export default {
     // Default: confirm menu pop up
     const confirmCheerRow = getConfirmCheerRow(user, code);
 
+    // store message id of the mission card? and update the card
+
     await interaction.reply({
       components: [confirmCheerRow],
       flags: MessageFlags.IsComponentsV2,
