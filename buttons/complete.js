@@ -96,6 +96,33 @@ export default {
       }
 
       const text = new TextDisplayBuilder().setContent(rewardMessage);
+
+      if (completedAllDaily && dailyBonus > 0) {
+        await interaction.followUp({
+          components: [text],
+          flags: MessageFlags.IsComponentsV2,
+        });
+
+        const congratsMsgs = [
+          "Woah!", // default
+          "Harikitte ikou!",
+          "How did you just do that.",
+        ];
+
+        const congratsMsg =
+          Math.random() < 0.5
+            ? congratsMsgs[0]
+            : congratsMsgs[Math.floor(Math.random() * (congratsMsgs.length - 1)) + 1];
+
+        const dailyBonusMsg = `\`${congratsMsg}\`
+> \`✨ Completed all daily missions!\``;
+        const dailyBonusText = new TextDisplayBuilder().setContent(dailyBonusMsg);
+        return interaction.followUp({
+          components: [dailyBonusText],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
+
       return interaction.followUp({
         components: [text],
         flags: MessageFlags.IsComponentsV2,

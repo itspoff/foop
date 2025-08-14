@@ -51,6 +51,7 @@ export default {
       });
     } else if (value === "complete") {
       const rewardMessages = [];
+      let completedAllDaily = false;
 
       for (const mission of selectedMissions) {
         const totalTime = mission.locked_in_at
@@ -63,7 +64,7 @@ export default {
           is_complete: { $ne: true },
         });
 
-        const completedAllDaily = incompleteCount === 1;
+        completedAllDaily = incompleteCount === 1;
         let dailyBonus = 0;
 
         if (completedAllDaily) {
@@ -106,6 +107,32 @@ export default {
       }
       resultMessage = rewardMessages.join("\n");
       const text = new TextDisplayBuilder().setContent(resultMessage);
+
+      if (completedAllDaily && dailyBonus > 0) {
+        await interaction.update({
+          components: [text],
+          flags: MessageFlags.IsComponentsV2,
+        });
+
+        const congratsMsgs = [
+          "Woah!", // default
+          "Harikitte ikou!",
+          "How did you just do that.",
+        ];
+
+        const congratsMsg =
+          Math.random() < 0.5
+            ? congratsMsgs[0]
+            : congratsMsgs[Math.floor(Math.random() * (congratsMsgs.length - 1)) + 1];
+
+        const dailyBonusMsg = `\`${congratsMsg}\`
+> \`✨ Completed all daily missions!\``;
+        const dailyBonusText = new TextDisplayBuilder().setContent(dailyBonusMsg);
+        return interaction.followUp({
+          components: [dailyBonusText],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
 
       return interaction.update({
         components: [text],
