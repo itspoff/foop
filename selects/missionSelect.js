@@ -52,6 +52,7 @@ export default {
     } else if (value === "complete") {
       const rewardMessages = [];
       let completedAllDaily = false;
+      let dailyBonus = 0;
 
       for (const mission of selectedMissions) {
         const totalTime = mission.locked_in_at
@@ -65,7 +66,6 @@ export default {
         });
 
         completedAllDaily = incompleteCount === 1;
-        let dailyBonus = 0;
 
         if (completedAllDaily) {
           const alreadyRewarded = await missions.findOne({
