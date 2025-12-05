@@ -1,7 +1,7 @@
 import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
-import { formatMission, getStatusMessage } from "../utils/formatLabels.js";
-import { formatTime, getCurrentPST } from "../utils/formatTime.js";
+import { getStatusMessage } from "../utils/formatLabels.js";
+import { getCurrentPST } from "../utils/formatTime.js";
 import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 import { calculateMissionRewards, formatMissionRewardMessage } from "../utils/missionRewards.js";
 import { getConfirmStatusRow } from "../utils/buttonRows.js";
