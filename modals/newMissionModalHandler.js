@@ -11,15 +11,10 @@ export default {
 
     const title = interaction.fields.getTextInputValue("new_input_title")?.trim();
     const desc = interaction.fields.getTextInputValue("new_input_desc")?.trim() || "";
-    const isDailyInput = interaction.fields.getTextInputValue("new_input_daily")?.trim().toUpperCase();
+    const isDailyInput = interaction.fields.getTextInputValue("new_input_daily")?.trim.toLowerCase();
 
-    const isDaily = isDailyInput === "T";
-    if (!["T", "F"].includes(isDailyInput)) {
-      return await interaction.reply({
-        content: "`❌ Invalid input for daily field. Please enter T or F.`",
-        ephemeral: true,
-      });
-    }
+    const trueInputs = ["t", "yes", "y"];
+    const isDaily = trueInputs.includes(isDailyInput);
 
     const missionCode = await generateUniqueCode(missions);
 

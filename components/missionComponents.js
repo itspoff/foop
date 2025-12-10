@@ -124,11 +124,12 @@ const placeholders = [
   "Good good study, day day up.",
   "Is this task bothering you?",
   "You can do this, I believe in you!",
-  "MY GOAT",
+  "I know you got this.",
   "Sending you energy to get through the day!",
   "uuuuuuuuu umapyoi! umayaoi!",
   "It's what Himmel the Hero would have done.",
   "你来啦！小可爱！",
+  "GOAT GOAT GOAT",
 ];
 
 export function createNewMissionModal(value = "") {
@@ -147,13 +148,13 @@ export function createNewMissionModal(value = "") {
 
   const dailyInput = new TextInputBuilder()
     .setCustomId("new_input_daily")
-    .setLabel("Is this task daily? (T/F)")
+    .setLabel("Is this task daily? (Leave blank for no.)")
     .setStyle(TextInputStyle.Short)
-    .setValue("F")
-    .setPlaceholder("(Type T/F)")
-    .setRequired(true)
-    .setMaxLength(1)
-    .setMinLength(1);
+    .setValue("")
+    .setPlaceholder('Type "Y", "T", or "Yes" to turn this into a daily task.')
+    .setRequired(false)
+    .setMaxLength(3)
+    .setMinLength(0);
 
   const descInput = new TextInputBuilder()
     .setCustomId("new_input_desc")
