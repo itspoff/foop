@@ -1,6 +1,5 @@
 import { MessageFlags } from "discord.js";
 import { getCurrentPST } from "../utils/formatTime.js";
-import { generateUniqueCode } from "../utils/generateUniqueCode.js";
 import { getMissionCard } from "../components/missionComponents.js";
 
 export default {
@@ -16,11 +15,8 @@ export default {
     const trueInputs = ["t", "yes", "y"];
     const isDaily = trueInputs.includes(isDailyInput);
 
-    const missionCode = await generateUniqueCode(missions);
-
     const mission = {
       user_id: user._id,
-      code: missionCode,
       name: title,
       description: desc,
       date_created: getCurrentPST().toJSDate(),

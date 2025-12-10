@@ -41,7 +41,7 @@ export function getMissionSelector(missionArray, options = MissionSelectOperatio
         const descString = desc.join(" - ");
         return new StringSelectMenuOptionBuilder()
           .setLabel(capitalizeFirstLetter(mission.name.slice(0, 100)))
-          .setValue(mission.code)
+          .setValue(mission._id.toString())
           .setDescription(descString || " ");
       })
     );
@@ -103,7 +103,7 @@ ${stats}
     disableComplete = true;
     disableCheer = true;
   }
-  const buttons = getMissionButtonRow(mission.code, mission.user_id, {
+  const buttons = getMissionButtonRow(mission._id, mission.user_id, {
     lockedInMission,
     disableLockIn,
     disableComplete,

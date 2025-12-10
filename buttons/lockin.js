@@ -3,6 +3,7 @@ import { formatMission } from "../utils/formatLabels.js";
 import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 import { getConfirmCheckOutRow, getConfirmStatusRow } from "../utils/buttonRows.js";
 import { getCurrentPST } from "../utils/formatTime.js";
+import { ObjectId } from "mongodb";
 
 export default {
   prefix: "lockin_",
@@ -16,7 +17,7 @@ export default {
     }
     const missions = db.collection("missions");
     const values = value.split("_");
-    const code = values[0];
+    let missionId = values[0];
     const parent = values[1];
 
     const alreadyLocked = await missions.findOne({
@@ -31,11 +32,12 @@ export default {
         flags: MessageFlags.IsComponentsV2,
       });
     }
-    if (/^\d{4}$/.test(code)) {
-      const mission = await missions.findOne({ code });
+    if (ObjectId.isValid(missionId)) {
+      missionId = ObjectId.createFromHexString(missionId);
+      const mission = await missions.findOne({ _id: missionId });
       if (!mission) {
         return interaction.reply({
-          content: `> \`❌ No mission found with code ${code}.\``,
+          content: `> \`❌ No mission found with id ${missionId}.\``,
           ephemeral: true,
         });
       }
@@ -46,11 +48,11 @@ export default {
         });
       }
       if (mission) {
-        await missions.updateOne({ code }, { $set: { locked_in_at: getCurrentPST().toJSDate() } });
+        await missions.updateOne({ _id: missionId }, { $set: { locked_in_at: getCurrentPST().toJSDate() } });
         const text = new TextDisplayBuilder().setContent("`🔐 Locked in on:` " + formatMission(mission));
         const updatedMission = await missions.findOne({
           user_id: user._id,
-          code,
+          _id: missionId,
         });
         const missionCard = await getMissionCard(updatedMission);
         await interaction.update({

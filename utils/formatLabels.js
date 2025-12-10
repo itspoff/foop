@@ -1,5 +1,5 @@
 import { MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
-import { timeSince } from "./formatTime.js";
+import { formatTime, timeSince } from "./formatTime.js";
 import { getOrCreateUser } from "./getOrCreateUser.js";
 import { getOwnStatusButtonRow, getStatusButtonRow } from "./buttonRows.js";
 
@@ -66,8 +66,6 @@ export function formatCondition(condition) {
     const name = capitalizeFirstLetter(condition.name);
     return `\`${emoji} ${name}\``;
   }
-
-  console.log("Could not format condition.");
 }
 
 export function formatThoughtBubble(bubble) {
@@ -76,14 +74,7 @@ export function formatThoughtBubble(bubble) {
   }
 }
 
-export async function showMissionList(
-  interaction,
-  user,
-  missions,
-  highlightCode = null,
-  highlightText = "",
-  followUp = true
-) {
+export async function showMissionList(interaction, user, missions, followUp = true) {
   const all = await missions.find({ user_id: user._id }).toArray();
   const sorted = sortMissions(all);
 
@@ -93,7 +84,7 @@ export async function showMissionList(
 
   const formatWithHighlight = (m) => {
     const label = formatDisplayMission(m);
-    return m.code === highlightCode ? `${label} \`${highlightText}\`` : label;
+    return label;
   };
 
   const dailyList = dailyMissions.map(formatWithHighlight).join("\n");
@@ -123,8 +114,7 @@ export function sortMissions(missions) {
 }
 
 export function formatMission(mission) {
-  const code = mission.code || "0000";
-  return `\`${capitalizeFirstLetter(mission.name)}\` \`🏷️${code}\``;
+  return `\`${capitalizeFirstLetter(mission.name)}\``;
 }
 
 export function formatDisplayMission(mission, quoted = true) {
@@ -136,10 +126,14 @@ export function formatDisplayMission(mission, quoted = true) {
     emoji = "💮";
   }
 
-  const code = mission.code || "0000";
+  let timer = "";
+  if (mission.time_taken) {
+    timer = `\`⏱️ ${formatTime(mission.time_taken)}\``;
+  }
+
   return `${quoted ? "> " : ""}\`${emoji}\`  ${mission.is_complete ? "~~" : ""}\`${capitalizeFirstLetter(
     mission.name
-  )}\`${mission.is_complete ? "~~" : ""} \`🏷️${code}\``;
+  )}\`${mission.is_complete ? "~~" : ""} ${timer}`;
 }
 
 export function formatLockedInMission(mission) {
@@ -147,8 +141,7 @@ export function formatLockedInMission(mission) {
     return `\`🕸️ Nothing here...\``;
   }
 
-  const code = mission.code || "0000";
-  return `\`🔐\` \`${capitalizeFirstLetter(mission.name)}\` \`🏷️${code}\`  \`⏱️ ${timeSince(mission.locked_in_at)}\``;
+  return `\`🔐\` \`${capitalizeFirstLetter(mission.name)}\` \`⏲️ ${timeSince(mission.locked_in_at)}\``;
 }
 
 export function capitalizeFirstLetter(string) {
@@ -191,7 +184,7 @@ export async function getStatusMessage(discordUser, interaction, db) {
 > **\`Current thought: \`** ${thoughtBubble}
 > **\`Locked in on:    \`** ${displayLockedInMission}`;
 
-  const displayMissions = await showMissionList(interaction, user, missionsCollection, null, "", false);
+  const displayMissions = await showMissionList(interaction, user, missionsCollection, false);
   const missions = new TextDisplayBuilder().setContent(displayMissions);
   const header = new TextDisplayBuilder().setContent(statusUpdate);
   const thumbnail = new ThumbnailBuilder().setDescription("Status").setURL(avatarURL);

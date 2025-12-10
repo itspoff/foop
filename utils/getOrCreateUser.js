@@ -1,5 +1,4 @@
 import connectToDatabase from "../db.js";
-import { generateUniqueCode } from "../utils/generateUniqueCode.js";
 import { getCurrentPST } from "./formatTime.js";
 
 export async function getOrCreateUser(discordUser, guildMember = null) {
@@ -37,11 +36,8 @@ export async function getOrCreateUser(discordUser, guildMember = null) {
     user = newUser;
     console.log(`Created new user: ${display_name}`);
 
-    const code = await generateUniqueCode(missions);
-
     await missions.insertOne({
       user_id: userId,
-      code,
       name: "daily login",
       description: "Use me once every day!",
       date_created: now.toJSDate(),

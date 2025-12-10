@@ -1,17 +1,8 @@
-import {
-  ActionRowBuilder,
-  AttachmentBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  MessageFlags,
-  SectionBuilder,
-  TextDisplayBuilder,
-  ThumbnailBuilder,
-} from "discord.js";
+import { AttachmentBuilder, MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 import { formatMission, getStatusMessage } from "../utils/formatLabels.js";
 import { formatTime } from "../utils/formatTime.js";
-import { getConfirmStatusRow, getMissionButtonRow } from "../utils/buttonRows.js";
+import { getConfirmStatusRow } from "../utils/buttonRows.js";
 import { getMissionCard } from "../components/missionComponents.js";
 
 export default {
@@ -26,7 +17,7 @@ export default {
     }
     const missions = db.collection("missions");
     const values = value.split("_");
-    const code = values[0];
+    const missionId = values[0];
     const parent = values[1];
 
     const mission = await missions.findOne({

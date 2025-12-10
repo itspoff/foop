@@ -5,6 +5,7 @@ import { getCurrentPST } from "../utils/formatTime.js";
 import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 import { calculateMissionRewards, formatMissionRewardMessage } from "../utils/missionRewards.js";
 import { getConfirmStatusRow } from "../utils/buttonRows.js";
+import { ObjectId } from "mongodb";
 
 export default {
   prefix: "complete_",
@@ -20,11 +21,12 @@ export default {
     const users = db.collection("users");
     const missions = db.collection("missions");
     const values = value.split("_");
-    const code = values[0];
+    let missionId = values[0];
     const parent = values[1];
 
-    if (/^\d{4}$/.test(code)) {
-      const mission = await missions.findOne({ code, user_id: user._id, is_complete: { $ne: true } });
+    if (ObjectId.isValid(missionId)) {
+      missionId = ObjectId.createFromHexString(missionId);
+      const mission = await missions.findOne({ _id: missionId, user_id: user._id, is_complete: { $ne: true } });
       const isDaily = mission.is_daily;
       if (!mission)
         return interaction.reply({ content: "> `❌ Mission not found or already complete.`", ephemeral: true });
@@ -87,7 +89,7 @@ export default {
         const updatedStatus = await getStatusMessage(interaction.user, interaction, db);
         await interaction.update(updatedStatus);
       } else {
-        const updatedMission = await missions.findOne({ user_id: user._id, code });
+        const updatedMission = await missions.findOne({ _id: missionId, user_id: user._id });
         const missionCard = await getMissionCard(updatedMission);
         await interaction.update({
           components: [missionCard],

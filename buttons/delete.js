@@ -1,7 +1,8 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, TextDisplayBuilder } from "discord.js";
+import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { capitalizeFirstLetter } from "../utils/formatLabels.js";
-import { getConfirmStatusRow, getMissionButtonRow } from "../utils/buttonRows.js";
+import { getConfirmStatusRow } from "../utils/buttonRows.js";
 import { getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
+import { ObjectId } from "mongodb";
 
 export default {
   prefix: "delete_",
@@ -15,14 +16,15 @@ export default {
     }
     const missions = db.collection("missions");
     const values = value.split("_");
-    const code = values[0];
+    let missionId = values[0];
     const parent = values[1];
 
-    if (/^\d{4}$/.test(code)) {
-      const mission = await missions.findOne({ code });
+    if (ObjectId.isValid(missionId)) {
+      missionId = ObjectId.createFromHexString(missionId);
+      const mission = await missions.findOne({ _id: missionId });
       if (!mission) {
         return interaction.reply({
-          content: `> \`❌ No mission found with code ${code}.\``,
+          content: `> \`❌ No mission found with id ${missionId}.\``,
           ephemeral: true,
         });
       }

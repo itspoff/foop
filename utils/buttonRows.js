@@ -1,7 +1,7 @@
 import { ButtonBuilder, ButtonStyle, ActionRowBuilder, SectionBuilder } from "discord.js";
 import { formatMission } from "./formatLabels.js";
 
-export function getMissionButtonRow(code, userId, options = {}) {
+export function getMissionButtonRow(missionId, userId, options = {}) {
   const {
     disableLockIn = false,
     disableCheckOut = false,
@@ -12,20 +12,20 @@ export function getMissionButtonRow(code, userId, options = {}) {
   } = options;
 
   let lockInButton = new ButtonBuilder()
-    .setCustomId(`lockin_${code}_${userId}`)
+    .setCustomId(`lockin_${missionId}_${userId}`)
     .setLabel("🔐 Lock in")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableLockIn);
 
   let completeButton = new ButtonBuilder()
-    .setCustomId(`complete_${code}_${userId}`)
+    .setCustomId(`complete_${missionId}_${userId}`)
     .setLabel("🐾 Complete")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableComplete);
 
   if (lockedInMission) {
     const checkOutButton = new ButtonBuilder()
-      .setCustomId(`checkout_${code}_card_${userId}`)
+      .setCustomId(`checkout_${missionId}_card_${userId}`)
       .setLabel("💨 Check out")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(disableCheckOut);
@@ -34,13 +34,13 @@ export function getMissionButtonRow(code, userId, options = {}) {
   }
 
   const cheerButton = new ButtonBuilder()
-    .setCustomId(`cheer_${code}_card_${userId}`)
+    .setCustomId(`cheer_${missionId}_card_${userId}`)
     .setLabel("👏 Cheer")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableCheer);
 
   const deleteButton = new ButtonBuilder()
-    .setCustomId(`delete_${code}_card_${userId}`)
+    .setCustomId(`delete_${missionId}_card_${userId}`)
     .setLabel("💢 Delete")
     .setStyle(ButtonStyle.Danger)
     .setDisabled(disableDelete);
@@ -50,10 +50,10 @@ export function getMissionButtonRow(code, userId, options = {}) {
 
 export function getStatusButtonRow(user, isOtherUser, lockedInMission, options = {}) {
   const { disableCheer = false, disablePackage = true, disableProfile = false } = options;
-  const code = lockedInMission ? lockedInMission.code : "0";
+  const missionId = lockedInMission ? lockedInMission._id : "0";
 
   const cheerButton = new ButtonBuilder()
-    .setCustomId(`cheer_${code}_${user._id}`)
+    .setCustomId(`cheer_${missionId}_${user._id}`)
     .setLabel("👏 Cheer")
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableCheer);
@@ -73,13 +73,13 @@ export function getStatusButtonRow(user, isOtherUser, lockedInMission, options =
   return new ActionRowBuilder().addComponents(cheerButton, packageButton, profileButton);
 }
 
-export function getConfirmCheerRow(user, code) {
+export function getConfirmCheerRow(user, missionId) {
   return new SectionBuilder()
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(`\`Spend 25 Ppts to cheer?\`\n-# \`You currently have: ${user.ppts} Ppts\``)
     )
     .setButtonAccessory((button) =>
-      button.setCustomId(`cheer_${code}_confirm_${user._id}`).setLabel("⭕️ Confirm").setStyle(ButtonStyle.Danger)
+      button.setCustomId(`cheer_${missionId}_confirm_${user._id}`).setLabel("⭕️ Confirm").setStyle(ButtonStyle.Danger)
     );
 }
 
@@ -103,7 +103,7 @@ export function getConfirmCheckOutRow(user, mission) {
     )
     .setButtonAccessory((button) =>
       button
-        .setCustomId(`checkout_${alreadyLocked.code}_confirm_${user._id}`)
+        .setCustomId(`checkout_${alreadyLocked._id}_confirm_${user._id}`)
         .setLabel("💨 Check out")
         .setStyle(ButtonStyle.Primary)
     );
@@ -161,15 +161,17 @@ export function getOwnStatusButtonRow(user, options = {}) {
     .setDisabled(disableComplete);
 
   if (lockedInMission) {
+    const missionId = lockedInMission._id;
+
     const checkOutButton = new ButtonBuilder()
-      .setCustomId(`checkout_${lockedInMission.code}_status_${userId}`)
+      .setCustomId(`checkout_${missionId}_status_${userId}`)
       .setLabel("💨 Check out")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(disableCheckOut);
 
     lockInButton = checkOutButton;
     completeButton = new ButtonBuilder()
-      .setCustomId(`complete_${lockedInMission.code}_status_${userId}`)
+      .setCustomId(`complete_${missionId}_status_${userId}`)
       .setLabel("🐾 Complete")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(disableComplete);

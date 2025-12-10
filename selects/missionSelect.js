@@ -5,18 +5,17 @@ import { calculateMissionRewards, formatMissionRewardMessage } from "../utils/mi
 import { getCurrentPST } from "../utils/formatTime.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 import { getConfirmCheckOutRow } from "../utils/buttonRows.js";
+import { ObjectId } from "mongodb";
 
 export default {
   prefix: "missionSelect_",
 
   async execute(interaction, { db, user, value }) {
     const users = db.collection("users");
-    const selectedCodes = interaction.values;
+    const selectedMissionIds = interaction.values.map((id) => new ObjectId(id));
     const missions = db.collection("missions");
 
-    // Fetch selected missions
-    const selectedMissions = await missions.find({ user_id: user._id, code: { $in: selectedCodes } }).toArray();
-
+    const selectedMissions = await missions.find({ user_id: user._id, _id: { $in: selectedMissionIds } }).toArray();
     if (selectedMissions.length === 0) {
       await interaction.reply({
         content: "❌ This selector is outdated!",
