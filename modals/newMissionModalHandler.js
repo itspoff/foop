@@ -11,7 +11,7 @@ export default {
 
     const title = interaction.fields.getTextInputValue("new_input_title")?.trim();
     const desc = interaction.fields.getTextInputValue("new_input_desc")?.trim() || "";
-    const isDailyInput = interaction.fields.getTextInputValue("new_input_daily")?.trim.toLowerCase();
+    const isDailyInput = interaction.fields.getTextInputValue("new_input_daily")?.trim().toLowerCase();
 
     const trueInputs = ["t", "yes", "y"];
     const isDaily = trueInputs.includes(isDailyInput);
