@@ -235,6 +235,14 @@ setInterval(async () => {
   for (const user of users) {
     const users = await db.collection("users");
     const missions = await db.collection("missions");
+
+    // don't send daily message if user has not been active within the last 24 hours
+    const lastUpdated = user.last_updated ? DateTime.fromJSDate(user.last_updated) : null;
+    if (!lastUpdated || now.diff(lastUpdated, "hours").hours > 24) {
+      console.log(`Skipping daly message for ${user.display_name}: inactive`);
+      continue;
+    }
+
     try {
       const discordUser = await client.users.fetch(user._id.toString());
       const dailyMissions = await missions.find({ user_id: user._id, is_daily: true }).toArray();
