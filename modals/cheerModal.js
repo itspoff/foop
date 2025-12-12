@@ -68,7 +68,9 @@ export function createCheerModal(userToCheer = "a friend", missionId) {
   const placeholder =
     Math.random() < 0.5 ? placeholders[0] : placeholders[Math.floor(Math.random() * (placeholders.length - 1)) + 1];
 
-  const textDescription = new TextDisplayBuilder().setContent("test");
+  const textDescription = new TextDisplayBuilder().setContent(
+    `Use 250 ppts to cheer for this mission? \n-# ${userToCheer} will receive double the rewards on completion.`
+  );
   const messageInput = new TextInputBuilder()
     .setCustomId("cheer_input_message")
     .setStyle(TextInputStyle.Short)
@@ -77,6 +79,6 @@ export function createCheerModal(userToCheer = "a friend", missionId) {
 
   const messageLabel = new LabelBuilder().setLabel("Add a message").setTextInputComponent(messageInput);
 
-  modal.addLabelComponents(messageLabel).addTextDisplayComponents(textDescription);
+  modal.addTextDisplayComponents(textDescription).addLabelComponents(messageLabel);
   return modal;
 }
