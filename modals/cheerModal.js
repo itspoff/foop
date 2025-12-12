@@ -42,7 +42,7 @@ export default {
       });
     }
 
-    const message = interaction.fields.getTextInputValue("cheer_input_message")?.trim();
+    const message = interaction.fields.getTextInputValue("cheer_input_message")?.trim() || "You got this!";
 
     const text = new TextDisplayBuilder().setContent(
       `\`${message}\`
