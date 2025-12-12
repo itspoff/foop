@@ -3,7 +3,6 @@ import {
   StringSelectMenuOptionBuilder,
   ActionRowBuilder,
   ContainerBuilder,
-  TextDisplayBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,

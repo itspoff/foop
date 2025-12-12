@@ -173,9 +173,8 @@ export async function getStatusMessage(discordUser, interaction, db) {
     user_id: user._id,
     locked_in_at: { $ne: null },
   });
-  const displayLockedInMission = formatLockedInMission(lockedInMission);
 
-  const displayConditions = formatConditionList(user.conditions);
+  const displayLockedInMission = formatLockedInMission(lockedInMission);
   const thoughtBubble = formatThoughtBubble(user.thought_bubble) ?? "`🧠 Head empty. No thoughts.`";
 
   // Header Text
