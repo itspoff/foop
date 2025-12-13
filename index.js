@@ -229,25 +229,28 @@ setInterval(async () => {
     .collection("users")
     .find({
       daily_reset_hour: currentHour,
-      $or: [{ last_daily_sent: { $lt: now.startOf("day").toJSDate() } }, { last_daily_sent: { $exists: false } }],
+      $or: [{ last_daily_sent: { $lt: now.startOf("hour").toJSDate() } }, { last_daily_sent: { $exists: false } }],
     })
     .toArray();
 
   for (const user of users) {
-    const users = await db.collection("users");
-    const missions = await db.collection("missions");
+    const usersCol = db.collection("users");
+    const missionsCol = db.collection("missions");
 
     // don't send daily message if user has not been active within the last 24 hours
     const lastUpdated = user.last_updated ? DateTime.fromJSDate(user.last_updated) : null;
     if (!lastUpdated || now.diff(lastUpdated, "hours").hours > 24) {
-      console.log(`Skipping daly message for ${user.display_name}: inactive`);
+      console.log(`Skipping daily message for ${user.display_name}: last active ${lastUpdated?.toISO()}`);
+
+      await usersCol.updateOne({ _id: user._id }, { $set: { last_daily_sent: now.toJSDate() } });
+
       continue;
     }
 
     try {
       const discordUser = await client.users.fetch(user._id.toString());
-      const dailyMissions = await missions.find({ user_id: user._id, is_daily: true }).toArray();
-      const allMissions = await missions.find({ user_id: user._id }).toArray();
+      const dailyMissions = await missionsCol.find({ user_id: user._id, is_daily: true }).toArray();
+      const allMissions = await missionsCol.find({ user_id: user._id }).toArray();
 
       const dailyReport = getDailyReport(user, discordUser, dailyMissions, allMissions);
 
@@ -267,7 +270,7 @@ setInterval(async () => {
         userUpdate.$set.daily_streak = 0;
       }
 
-      await users.updateOne({ _id: user._id }, userUpdate);
+      await usersCol.updateOne({ _id: user._id }, userUpdate);
 
       for (const daily of dailyMissions) {
         let updatedMission = {
@@ -293,10 +296,10 @@ setInterval(async () => {
             count: 1,
           };
         }
-        await missions.updateOne({ _id: daily._id, user_id: user._id }, updatedMission);
+        await missionsCol.updateOne({ _id: daily._id, user_id: user._id }, updatedMission);
       }
 
-      await missions.deleteMany({
+      await missionsCol.deleteMany({
         user_id: user._id,
         is_daily: false,
         is_complete: true,
