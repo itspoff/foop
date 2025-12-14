@@ -11,7 +11,7 @@ import { config } from "dotenv";
 import connectToDatabase from "./db.js";
 import fs from "node:fs";
 import { getOrCreateUser } from "./utils/getOrCreateUser.js";
-import { getCurrentPST, getResetTimePST } from "./utils/formatTime.js";
+import { getCurrentPST, getResetTimePST, timeSince } from "./utils/formatTime.js";
 import { formatReminder } from "./utils/formatReminder.js";
 import { getDailyReport } from "./components/dailyReport.js";
 import { getDailyButtonRow } from "./utils/buttonRows.js";
@@ -237,16 +237,6 @@ setInterval(async () => {
     const usersCol = db.collection("users");
     const missionsCol = db.collection("missions");
 
-    // don't send daily message if user has not been active within the last 24 hours
-    const lastUpdated = user.last_updated ? DateTime.fromJSDate(user.last_updated) : null;
-    if (!lastUpdated || now.diff(lastUpdated, "hours").hours > 24) {
-      console.log(`Skipping daily message for ${user.display_name}: last active ${lastUpdated?.toISO()}`);
-
-      await usersCol.updateOne({ _id: user._id }, { $set: { last_daily_sent: now.toJSDate() } });
-
-      continue;
-    }
-
     try {
       const discordUser = await client.users.fetch(user._id.toString());
       const dailyMissions = await missionsCol.find({ user_id: user._id, is_daily: true }).toArray();
@@ -308,11 +298,18 @@ setInterval(async () => {
 
       const separator = new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small);
       const buttons = getDailyButtonRow(discordUser);
-      await discordUser.send({
-        components: [dailyReport.section, separator, buttons],
-        flags: [MessageFlags.IsComponentsV2],
-      });
-      console.log(`Sent daily message to ${user.display_name || user._id}`);
+
+      // don't send daily message if user has not been active within the last 24 hours
+      const lastUpdated = user.last_updated ? DateTime.fromJSDate(user.last_updated) : null;
+      if (!lastUpdated || now.diff(lastUpdated, "hours").hours > 24) {
+        console.log(`Skipping daily message for ${user.display_name}: last active: ${timeSince(lastUpdated)} ago`);
+      } else {
+        await discordUser.send({
+          components: [dailyReport.section, separator, buttons],
+          flags: [MessageFlags.IsComponentsV2],
+        });
+        console.log(`Sent daily message to ${user.display_name || user._id}`);
+      }
     } catch (err) {
       console.error(`❌ Failed to send daily message to ${user._id}:`, err);
     }
