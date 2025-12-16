@@ -2,7 +2,7 @@ import { AttachmentBuilder, MessageFlags, SectionBuilder, TextDisplayBuilder, Th
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 import { formatMission, getStatusMessage } from "../utils/formatLabels.js";
 import { formatTime } from "../utils/formatTime.js";
-import { getConfirmStatusRow } from "../utils/buttonRows.js";
+import { getConfirmStatusRow } from "../components/buttonRows.js";
 import { getMissionCard } from "../components/missionComponents.js";
 
 export default {

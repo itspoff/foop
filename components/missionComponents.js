@@ -9,7 +9,7 @@ import {
 } from "discord.js";
 import { sortMissions, capitalizeFirstLetter, formatDisplayMission } from "../utils/formatLabels.js";
 import { DateTime } from "luxon";
-import { getMissionButtonRow } from "../utils/buttonRows.js";
+import { getMissionButtonRow } from "./buttonRows.js";
 import { formatTime } from "../utils/formatTime.js";
 import { getExistingUserFromId } from "../utils/getOrCreateUser.js";
 

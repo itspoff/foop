@@ -18,7 +18,7 @@ import { generateUniqueCode } from "../utils/generateUniqueCode.js";
 import { capitalizeFirstLetter, formatHelpText, formatMission } from "../utils/formatLabels.js";
 import { formatTime, getCurrentPST } from "../utils/formatTime.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
-import { getConfirmCheckOutRow, getMissionButtonRow } from "../utils/buttonRows.js";
+import { getConfirmCheckOutRow, getMissionButtonRow } from "../components/buttonRows.js";
 import {
   createNewMissionModal,
   getMissionCard,

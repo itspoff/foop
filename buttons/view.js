@@ -1,6 +1,6 @@
 import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
-import { getConfirmStatusRow } from "../utils/buttonRows.js";
+import { getConfirmStatusRow } from "../components/buttonRows.js";
 
 export default {
   prefix: "view_",

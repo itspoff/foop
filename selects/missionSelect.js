@@ -4,7 +4,7 @@ import { getMissionCard } from "../components/missionComponents.js";
 import { calculateMissionRewards, formatMissionRewardMessage } from "../utils/missionRewards.js";
 import { getCurrentPST } from "../utils/formatTime.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
-import { getConfirmCheckOutRow } from "../utils/buttonRows.js";
+import { getConfirmCheckOutRow } from "../components/buttonRows.js";
 import { ObjectId } from "mongodb";
 
 export default {

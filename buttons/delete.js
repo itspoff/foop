@@ -1,6 +1,6 @@
 import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { capitalizeFirstLetter } from "../utils/formatLabels.js";
-import { getConfirmStatusRow } from "../utils/buttonRows.js";
+import { getConfirmStatusRow } from "../components/buttonRows.js";
 import { getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 import { ObjectId } from "mongodb";
 

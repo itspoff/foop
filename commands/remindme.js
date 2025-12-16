@@ -3,7 +3,7 @@ import connectToDatabase from "../db.js";
 import * as chrono from "chrono-node";
 import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 import { formatReminder } from "../utils/formatReminder.js";
-import { getReminderRow } from "../utils/buttonRows.js";
+import { getReminderRow } from "../components/buttonRows.js";
 import { getCurrentPST } from "../utils/formatTime.js";
 
 export const data = new SlashCommandBuilder()

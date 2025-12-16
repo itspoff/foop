@@ -1,7 +1,7 @@
 import { MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import { formatTime, timeSince } from "./formatTime.js";
 import { getOrCreateUser } from "./getOrCreateUser.js";
-import { getOwnStatusButtonRow, getStatusButtonRow } from "./buttonRows.js";
+import { getOwnStatusButtonRow, getStatusButtonRow } from "../components/buttonRows.js";
 
 export function formatMood(mood) {
   const moodMap = {
@@ -150,6 +150,15 @@ export function capitalizeFirstLetter(string) {
 
 export function formatHelpText(string) {
   return `\n-# *${string}*`;
+}
+
+export async function getHomeMessage(discordUser, interaction, db) {
+  const text = new TextDisplayBuilder().setContent("home");
+
+  return {
+    components: [text],
+    flags: MessageFlags.IsComponentsV2,
+  };
 }
 
 export async function getStatusMessage(discordUser, interaction, db) {

@@ -1,6 +1,6 @@
 import { ButtonStyle, MessageFlags, SectionBuilder } from "discord.js";
 import { createNewMissionModal } from "../components/missionComponents.js";
-import { getConfirmStatusRow } from "../utils/buttonRows.js";
+import { getConfirmStatusRow } from "../components/buttonRows.js";
 
 export default {
   prefix: "new_",

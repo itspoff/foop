@@ -14,7 +14,7 @@ import { getOrCreateUser } from "./utils/getOrCreateUser.js";
 import { getCurrentPST, getResetTimePST, timeSince } from "./utils/formatTime.js";
 import { formatReminder } from "./utils/formatReminder.js";
 import { getDailyReport } from "./components/dailyReport.js";
-import { getDailyButtonRow } from "./utils/buttonRows.js";
+import { getDailyButtonRow } from "./components/buttonRows.js";
 import { calculateLevelUp } from "./utils/missionRewards.js";
 import { DateTime } from "luxon";
 

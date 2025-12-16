@@ -1,7 +1,7 @@
 import { ButtonStyle, MessageFlags, SectionBuilder, TextDisplayBuilder } from "discord.js";
 import { formatMission } from "../utils/formatLabels.js";
 import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
-import { getConfirmCheckOutRow, getConfirmStatusRow } from "../utils/buttonRows.js";
+import { getConfirmCheckOutRow, getConfirmStatusRow } from "../components/buttonRows.js";
 import { getCurrentPST } from "../utils/formatTime.js";
 import { ObjectId } from "mongodb";
 

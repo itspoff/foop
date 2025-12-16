@@ -1,5 +1,5 @@
 import { ButtonBuilder, ButtonStyle, ActionRowBuilder, SectionBuilder } from "discord.js";
-import { formatMission } from "./formatLabels.js";
+import { formatMission } from "../utils/formatLabels.js";
 
 export function getMissionButtonRow(missionId, userId, options = {}) {
   const {

@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, InteractionContextType, MessageFlags } from "discord.js";
 import connectToDatabase from "../db.js";
 import { getStatusMessage } from "../utils/formatLabels.js";
-import { getConfirmStatusRow } from "../utils/buttonRows.js";
+import { getConfirmStatusRow } from "../components/buttonRows.js";
 
 export const data = new SlashCommandBuilder()
   .setName("status")
