@@ -152,7 +152,7 @@ export function formatHelpText(string) {
   return `\n-# *${string}*`;
 }
 
-export async function getHomeMessage(discordUser, interaction, db) {
+export async function getHomeMessage(interaction, db) {
   const text = new TextDisplayBuilder().setContent("home");
   const petsCollection = db.collection("pets");
 

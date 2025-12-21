@@ -60,7 +60,8 @@ export default {
     });
   },
 };
-export function createCheerModal(userToCheer = "a friend", missionId) {
+
+export function getCheerModal(userToCheer = "a friend", missionId) {
   const modal = new ModalBuilder()
     .setCustomId(`cheer_modal_submit:${missionId}`)
     .setTitle(`Cheer for ${userToCheer} 🎉`);

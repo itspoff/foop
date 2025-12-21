@@ -1,6 +1,6 @@
-import { ButtonStyle, MessageFlags, SectionBuilder } from "discord.js";
-import { createNewMissionModal } from "../components/missionComponents.js";
+import { MessageFlags } from "discord.js";
 import { getConfirmStatusRow } from "../components/buttonRows.js";
+import { getNewMissionModal } from "../modals/newMissionModal.js";
 
 export default {
   prefix: "new_",
@@ -14,7 +14,7 @@ export default {
       });
     }
 
-    const modal = createNewMissionModal();
+    const modal = getNewMissionModal();
     return interaction.showModal(modal);
   },
 };

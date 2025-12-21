@@ -8,15 +8,16 @@ import {
   SeparatorSpacingSize,
 } from "discord.js";
 import { config } from "dotenv";
-import connectToDatabase from "./db.js";
 import fs from "node:fs";
+import { DateTime } from "luxon";
+
+import connectToDatabase from "./db.js";
 import { getOrCreateUser } from "./utils/getOrCreateUser.js";
-import { getCurrentPST, getResetTimePST, timeSince } from "./utils/formatTime.js";
+import { getCurrentPST, getResetTimePST } from "./utils/formatTime.js";
 import { formatReminder } from "./utils/formatReminder.js";
 import { getDailyReport } from "./components/dailyReport.js";
 import { getDailyButtonRow } from "./components/buttonRows.js";
 import { calculateLevelUp } from "./utils/missionRewards.js";
-import { DateTime } from "luxon";
 
 config();
 
@@ -25,53 +26,58 @@ const client = new Client({
 });
 
 client.commands = new Collection();
-client.buttons = new Collection();
-client.modalSubmissions = new Collection();
-
 client.buttonHandlersByPrefix = [];
 client.modalHandlersByPrefix = [];
 client.selectHandlersByPrefix = [];
 
-const buttonFiles = fs.readdirSync("./buttons").filter((file) => file.endsWith(".js"));
-for (const file of buttonFiles) {
-  const button = (await import(`./buttons/${file}`)).default;
-  if (button?.prefix && typeof button.execute === "function") {
-    client.buttonHandlersByPrefix.push(button);
-  }
-}
-
-const modalFiles = fs.readdirSync("./modals").filter((file) => file.endsWith(".js"));
-for (const file of modalFiles) {
-  const modalHandler = (await import(`./modals/${file}`)).default;
-  if (modalHandler?.prefix && typeof modalHandler.execute === "function") {
-    client.modalHandlersByPrefix.push(modalHandler);
-  }
-}
-
-const selectFiles = fs.readdirSync("./selects").filter((file) => file.endsWith(".js"));
-for (const file of selectFiles) {
-  const selectHandler = (await import(`./selects/${file}`)).default;
-  if (selectHandler?.prefix && typeof selectHandler.execute === "function") {
-    client.selectHandlersByPrefix.push(selectHandler);
-  }
-}
-
-const commandFiles = fs.readdirSync("./commands").filter((file) => file.endsWith(".js"));
-for (const file of commandFiles) {
-  const command = await import(`./commands/${file}`);
-  if ("data" in command && "execute" in command) {
-    client.commands.set(command.data.name, command);
-  }
-}
 const baseDailyBonus = 100;
 let db;
+
+async function loadHandlers(dir, targetArray) {
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith(".js"));
+  for (const file of files) {
+    const handler = (await import(`${dir}/${file}`)).default;
+    if (handler?.prefix && typeof handler.execute === "function") {
+      targetArray.push(handler);
+    }
+  }
+}
+
+async function loadCommands() {
+  const files = fs.readdirSync("./commands").filter((f) => f.endsWith(".js"));
+  for (const file of files) {
+    const command = await import(`./commands/${file}`);
+    if (command?.data && command?.execute) {
+      client.commands.set(command.data.name, command);
+    }
+  }
+}
+
+async function safeExecute(interaction, fn) {
+  try {
+    await fn();
+  } catch (err) {
+    console.error("❌ Interaction error:", err);
+    if (!interaction.replied) {
+      await interaction.reply({ content: "`❌ There was an error.`", ephemeral: true });
+    }
+  }
+}
+
+function findHandlerByPrefix(handlers, customId) {
+  return handlers.find((h) => customId.startsWith(h.prefix));
+}
 
 (async () => {
   db = await connectToDatabase();
 
+  await loadHandlers("./buttons", client.buttonHandlersByPrefix);
+  await loadHandlers("./modals", client.modalHandlersByPrefix);
+  await loadHandlers("./selects", client.selectHandlersByPrefix);
+  await loadCommands();
+
   client.once(Events.ClientReady, async (c) => {
     console.log(`Logged in as ${c.user.tag}`);
-    db = await connectToDatabase();
   });
 
   client.on(Events.InteractionCreate, async (interaction) => {
@@ -79,111 +85,70 @@ let db;
     const user = await getOrCreateUser(interaction.user, interaction.member);
 
     if (interaction.isButton()) {
-      const matchedHandler = client.buttonHandlersByPrefix.find((handler) =>
-        interaction.customId.startsWith(handler.prefix)
-      );
+      const handler = findHandlerByPrefix(client.buttonHandlersByPrefix, interaction.customId);
+      if (!handler) return;
 
-      if (!matchedHandler) return;
-
-      const value = interaction.customId.slice(matchedHandler.prefix.length);
+      const value = interaction.customId.slice(handler.prefix.length);
       const tags = await db.collection("tags").find().toArray();
 
-      try {
-        await matchedHandler.execute(interaction, { db, user, tags, value });
-      } catch (err) {
-        console.error("Error executing button handler:", err);
-        await interaction.reply({
-          content: "`❌ There was an error.`",
-          ephemeral: true,
-        });
-      }
-    } else if (interaction.isModalSubmit()) {
-      const matchedHandler = client.modalHandlersByPrefix.find((handler) =>
-        interaction.customId.startsWith(handler.prefix)
-      );
+      return safeExecute(interaction, () => handler.execute(interaction, { db, user, tags, value }));
+    }
 
-      if (!matchedHandler) return;
+    if (interaction.isModalSubmit()) {
+      const handler = findHandlerByPrefix(client.modalHandlersByPrefix, interaction.customId);
+      if (!handler) return;
 
-      const value = interaction.customId.slice(matchedHandler.prefix.length);
+      const value = interaction.customId.slice(handler.prefix.length);
 
-      try {
-        await matchedHandler.execute(interaction, { db, user, value });
-      } catch (err) {
-        console.error("Error executing modal handler:", err);
-        await interaction.reply({
-          content: "`❌ There was an error.`",
-          ephemeral: true,
-        });
-      }
-    } else if (interaction.isStringSelectMenu()) {
-      const matchedHandler = client.selectHandlersByPrefix.find((handler) =>
-        interaction.customId.startsWith(handler.prefix)
-      );
+      return safeExecute(interaction, () => handler.execute(interaction, { db, user, value }));
+    }
 
-      if (!matchedHandler) return;
+    if (interaction.isStringSelectMenu()) {
+      const handler = findHandlerByPrefix(client.selectHandlersByPrefix, interaction.customId);
+      if (!handler) return;
 
-      const value = interaction.customId.slice(matchedHandler.prefix.length);
+      const value = interaction.customId.slice(handler.prefix.length);
 
-      try {
-        await matchedHandler.execute(interaction, { db, user, value });
-      } catch (err) {
-        console.error("Error executing string select menu handler:", err);
-        await interaction.reply({
-          content: "`❌ There was an error.`",
-          ephemeral: true,
-        });
-      }
-    } else if (interaction.isChatInputCommand()) {
+      return safeExecute(interaction, () => handler.execute(interaction, { db, user, value }));
+    }
+
+    if (interaction.isUserContextMenuCommand() || interaction.isMessageContextMenuCommand()) {
       const command = client.commands.get(interaction.commandName);
       if (!command) return;
 
-      try {
-        await command.execute(interaction, db);
-      } catch (error) {
-        console.error("`❌ Error executing command:`", error);
-        await interaction.reply({
-          content: "There was an error!",
-        });
-      }
+      return safeExecute(interaction, () => command.execute(interaction, db));
+    }
 
-      // daily login
-      const missions = db.collection("missions");
-      const users = db.collection("users");
+    const command = client.commands.get(interaction.commandName);
+    if (!command) return;
 
-      const lastClaim = user.last_daily_bonus ? new Date(user.last_daily_bonus) : null;
-      const userResetHour = typeof user.daily_reset_hour === "number" ? user.daily_reset_hour : 0;
-      const resetTime = getResetTimePST(userResetHour);
+    await safeExecute(interaction, () => command.execute(interaction, db));
 
-      if (!lastClaim || lastClaim < resetTime) {
-        console.log("Daily Login from:", user.display_name);
-        const bonus = baseDailyBonus + Math.floor(Math.random() * 101);
+    const usersCol = db.collection("users");
+    const missionsCol = db.collection("missions");
 
-        await missions.updateOne(
-          { user_id: user._id, name: "daily login", is_system: true },
-          {
-            $set: {
-              is_complete: true,
-            },
-          }
-        );
+    const lastClaim = user.last_daily_bonus ? new Date(user.last_daily_bonus) : null;
+    const resetTime = getResetTimePST(user.daily_reset_hour ?? 0);
 
-        await users.updateOne(
-          { _id: user._id },
-          {
-            $inc: {
-              ppts: bonus,
-            },
-            $set: {
-              last_daily_bonus: getCurrentPST().toJSDate(),
-            },
-          }
-        );
+    if (!lastClaim || lastClaim < resetTime) {
+      const bonus = baseDailyBonus + Math.floor(Math.random() * 101);
 
-        await interaction.followUp({
-          content: `## \`✨\` *\`Daily Login Bonus!\`* \`✨\`
-||\`🔥 +${bonus} PPts \`||`,
-        });
-      }
+      await missionsCol.updateOne(
+        { user_id: user._id, name: "daily login", is_system: true },
+        { $set: { is_complete: true } }
+      );
+
+      await usersCol.updateOne(
+        { _id: user._id },
+        {
+          $inc: { ppts: bonus },
+          $set: { last_daily_bonus: getCurrentPST().toJSDate() },
+        }
+      );
+
+      await interaction.followUp({
+        content: `## \`✨ Daily Login Bonus ✨\`\n||\`🔥 +${bonus} PPts\`||`,
+      });
     }
   });
 
@@ -193,6 +158,7 @@ let db;
 setInterval(async () => {
   if (!db) db = await connectToDatabase();
   const now = getCurrentPST();
+
   const reminders = await db
     .collection("reminders")
     .find({
@@ -200,16 +166,18 @@ setInterval(async () => {
       sent: false,
     })
     .toArray();
+
   for (const reminder of reminders) {
     try {
-      let channel;
+      let channel = null;
+
       try {
         channel = await client.channels.fetch(reminder.channel_id);
-      } catch (err) {
-        console.warn(`Channel not accessible for user ${reminder.user_id}, falling back to DM`);
+      } catch {
+        console.warn(`⚠️ Channel unavailable, DM fallback for ${reminder.user_id}`);
       }
 
-      const content = `<@${reminder.user_id}> \`You have a reminder!\` \n> ${formatReminder(reminder)}`;
+      const content = `<@${reminder.user_id}> \`You have a reminder!\`\n> ${formatReminder(reminder)}`;
 
       if (channel) {
         await channel.send({ content });
@@ -218,52 +186,45 @@ setInterval(async () => {
         await user.send({ content });
       }
 
-      return db.collection("reminders").updateOne({ _id: reminder._id }, { $set: { sent: true } });
+      await db.collection("reminders").updateOne({ _id: reminder._id }, { $set: { sent: true } });
     } catch (err) {
       console.error("❌ Failed to send reminder:", err);
     }
   }
-  const currentHour = now.hour;
 
   const users = await db
     .collection("users")
     .find({
-      daily_reset_hour: currentHour,
+      daily_reset_hour: now.hour,
       $or: [{ last_daily_sent: { $lt: now.startOf("hour").toJSDate() } }, { last_daily_sent: { $exists: false } }],
     })
     .toArray();
 
   for (const user of users) {
-    const usersCol = db.collection("users");
-    const missionsCol = db.collection("missions");
-
     try {
       const discordUser = await client.users.fetch(user._id.toString());
+      const missionsCol = db.collection("missions");
+
       const dailyMissions = await missionsCol.find({ user_id: user._id, is_daily: true }).toArray();
       const allMissions = await missionsCol.find({ user_id: user._id }).toArray();
 
       const dailyReport = getDailyReport(user, discordUser, dailyMissions, allMissions);
 
-      const userUpdate = {
+      const update = {
         $set: {
           energy: 100,
           mood: "normal",
           thought_bubble: null,
           last_updated: now.toJSDate(),
           last_daily_sent: now.toJSDate(),
+          daily_streak: dailyReport.allDailiesCompleted ? (user.daily_streak ?? 0) + 1 : 0,
         },
       };
 
-      if (dailyReport.allDailiesCompleted) {
-        userUpdate.$inc = { daily_streak: 1 };
-      } else {
-        userUpdate.$set.daily_streak = 0;
-      }
-
-      await usersCol.updateOne({ _id: user._id }, userUpdate);
+      await db.collection("users").updateOne({ _id: user._id }, update);
 
       for (const daily of dailyMissions) {
-        let updatedMission = {
+        const updateMission = {
           $set: {
             is_complete: false,
             locked_in_at: null,
@@ -272,21 +233,17 @@ setInterval(async () => {
             cheers: [],
             rewarded_all_dailies: false,
           },
+          $inc: { count: 1 },
         };
+
         if (daily.is_complete) {
           const levelUp = calculateLevelUp(daily);
-          updatedMission.$set.level = levelUp.level;
-          updatedMission.$set.xp = levelUp.xp;
-          updatedMission.$inc = {
-            count: 1,
-            completed_count: 1,
-          };
-        } else {
-          updatedMission.$inc = {
-            count: 1,
-          };
+          updateMission.$set.level = levelUp.level;
+          updateMission.$set.xp = levelUp.xp;
+          updateMission.$inc.completed_count = 1;
         }
-        await missionsCol.updateOne({ _id: daily._id, user_id: user._id }, updatedMission);
+
+        await missionsCol.updateOne({ _id: daily._id }, updateMission);
       }
 
       await missionsCol.deleteMany({
@@ -294,24 +251,21 @@ setInterval(async () => {
         is_daily: false,
         is_complete: true,
       });
-      console.log(`Reset missions for ${user.display_name}`);
 
-      const separator = new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small);
-      const buttons = getDailyButtonRow(discordUser);
-
-      // don't send daily message if user has not been active within the last 24 hours
       const lastUpdated = user.last_updated ? DateTime.fromJSDate(user.last_updated) : null;
-      if (!lastUpdated || now.diff(lastUpdated, "hours").hours > 24) {
-        console.log(`Skipping daily message for ${user.display_name}: last active: ${timeSince(lastUpdated)} ago`);
-      } else {
+      if (lastUpdated && now.diff(lastUpdated, "hours").hours <= 24) {
+        const separator = new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small);
+        const buttons = getDailyButtonRow(discordUser);
+
         await discordUser.send({
           components: [dailyReport.section, separator, buttons],
           flags: [MessageFlags.IsComponentsV2],
         });
-        console.log(`Sent daily message to ${user.display_name || user._id}`);
+      } else {
+        console.log(`⏭️ Skipped daily DM for ${user.display_name} (inactive)`);
       }
     } catch (err) {
-      console.error(`❌ Failed to send daily message to ${user._id}:`, err);
+      console.error(`❌ Daily reset failed for ${user._id}:`, err);
     }
   }
 }, 60 * 1000);
