@@ -1,4 +1,4 @@
-import { MessageFlags, ModalBuilder, TextInputBuilder } from "discord.js";
+import { ActionRowBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { getCurrentPST } from "../utils/formatTime.js";
 import { getMissionCard } from "../components/missionComponents.js";
 
