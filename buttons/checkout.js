@@ -65,7 +65,7 @@ export default {
     );
 
     if (parent === "status") {
-      const updatedStatus = await getStatusMessage(interaction.user, interaction, db);
+      const updatedStatus = await getStatusMessage(interaction, db);
       await interaction.update(updatedStatus);
     } else if (parent === "confirm") {
       return interaction.update({

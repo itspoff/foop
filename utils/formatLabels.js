@@ -154,6 +154,7 @@ export function formatHelpText(string) {
 
 export async function getHomeMessage(discordUser, interaction, db) {
   const text = new TextDisplayBuilder().setContent("home");
+  const petsCollection = db.collection("pets");
 
   return {
     components: [text],
@@ -161,12 +162,12 @@ export async function getHomeMessage(discordUser, interaction, db) {
   };
 }
 
-export async function getStatusMessage(discordUser, interaction, db) {
+export async function getStatusMessage(interaction, db) {
   const tagsCollection = db.collection("tags");
   const missionsCollection = db.collection("missions");
 
-  const user = await getOrCreateUser(discordUser);
-  const isOtherUser = interaction.user.id !== discordUser.id;
+  const user = await getOrCreateUser(interaction.user);
+  const discordUser = interaction.user;
   const avatarURL = discordUser.displayAvatarURL();
 
   const displayName = formatDisplayName(user.display_name || discordUser.globalName);
@@ -198,9 +199,7 @@ export async function getStatusMessage(discordUser, interaction, db) {
   const thumbnail = new ThumbnailBuilder().setDescription("Status").setURL(avatarURL);
   const headerSection = new SectionBuilder().addTextDisplayComponents(header).setThumbnailAccessory(thumbnail);
 
-  const footer = isOtherUser
-    ? getStatusButtonRow(user, isOtherUser, lockedInMission, { disableCheer: !lockedInMission })
-    : getOwnStatusButtonRow(user, { lockedInMission });
+  const footer = getOwnStatusButtonRow(user, { lockedInMission });
 
   return {
     components: [headerSection, missions, footer],

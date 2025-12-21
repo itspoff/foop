@@ -24,7 +24,7 @@ export default {
     );
 
     if (buttonOwnerId === user._id) {
-      const editedStatus = await getStatusMessage(interaction.user, interaction, db);
+      const editedStatus = await getStatusMessage(interaction, db);
       await interaction.update(editedStatus);
     } else {
       const text = new TextDisplayBuilder().setContent(`> \`Profile updated for ${user.display_name}.\``);

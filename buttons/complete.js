@@ -86,7 +86,7 @@ export default {
       const rewardMessage = formatMissionRewardMessage({ ...rewardData, mission, user, totalTime, dailyBonus });
 
       if (parent === "status") {
-        const updatedStatus = await getStatusMessage(interaction.user, interaction, db);
+        const updatedStatus = await getStatusMessage(interaction, db);
         await interaction.update(updatedStatus);
       } else {
         const updatedMission = await missions.findOne({ _id: missionId, user_id: user._id });

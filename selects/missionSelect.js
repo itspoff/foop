@@ -1,5 +1,4 @@
 import { ButtonStyle, MessageFlags, SectionBuilder, TextDisplayBuilder } from "discord.js";
-import { formatMission, getStatusMessage } from "../utils/formatLabels.js";
 import { getMissionCard } from "../components/missionComponents.js";
 import { calculateMissionRewards, formatMissionRewardMessage } from "../utils/missionRewards.js";
 import { getCurrentPST } from "../utils/formatTime.js";
