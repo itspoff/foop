@@ -1,4 +1,11 @@
-import { MessageFlags, ModalBuilder, TextDisplayBuilder, TextInputBuilder } from "discord.js";
+import {
+  ActionRowBuilder,
+  MessageFlags,
+  ModalBuilder,
+  TextDisplayBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+} from "discord.js";
 import { getCurrentPST } from "../utils/formatTime.js";
 import { getStatusMessage } from "../utils/formatLabels.js";
 
