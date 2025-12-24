@@ -123,33 +123,6 @@ function findHandlerByPrefix(handlers, customId) {
     if (!command) return;
 
     await safeExecute(interaction, () => command.execute(interaction, db));
-
-    const usersCol = db.collection("users");
-    const missionsCol = db.collection("missions");
-
-    const lastClaim = user.last_daily_bonus ? new Date(user.last_daily_bonus) : null;
-    const resetTime = getResetTimePST(user.daily_reset_hour ?? 0);
-
-    if (!lastClaim || lastClaim < resetTime) {
-      const bonus = baseDailyBonus + Math.floor(Math.random() * 101);
-
-      await missionsCol.updateOne(
-        { user_id: user._id, name: "daily login", is_system: true },
-        { $set: { is_complete: true } }
-      );
-
-      await usersCol.updateOne(
-        { _id: user._id },
-        {
-          $inc: { ppts: bonus },
-          $set: { last_daily_bonus: getCurrentPST().toJSDate() },
-        }
-      );
-
-      await interaction.followUp({
-        content: `## \`✨ Daily Login Bonus ✨\`\n||\`🔥 +${bonus} PPts\`||`,
-      });
-    }
   });
 
   await client.login(process.env.BOT_TOKEN);
