@@ -8,6 +8,30 @@ const placeholders = [
   "You can do it!",
   "Is this task bothering you?",
 ];
+
+export function getCheerModal(userToCheer = "a friend", missionId) {
+  const modal = new ModalBuilder()
+    .setCustomId(`cheer_modal_submit:${missionId}`)
+    .setTitle(`Cheer for ${userToCheer} 🎉`);
+
+  const placeholder =
+    Math.random() < 0.5 ? placeholders[0] : placeholders[Math.floor(Math.random() * (placeholders.length - 1)) + 1];
+
+  const textDescription = new TextDisplayBuilder().setContent(
+    `Use 250 ppts to cheer for this mission? \n-# ${userToCheer} will receive double the rewards on completion.`
+  );
+  const messageInput = new TextInputBuilder()
+    .setCustomId("cheer_input_message")
+    .setStyle(TextInputStyle.Short)
+    .setPlaceholder(placeholder)
+    .setRequired(false);
+
+  const messageLabel = new LabelBuilder().setLabel("Add a message").setTextInputComponent(messageInput);
+
+  modal.addTextDisplayComponents(textDescription).addLabelComponents(messageLabel);
+  return modal;
+}
+
 export default {
   prefix: "cheer_modal_submit",
 
@@ -60,26 +84,3 @@ export default {
     });
   },
 };
-
-export function getCheerModal(userToCheer = "a friend", missionId) {
-  const modal = new ModalBuilder()
-    .setCustomId(`cheer_modal_submit:${missionId}`)
-    .setTitle(`Cheer for ${userToCheer} 🎉`);
-
-  const placeholder =
-    Math.random() < 0.5 ? placeholders[0] : placeholders[Math.floor(Math.random() * (placeholders.length - 1)) + 1];
-
-  const textDescription = new TextDisplayBuilder().setContent(
-    `Use 250 ppts to cheer for this mission? \n-# ${userToCheer} will receive double the rewards on completion.`
-  );
-  const messageInput = new TextInputBuilder()
-    .setCustomId("cheer_input_message")
-    .setStyle(TextInputStyle.Short)
-    .setPlaceholder(placeholder)
-    .setRequired(false);
-
-  const messageLabel = new LabelBuilder().setLabel("Add a message").setTextInputComponent(messageInput);
-
-  modal.addTextDisplayComponents(textDescription).addLabelComponents(messageLabel);
-  return modal;
-}
