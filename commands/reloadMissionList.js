@@ -9,7 +9,9 @@ export const data = new ContextMenuCommandBuilder()
 export async function execute(interaction, db) {
   try {
     const updatedList = await getMissionListDisplay(interaction, db);
-    await interaction.targetMessage.edit(updatedList);
+    const channel = interaction.channel ?? (await interaction.client.channels.fetch(interaction.channelId));
+
+    await channel.messages.edit(target.id, updatedList);
     await interaction.reply({ content: "> `✅ Reloaded missions.`", ephemeral: true });
   } catch (error) {
     console.error("Failed to reload mission list:", error);
