@@ -20,7 +20,7 @@ export default {
 
     return interaction.reply({
       components: [text, selector],
-      flags: [MessageFlags.IsComponentsV2],
+      flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
     });
   },
 };

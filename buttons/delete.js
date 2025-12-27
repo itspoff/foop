@@ -2,63 +2,62 @@ import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { capitalizeFirstLetter } from "../utils/formatLabels.js";
 import { getConfirmStatusRow } from "../components/buttonRows.js";
 import { getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
+import { processMissionDeletion } from "../logic/missionLogic.js";
 import { ObjectId } from "mongodb";
 
 export default {
   prefix: "delete_",
   async execute(interaction, { db, user, value }) {
     if (!value.endsWith(interaction.user.id)) {
-      const openStatus = getConfirmStatusRow(user);
       return interaction.reply({
-        components: [openStatus],
+        components: [getConfirmStatusRow(user)],
         flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
       });
     }
+
+    const [missionIdStr] = value.split("_");
     const missions = db.collection("missions");
-    const values = value.split("_");
-    let missionId = values[0];
-    const parent = values[1];
 
-    if (ObjectId.isValid(missionId)) {
-      missionId = ObjectId.createFromHexString(missionId);
-      const mission = await missions.findOne({ _id: missionId });
-      if (!mission) {
-        return interaction.reply({
-          content: `> \`❌ No mission found with id ${missionId}.\``,
-          ephemeral: true,
-        });
-      }
-      if (mission.user_id !== user._id) {
-        return interaction.reply({
-          content: "> `❌ You don't have permission to delete this mission.`",
-          ephemeral: true,
-        });
-      }
-      if (mission.is_system) {
-        return interaction.reply({
-          content: "> `⚠️ You can't delete a system mission.`",
-          ephemeral: true,
-        });
-      }
+    if (ObjectId.isValid(missionIdStr)) {
+      const missionId = ObjectId.createFromHexString(missionIdStr);
 
-      await missions.deleteOne({ _id: mission._id });
-      const text = new TextDisplayBuilder().setContent(
-        `\`Mission\` \`💢\` \`${capitalizeFirstLetter(mission.name)}\` \`has been deleted.\``
-      );
-      return interaction.update({
-        components: [text],
-        flags: MessageFlags.IsComponentsV2,
-      });
+      try {
+        const deletedMission = await processMissionDeletion(db, user, missionId);
+
+        const successText = new TextDisplayBuilder().setContent(
+          `\`Mission\` \`💢\` \`${capitalizeFirstLetter(deletedMission.name)}\` \`has been deleted.\``
+        );
+
+        return interaction.update({
+          components: [successText],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      } catch (error) {
+        return handleDeletionError(interaction, error, missionIdStr);
+      }
     }
 
     const missionArray = await missions.find({ user_id: user._id }).toArray();
 
-    const text = new TextDisplayBuilder().setContent("## `💢 Mission Delete`");
-    const selector = getMissionSelector(missionArray, MissionSelectOperations.DELETE);
-
     return interaction.reply({
-      components: [text, selector],
-      flags: [MessageFlags.IsComponentsV2],
+      components: [
+        new TextDisplayBuilder().setContent("## `💢 Mission Delete`"),
+        getMissionSelector(missionArray, MissionSelectOperations.DELETE),
+      ],
+      flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
     });
   },
 };
+
+function handleDeletionError(interaction, error, missionId) {
+  const messages = {
+    NOT_FOUND: `> \`❌ No mission found with id ${missionId}.\``,
+    FORBIDDEN: "> `❌ You don't have permission to delete this mission.`",
+    SYSTEM_PROTECTED: "> `⚠️ You can't delete a system mission.`",
+  };
+
+  return interaction.reply({
+    content: messages[error.message] || "> `❌ An unexpected error occurred.`",
+    ephemeral: true,
+  });
+}

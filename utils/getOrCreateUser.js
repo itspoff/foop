@@ -11,7 +11,7 @@ export async function getOrCreateUser(discordUser, guildMember = null) {
   let user = await users.findOne({ _id: userId });
 
   const now = getCurrentPST();
-  const avatarURL = discordUser.displayAvatarURL();
+  const avatarURL = discordUser.display_avatar_url;
 
   if (!user) {
     const newUser = {

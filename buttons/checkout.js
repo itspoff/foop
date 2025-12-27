@@ -1,24 +1,22 @@
 import { AttachmentBuilder, MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
-import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 import { formatMission, getStatusHeader } from "../utils/formatLabels.js";
 import { formatTime } from "../utils/formatTime.js";
 import { getConfirmStatusRow } from "../components/buttonRows.js";
 import { getMissionCard } from "../components/missionComponents.js";
+import { processMissionCheckout } from "../logic/missionLogic.js"; // Import the helper
 
 export default {
   prefix: "checkout_",
   async execute(interaction, { db, user, value }) {
     if (!value.endsWith(interaction.user.id)) {
-      const openStatus = getConfirmStatusRow(user);
       return interaction.reply({
-        components: [openStatus],
+        components: [getConfirmStatusRow(user)],
         flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
       });
     }
+
     const missions = db.collection("missions");
-    const values = value.split("_");
-    const missionId = values[0];
-    const parent = values[1];
+    const [missionId, parent] = value.split("_");
 
     const mission = await missions.findOne({
       user_id: user._id,
@@ -26,67 +24,56 @@ export default {
       is_complete: { $ne: true },
     });
 
-    const msg = new TextDisplayBuilder().setContent("`🗨️` `can you lock the fuck in`\n> `Lock in on a mission first.`");
-    const thumbnail = new ThumbnailBuilder().setDescription("poff").setURL("attachment://poff-icon.png");
-    const lockInMessage = new SectionBuilder().addTextDisplayComponents(msg).setThumbnailAccessory(thumbnail);
-
     if (!mission) {
       const file = new AttachmentBuilder("assets/poff-icon.png", { name: "poff-icon.png" });
+      const msg = new TextDisplayBuilder().setContent(
+        "`🗨️` `can you lock the fuck in`\n> `Lock in on a mission first.`"
+      );
+      const lockInMessage = new SectionBuilder()
+        .addTextDisplayComponents(msg)
+        .setThumbnailAccessory(new ThumbnailBuilder().setDescription("poff").setURL("attachment://poff-icon.png"));
 
       return interaction.reply({
         components: [lockInMessage],
-        flags: MessageFlags.IsComponentsV2,
         files: [file],
+        flags: MessageFlags.IsComponentsV2,
         ephemeral: true,
       });
     }
 
-    const totalTime = calculateTotalTimeTaken(mission.locked_in_at, mission.time_taken);
-    const sessionTime = Math.floor((new Date() - new Date(mission.locked_in_at)) / 1000); // in seconds
+    const { totalTime, sessionTime } = await processMissionCheckout(db, user, mission);
 
-    await missions.updateOne(
-      { _id: mission._id },
-      {
-        $set: {
-          time_taken: totalTime,
-          locked_in_at: null,
-        },
-      }
+    const checkoutText = new TextDisplayBuilder().setContent(
+      `> \`💨 Checked out on:\` ${formatMission(mission)} \`⏱️ ${formatTime(totalTime)} (+${formatTime(sessionTime)})\``
     );
 
-    const text = new TextDisplayBuilder().setContent(
-      "`💨 Checked out on:` " +
-        formatMission(mission) +
-        " `⏱️ " +
-        formatTime(totalTime) +
-        " (+" +
-        formatTime(sessionTime) +
-        ")`"
-    );
+    const updatePayload = await getUpdatePayload(parent, interaction, db, user, mission, checkoutText);
+    await interaction.update(updatePayload);
 
-    if (parent === "status") {
-      const updatedStatus = await getStatusHeader(interaction, db);
-      await interaction.update(updatedStatus);
-    } else if (parent === "confirm") {
-      return interaction.update({
-        components: [text],
-        flags: MessageFlags.IsComponentsV2,
-      });
-    } else {
-      const updatedMission = await missions.findOne({
-        user_id: user._id,
-        _id: mission._id,
-      });
-      const missionCard = await getMissionCard(updatedMission);
-      await interaction.update({
-        components: [missionCard],
+    if (parent !== "confirm") {
+      return interaction.followUp({
+        components: [checkoutText],
         flags: MessageFlags.IsComponentsV2,
       });
     }
-
-    return interaction.followUp({
-      components: [text],
-      flags: MessageFlags.IsComponentsV2,
-    });
   },
 };
+
+async function getUpdatePayload(parent, interaction, db, user, mission, checkoutText) {
+  switch (parent) {
+    case "status":
+      return await getStatusHeader(interaction, db);
+
+    case "confirm":
+      return { components: [checkoutText], flags: MessageFlags.IsComponentsV2 };
+
+    default: {
+      const updatedMission = await db.collection("missions").findOne({ _id: mission._id });
+      const missionCard = await getMissionCard(updatedMission);
+      return {
+        components: [missionCard],
+        flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
+      };
+    }
+  }
+}

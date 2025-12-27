@@ -7,8 +7,7 @@ export const data = new SlashCommandBuilder()
   .setDescription("Send a status update!")
   .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
 
-export async function execute(interaction) {
-  const db = await connectToDatabase();
+export async function execute(interaction, db) {
   const message = await getStatusHeader(interaction, db);
 
   return interaction.reply(message);

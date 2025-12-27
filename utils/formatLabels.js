@@ -24,6 +24,7 @@ export function formatEnergy(energy) {
 }
 
 export function formatDisplayName(name) {
+  if (!name) return "";
   return `*\`${name.toUpperCase()}   \`*`;
 }
 
@@ -152,12 +153,17 @@ export function formatHelpText(string) {
   return `\n-# *${string}*`;
 }
 
-export async function getStatusHeader(interaction, db) {
+export async function getStatusHeader(interaction, db, targetUser = null) {
   const tagsCollection = db.collection("tags");
   const missionsCollection = db.collection("missions");
 
-  const user = await getOrCreateUser(interaction.user);
-  const discordUser = interaction.user;
+  let user;
+  let discordUser = interaction.user;
+  if (targetUser) {
+    discordUser = await interaction.client.users.fetch(targetUser._id);
+  }
+  user = await getOrCreateUser(discordUser);
+
   const avatarURL = discordUser.displayAvatarURL();
 
   const displayName = formatDisplayName(user.display_name || discordUser.globalName);

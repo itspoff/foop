@@ -7,8 +7,7 @@ export const data = new SlashCommandBuilder()
   .setDescription("Manage your missions.")
   .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
 
-export async function execute(interaction) {
-  const db = await connectToDatabase();
+export async function execute(interaction, db) {
   const message = await getMissionListDisplay(interaction, db);
 
   return interaction.reply(message);

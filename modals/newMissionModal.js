@@ -94,7 +94,7 @@ export default {
 
     await interaction.reply({
       components: [missionCard],
-      flags: MessageFlags.IsComponentsV2,
+      flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
     });
   },
 };
