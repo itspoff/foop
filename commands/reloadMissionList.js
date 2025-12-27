@@ -1,4 +1,10 @@
-import { ApplicationCommandType, ContextMenuCommandBuilder, InteractionContextType, MessageFlags } from "discord.js";
+import {
+  ApplicationCommandType,
+  ContextMenuCommandBuilder,
+  InteractionContextType,
+  MessageFlags,
+  Routes,
+} from "discord.js";
 import { getMissionListDisplay } from "../utils/formatLabels.js";
 
 export const data = new ContextMenuCommandBuilder()
@@ -7,7 +13,6 @@ export const data = new ContextMenuCommandBuilder()
   .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
 
 export async function execute(interaction, db) {
-  // DEFER
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const target = interaction.targetMessage;
@@ -15,25 +20,20 @@ export async function execute(interaction, db) {
   try {
     const updatedPayload = await getMissionListDisplay(interaction, db);
 
-    // UPDATE message
-    if (interaction.channel) {
-      await interaction.channel.messages.edit(target.id, {
+    await interaction.client.rest.patch(Routes.channelMessage(interaction.channelId, target.id), {
+      body: {
         content: updatedPayload.content,
         components: updatedPayload.components,
         embeds: updatedPayload.embeds || [],
-      });
-    } else {
-      // fall back
-      await target.edit(updatedPayload);
-    }
+      },
+    });
 
-    // UPDATE deferred reply
     await interaction.editReply({ content: "> `✅ Mission list refreshed.`" });
   } catch (error) {
     console.error("Failed to reload mission list:", error);
 
-    return interaction.editReply({
-      content: "> `❌ Error: Could not refresh the list.`",
+    await interaction.editReply({
+      content: "> `❌ Error: Could not refresh the list. Use /missions instead.`",
     });
   }
 }
