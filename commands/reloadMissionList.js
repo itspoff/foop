@@ -7,11 +7,12 @@ export const data = new ContextMenuCommandBuilder()
   .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
 
 export async function execute(interaction, db) {
+  const target = interaction.targetMessage;
   try {
     const updatedList = await getMissionListDisplay(interaction, db);
-    const channel = interaction.channel ?? (await interaction.client.channels.fetch(interaction.channelId));
+    // const channel = interaction.channel ?? (await interaction.client.channels.fetch(interaction.channelId));
 
-    await channel.messages.edit(target.id, updatedList);
+    await target.edit(updatedList);
     await interaction.reply({ content: "> `✅ Reloaded missions.`", ephemeral: true });
   } catch (error) {
     console.error("Failed to reload mission list:", error);
