@@ -1,6 +1,6 @@
 import { AttachmentBuilder, MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
-import { formatMission, getStatusMessage } from "../utils/formatLabels.js";
+import { formatMission, getStatusHeader } from "../utils/formatLabels.js";
 import { formatTime } from "../utils/formatTime.js";
 import { getConfirmStatusRow } from "../components/buttonRows.js";
 import { getMissionCard } from "../components/missionComponents.js";
@@ -65,7 +65,7 @@ export default {
     );
 
     if (parent === "status") {
-      const updatedStatus = await getStatusMessage(interaction, db);
+      const updatedStatus = await getStatusHeader(interaction, db);
       await interaction.update(updatedStatus);
     } else if (parent === "confirm") {
       return interaction.update({

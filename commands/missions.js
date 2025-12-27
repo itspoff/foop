@@ -1,15 +1,15 @@
 import { SlashCommandBuilder, InteractionContextType } from "discord.js";
 import connectToDatabase from "../db.js";
-import { getStatusHeader } from "../utils/formatLabels.js";
+import { getMissionListDisplay } from "../utils/formatLabels.js";
 
 export const data = new SlashCommandBuilder()
-  .setName("status")
-  .setDescription("Send a status update!")
+  .setName("missions")
+  .setDescription("Manage your missions.")
   .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
 
 export async function execute(interaction) {
   const db = await connectToDatabase();
-  const message = await getStatusHeader(interaction, db);
+  const message = await getMissionListDisplay(interaction, db);
 
   return interaction.reply(message);
 }

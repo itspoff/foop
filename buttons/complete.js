@@ -1,6 +1,6 @@
 import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
-import { getStatusMessage } from "../utils/formatLabels.js";
+import { getMissionListDisplay } from "../utils/formatLabels.js";
 import { getCurrentPST } from "../utils/formatTime.js";
 import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 import { calculateMissionRewards, formatMissionRewardMessage } from "../utils/missionRewards.js";
@@ -86,7 +86,7 @@ export default {
       const rewardMessage = formatMissionRewardMessage({ ...rewardData, mission, user, totalTime, dailyBonus });
 
       if (parent === "status") {
-        const updatedStatus = await getStatusMessage(interaction, db);
+        const updatedStatus = await getMissionListDisplay(interaction, db);
         await interaction.update(updatedStatus);
       } else {
         const updatedMission = await missions.findOne({ _id: missionId, user_id: user._id });

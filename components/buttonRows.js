@@ -129,7 +129,7 @@ export function getReminderRow(discordUser, reminder, options = {}) {
   return new ActionRowBuilder().addComponents(joinButton, cancelButton);
 }
 
-export function getOwnStatusButtonRow(user, options = {}) {
+export function getMissionListButtonRow(user, options = {}) {
   const userId = user._id;
 
   const {

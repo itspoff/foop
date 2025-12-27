@@ -1,7 +1,7 @@
 import { MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import { formatTime, timeSince } from "./formatTime.js";
 import { getOrCreateUser } from "./getOrCreateUser.js";
-import { getOwnStatusButtonRow, getStatusButtonRow } from "../components/buttonRows.js";
+import { getMissionListButtonRow } from "../components/buttonRows.js";
 
 export function formatMood(mood) {
   const moodMap = {
@@ -92,7 +92,7 @@ export async function showMissionList(interaction, user, missions, followUp = tr
 
   const msg = [dailyList, otherList].filter(Boolean).join("\n\n");
 
-  const content = `### \`Today's Missions:\` \`${completed.length} / ${sorted.length}\`\n${msg}`;
+  const content = `### \`${user.display_name}'s Missions:\` \`${completed.length} / ${sorted.length}\`\n${msg}`;
 
   return followUp ? interaction.reply({ content }) : content;
 }
@@ -152,17 +152,7 @@ export function formatHelpText(string) {
   return `\n-# *${string}*`;
 }
 
-export async function getHomeMessage(interaction, db) {
-  const text = new TextDisplayBuilder().setContent("home");
-  const petsCollection = db.collection("pets");
-
-  return {
-    components: [text],
-    flags: MessageFlags.IsComponentsV2,
-  };
-}
-
-export async function getStatusMessage(interaction, db) {
+export async function getStatusHeader(interaction, db) {
   const tagsCollection = db.collection("tags");
   const missionsCollection = db.collection("missions");
 
@@ -187,22 +177,37 @@ export async function getStatusMessage(interaction, db) {
   const displayLockedInMission = formatLockedInMission(lockedInMission);
   const thoughtBubble = formatThoughtBubble(user.thought_bubble) ?? "`🧠 Head empty. No thoughts.`";
 
-  // Header Text
   const statusUpdate = `## ${displayName}  ${mood}  ${energy}  
 -#  ${displayTag ? `${displayTag}  |` : ""}  \`Last Updated: ${lastUpdated} ago\`  |  \`PPts: ${ppts}\`
 > **\`Current thought: \`** ${thoughtBubble}
 > **\`Locked in on:    \`** ${displayLockedInMission}`;
 
-  const displayMissions = await showMissionList(interaction, user, missionsCollection, false);
-  const missions = new TextDisplayBuilder().setContent(displayMissions);
   const header = new TextDisplayBuilder().setContent(statusUpdate);
   const thumbnail = new ThumbnailBuilder().setDescription("Status").setURL(avatarURL);
   const headerSection = new SectionBuilder().addTextDisplayComponents(header).setThumbnailAccessory(thumbnail);
 
-  const footer = getOwnStatusButtonRow(user, { lockedInMission });
+  return {
+    components: [headerSection],
+    flags: MessageFlags.IsComponentsV2,
+  };
+}
+
+export async function getMissionListDisplay(interaction, db) {
+  const missionsCollection = db.collection("missions");
+  const user = await getOrCreateUser(interaction.user);
+
+  const displayMissions = await showMissionList(interaction, user, missionsCollection, false);
+  const missionsList = new TextDisplayBuilder().setContent(displayMissions);
+
+  const lockedInMission = await missionsCollection.findOne({
+    user_id: user._id,
+    locked_in_at: { $ne: null },
+  });
+
+  const footer = getMissionListButtonRow(user, { lockedInMission });
 
   return {
-    components: [headerSection, missions, footer],
+    components: [missionsList, footer],
     flags: MessageFlags.IsComponentsV2,
   };
 }
