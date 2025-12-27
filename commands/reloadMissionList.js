@@ -7,18 +7,33 @@ export const data = new ContextMenuCommandBuilder()
   .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
 
 export async function execute(interaction, db) {
-  const target = interaction.targetMessage;
-  try {
-    const updatedList = await getMissionListDisplay(interaction, db);
-    // const channel = interaction.channel ?? (await interaction.client.channels.fetch(interaction.channelId));
+  // DEFER
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-    await target.edit(updatedList);
-    await interaction.reply({ content: "> `✅ Reloaded missions.`", ephemeral: true });
+  const target = interaction.targetMessage;
+
+  try {
+    const updatedPayload = await getMissionListDisplay(interaction, db);
+
+    // UPDATE message
+    if (interaction.channel) {
+      await interaction.channel.messages.edit(target.id, {
+        content: updatedPayload.content,
+        components: updatedPayload.components,
+        embeds: updatedPayload.embeds || [],
+      });
+    } else {
+      // fall back
+      await target.edit(updatedPayload);
+    }
+
+    // UPDATE deferred reply
+    await interaction.editReply({ content: "> `✅ Mission list refreshed.`" });
   } catch (error) {
     console.error("Failed to reload mission list:", error);
-    return interaction.reply({
-      content: "> `❌ Error: Could not reload the mission list.`",
-      ephemeral: true,
+
+    return interaction.editReply({
+      content: "> `❌ Error: Could not refresh the list.`",
     });
   }
 }
