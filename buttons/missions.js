@@ -1,4 +1,4 @@
-import { showMissionList } from "../utils/formatLabels.js";
+import { showMissionList } from "../utils/formatter.js";
 
 export default {
   prefix: "missions_",

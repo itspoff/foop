@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, InteractionContextType } from "discord.js";
 import connectToDatabase from "../db.js";
-import { getMissionListDisplay } from "../utils/formatLabels.js";
+import { getMissionListDisplay } from "../utils/formatter.js";
 
 export const data = new SlashCommandBuilder()
   .setName("missions")

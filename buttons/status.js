@@ -1,4 +1,4 @@
-import { getStatusHeader } from "../utils/formatLabels.js";
+import { getStatusPayload } from "../utils/formatter.js";
 import { getConfirmStatusRow } from "../components/buttonRows.js";
 
 export default {
@@ -12,7 +12,7 @@ export default {
       });
     }
 
-    const status = await getStatusHeader(interaction, db);
+    const status = await getStatusPayload(interaction, db);
     return interaction.reply(status);
   },
 };

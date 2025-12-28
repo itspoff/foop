@@ -7,7 +7,7 @@ import {
   TextInputStyle,
 } from "discord.js";
 import { getCurrentPST } from "../utils/formatTime.js";
-import { getStatusHeader } from "../utils/formatLabels.js";
+import { getStatusPayload } from "../utils/formatter.js";
 
 export function getProfileModal({ user, buttonOwnerId }) {
   const prevName = user.display_name;
@@ -70,7 +70,7 @@ export default {
     );
 
     if (buttonOwnerId === user._id) {
-      const editedStatus = await getStatusHeader(interaction, db);
+      const editedStatus = await getStatusPayload(interaction, db);
       await interaction.update(editedStatus);
     } else {
       const text = new TextDisplayBuilder().setContent(`> \`Profile updated for ${user.display_name}.\``);

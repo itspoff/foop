@@ -1,5 +1,5 @@
 import { MessageFlags, TextDisplayBuilder } from "discord.js";
-import { capitalizeFirstLetter } from "../utils/formatLabels.js";
+import { capitalizeFirstLetter } from "../utils/formatter.js";
 import { getConfirmStatusRow } from "../components/buttonRows.js";
 import { getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 import { processMissionDeletion } from "../logic/missionLogic.js";

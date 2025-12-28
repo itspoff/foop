@@ -1,7 +1,7 @@
 import { LabelBuilder, ModalBuilder, TextDisplayBuilder, TextInputBuilder } from "@discordjs/builders";
 import { MessageFlags, TextInputStyle } from "discord.js";
 import { ObjectId } from "mongodb";
-import { formatMission } from "../utils/formatLabels.js";
+import { formatMission } from "../utils/formatter.js";
 
 const placeholders = [
   "", // default

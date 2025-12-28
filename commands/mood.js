@@ -8,7 +8,7 @@ import {
 } from "discord.js";
 import connectToDatabase from "../db.js";
 import { getOrCreateUser } from "../utils/getOrCreateUser.js";
-import { formatMood, formatReason } from "../utils/formatLabels.js";
+import { formatMood, formatReason } from "../utils/formatter.js";
 import { getCurrentPST } from "../utils/formatTime.js";
 
 export const data = new SlashCommandBuilder()

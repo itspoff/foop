@@ -1,7 +1,7 @@
 import { ApplicationCommandType, ContextMenuCommandBuilder, InteractionContextType } from "discord.js";
 import { getAddFriendModal } from "../modals/addFriendModal.js";
 import { getExistingUserFromId } from "../utils/getOrCreateUser.js";
-import { getStatusHeader } from "../utils/formatLabels.js";
+import { getStatusPayload } from "../utils/formatter.js";
 
 export const data = new ContextMenuCommandBuilder()
   .setName("check status")
@@ -19,7 +19,7 @@ export async function execute(interaction, db) {
     });
   }
 
-  const targetUserStatus = await getStatusHeader(interaction, db, targetUser);
+  const targetUserStatus = await getStatusPayload(interaction, db, targetUser);
 
   return interaction.reply(targetUserStatus);
 }

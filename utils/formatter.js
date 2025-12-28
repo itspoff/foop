@@ -1,7 +1,7 @@
 import { MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import { formatTime, timeSince } from "./formatTime.js";
 import { getOrCreateUser } from "./getOrCreateUser.js";
-import { getMissionListButtonRow } from "../components/buttonRows.js";
+import { getMissionListButtonRow, getStatusButtonRow } from "../components/buttonRows.js";
 
 export function formatMood(mood) {
   const moodMap = {
@@ -73,6 +73,47 @@ export function formatThoughtBubble(bubble) {
   if (bubble) {
     return `\`💭 ${bubble}\``;
   }
+}
+
+export function createProgressBar(current, total, size = 9) {
+  if (!total || total <= 0) return `\`${"🌑".repeat(size)}\``;
+
+  const progress = Math.min(Math.max(current / total, 0), 1);
+  const steps = ["💨", "💨", "💧", "💧", "💦", "💦", "🌊", "🌠", "💢", "🎺"];
+  const markIndex = Math.min(Math.floor(progress * steps.length), steps.length - 1);
+  const mark = steps[markIndex];
+
+  const totalValue = progress * size;
+  const filledCount = Math.floor(totalValue);
+  const partialValue = totalValue % 1;
+
+  let bar = "🌕".repeat(filledCount);
+
+  if (filledCount < size) {
+    if (partialValue >= 0.875) {
+      bar += "🌕";
+    } else if (partialValue >= 0.625) {
+      bar += "🌖";
+    } else if (partialValue >= 0.375) {
+      bar += "🌗";
+    } else if (partialValue >= 0.125) {
+      bar += "🌘";
+    } else {
+      bar += "🌑";
+    }
+  }
+
+  // fill rest with empty
+  const currentLength = Array.from(bar).length;
+  if (currentLength < size) {
+    bar += "🌑".repeat(size - currentLength);
+  }
+
+  if (progress == 1) {
+    bar = "🌝".repeat(size);
+  }
+
+  return `\`${mark} ${bar}\``;
 }
 
 export async function showMissionList(interaction, user, missions, followUp = true) {
@@ -153,47 +194,41 @@ export function formatHelpText(string) {
   return `\n-# *${string}*`;
 }
 
-export async function getStatusHeader(interaction, db, targetUser = null) {
-  const tagsCollection = db.collection("tags");
+export async function getStatusPayload(interaction, db, targetUser = null) {
+  const discordUser = targetUser ? await interaction.client.users.fetch(targetUser._id) : interaction.user;
   const missionsCollection = db.collection("missions");
 
-  let user;
-  let discordUser = interaction.user;
-  if (targetUser) {
-    discordUser = await interaction.client.users.fetch(targetUser._id);
-  }
-  user = await getOrCreateUser(discordUser);
-
-  const avatarURL = discordUser.displayAvatarURL();
+  const user = await getOrCreateUser(discordUser);
+  const [activeTag, lockedInMission, missionsCompletedCount, missionCount] = await Promise.all([
+    user.active_tag ? db.collection("tags").findOne({ code: user.active_tag }) : null,
+    missionsCollection.findOne({ user_id: user._id, locked_in_at: { $ne: null } }),
+    missionsCollection.countDocuments({ user_id: user._id, is_complete: true }),
+    missionsCollection.countDocuments({ user_id: user._id }),
+  ]);
 
   const displayName = formatDisplayName(user.display_name || discordUser.globalName);
   const mood = formatMood(user.mood || "normal");
   const energy = formatEnergy(user.energy ?? 100);
-  const ppts = user.ppts;
-  const lastUpdated = user.last_updated ? timeSince(user.last_updated) : "unknown";
+  const lastUpdated = user.last_updated ? `${timeSince(user.last_updated)} ago` : "unknown";
 
-  const activeTag = user.active_tag ? await tagsCollection.findOne({ code: user.active_tag }) : null;
-  const displayTag = activeTag ? formatDisplayTag(activeTag) : "";
+  const displayTagStr = activeTag ? `${formatDisplayTag(activeTag)}  | ` : "";
+  const thoughtBubble = formatThoughtBubble(user.thought_bubble) || "`🧠 Head empty. No thoughts.`";
+  const progressString = createProgressBar(missionsCompletedCount, missionCount);
 
-  const lockedInMission = await missionsCollection.findOne({
-    user_id: user._id,
-    locked_in_at: { $ne: null },
-  });
+  const statusUpdate = [
+    `## ${displayName}  ${mood}  ${energy}`,
+    `-#  ${displayTagStr}\`Last Updated: ${lastUpdated}\`  |  \`PPts: ${user.ppts}\``,
+    `> **\`Current thought: \`** ${thoughtBubble}`,
+    `> **\`Locked in on:    \`** ${formatLockedInMission(lockedInMission)}`,
+    `> **\`Missions:        \`** ${progressString}`,
+  ].join("\n");
 
-  const displayLockedInMission = formatLockedInMission(lockedInMission);
-  const thoughtBubble = formatThoughtBubble(user.thought_bubble) ?? "`🧠 Head empty. No thoughts.`";
-
-  const statusUpdate = `## ${displayName}  ${mood}  ${energy}  
--#  ${displayTag ? `${displayTag}  |` : ""}  \`Last Updated: ${lastUpdated} ago\`  |  \`PPts: ${ppts}\`
-> **\`Current thought: \`** ${thoughtBubble}
-> **\`Locked in on:    \`** ${displayLockedInMission}`;
-
-  const header = new TextDisplayBuilder().setContent(statusUpdate);
-  const thumbnail = new ThumbnailBuilder().setDescription("Status").setURL(avatarURL);
-  const headerSection = new SectionBuilder().addTextDisplayComponents(header).setThumbnailAccessory(thumbnail);
+  const headerSection = new SectionBuilder()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(statusUpdate))
+    .setThumbnailAccessory(new ThumbnailBuilder().setDescription("Status").setURL(discordUser.displayAvatarURL()));
 
   return {
-    components: [headerSection],
+    components: [headerSection, getStatusButtonRow(user, lockedInMission)],
     flags: MessageFlags.IsComponentsV2,
   };
 }

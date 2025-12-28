@@ -1,5 +1,5 @@
 import { ButtonBuilder, ButtonStyle, ActionRowBuilder, SectionBuilder } from "discord.js";
-import { formatMission } from "../utils/formatLabels.js";
+import { formatMission } from "../utils/formatter.js";
 
 export function getMissionButtonRow(missionId, userId, options = {}) {
   const {
@@ -48,8 +48,8 @@ export function getMissionButtonRow(missionId, userId, options = {}) {
   return new ActionRowBuilder().addComponents(lockInButton, completeButton, cheerButton, deleteButton);
 }
 
-export function getStatusButtonRow(user, isOtherUser, lockedInMission, options = {}) {
-  const { disableCheer = false, disablePackage = true, disableProfile = false } = options;
+export function getStatusButtonRow(user, lockedInMission, options = {}) {
+  const { disableCheer = lockedInMission ? false : true, disablePackage = true, disableProfile = false } = options;
   const missionId = lockedInMission ? lockedInMission._id : "0";
 
   const cheerButton = new ButtonBuilder()
@@ -138,7 +138,6 @@ export function getMissionListButtonRow(user, options = {}) {
     disableCheckOut = false,
     disableComplete = false,
     disableView = false,
-    disableProfile = false,
     lockedInMission = false,
   } = options;
 
@@ -183,19 +182,7 @@ export function getMissionListButtonRow(user, options = {}) {
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disableView);
 
-  const profileButton = new ButtonBuilder()
-    .setCustomId(`profile_${userId}`)
-    .setLabel("👤 My profile")
-    .setStyle(ButtonStyle.Secondary)
-    .setDisabled(disableProfile);
-
-  return new ActionRowBuilder().addComponents(
-    newMissionButton,
-    lockInButton,
-    completeButton,
-    viewButton,
-    profileButton
-  );
+  return new ActionRowBuilder().addComponents(newMissionButton, lockInButton, completeButton, viewButton);
 }
 
 export function getDailyButtonRow(discordUser, options = {}) {

@@ -1,5 +1,5 @@
 import { MessageFlags, TextDisplayBuilder } from "discord.js";
-import { getMissionListDisplay } from "../utils/formatLabels.js";
+import { getMissionListDisplay } from "../utils/formatter.js";
 import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 import { formatMissionRewardMessage } from "../utils/missionRewards.js";
 import { getConfirmStatusRow } from "../components/buttonRows.js";

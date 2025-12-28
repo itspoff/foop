@@ -1,6 +1,6 @@
-import { SlashCommandBuilder, InteractionContextType } from "discord.js";
+import { SlashCommandBuilder, InteractionContextType, MessageFlags } from "discord.js";
 import connectToDatabase from "../db.js";
-import { getStatusHeader } from "../utils/formatLabels.js";
+import { getStatusPayload } from "../utils/formatter.js";
 
 export const data = new SlashCommandBuilder()
   .setName("status")
@@ -8,7 +8,7 @@ export const data = new SlashCommandBuilder()
   .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
 
 export async function execute(interaction, db) {
-  const message = await getStatusHeader(interaction, db);
+  const message = await getStatusPayload(interaction, db);
 
   return interaction.reply(message);
 }

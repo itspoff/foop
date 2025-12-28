@@ -1,4 +1,4 @@
-import { formatMission } from "./formatLabels.js";
+import { formatMission } from "./formatter.js";
 import { formatTime } from "./formatTime.js";
 
 export function calculateMissionRewards({ mission, user, totalTime = 0, dailyBonus = 0 }) {

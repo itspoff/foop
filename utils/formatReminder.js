@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { capitalizeFirstLetter } from "./formatLabels.js";
+import { capitalizeFirstLetter } from "./formatter.js";
 
 export function formatReminder(reminder) {
   const remindAt = DateTime.fromJSDate(reminder.remind_at, {

@@ -1,5 +1,5 @@
 import { StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ContainerBuilder } from "discord.js";
-import { sortMissions, capitalizeFirstLetter, formatDisplayMission } from "../utils/formatLabels.js";
+import { sortMissions, capitalizeFirstLetter, formatDisplayMission } from "../utils/formatter.js";
 import { DateTime } from "luxon";
 import { getMissionButtonRow } from "./buttonRows.js";
 import { formatTime } from "../utils/formatTime.js";

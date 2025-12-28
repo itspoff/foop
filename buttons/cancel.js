@@ -1,5 +1,5 @@
 import { MessageFlags, TextDisplayBuilder } from "discord.js";
-import { capitalizeFirstLetter } from "../utils/formatLabels.js";
+import { capitalizeFirstLetter } from "../utils/formatter.js";
 import { ObjectId } from "mongodb";
 
 export default {

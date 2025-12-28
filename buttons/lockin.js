@@ -1,5 +1,5 @@
 import { MessageFlags, TextDisplayBuilder } from "discord.js";
-import { formatMission } from "../utils/formatLabels.js";
+import { formatMission } from "../utils/formatter.js";
 import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 import { getConfirmCheckOutRow, getConfirmStatusRow } from "../components/buttonRows.js";
 import { processMissionLockIn } from "../logic/missionLogic.js";
