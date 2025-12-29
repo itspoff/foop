@@ -104,3 +104,14 @@ export async function processMissionLockIn(db, user, missionId) {
   const updatedMission = await missions.findOne({ _id: missionId });
   return { status: "SUCCESS", mission: updatedMission };
 }
+
+export async function sendDailyBonusFollowUp(interaction) {
+  const congratsMsgs = ["Woah!", "Harikitte ikou!", "How did you just do that."];
+  const congratsMsg = congratsMsgs[Math.floor(Math.random() * congratsMsgs.length)];
+
+  const dailyBonusMsg = `\`${congratsMsg}\` \n> \`✨ Completed all daily missions!\``;
+  return interaction.followUp({
+    components: [new TextDisplayBuilder().setContent(dailyBonusMsg)],
+    flags: MessageFlags.IsComponentsV2,
+  });
+}

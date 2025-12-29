@@ -30,7 +30,6 @@ client.buttonHandlersByPrefix = [];
 client.modalHandlersByPrefix = [];
 client.selectHandlersByPrefix = [];
 
-const baseDailyBonus = 100;
 let db;
 
 async function loadHandlers(dir, targetArray) {

@@ -1,5 +1,6 @@
 import {
   ActionRowBuilder,
+  LabelBuilder,
   MessageFlags,
   ModalBuilder,
   TextDisplayBuilder,
@@ -18,32 +19,33 @@ export function getProfileModal({ user, buttonOwnerId }) {
 
   const nameInput = new TextInputBuilder()
     .setCustomId("profile_display_name")
-    .setLabel("Display Name")
     .setStyle(TextInputStyle.Short)
     .setValue(prevName)
     .setRequired(true);
 
-  const bubbleInput = new TextInputBuilder()
+  const nameLabel = new LabelBuilder().setLabel("Display Name").setTextInputComponent(nameInput);
+
+  const thoughtInput = new TextInputBuilder()
     .setCustomId("profile_bubble")
-    .setLabel("What's on your mind?")
     .setStyle(TextInputStyle.Short)
     .setValue(prevBubble)
     .setRequired(false)
     .setMaxLength(100);
 
+  const thoughtLabel = new LabelBuilder().setLabel("What's on your mind?").setTextInputComponent(thoughtInput);
+
   const resetTimeInput = new TextInputBuilder()
     .setCustomId("profile_reset_hour")
-    .setLabel("Daily reset hour in PST (0–23)")
     .setStyle(TextInputStyle.Short)
     .setValue(prevDailyResetHour)
     .setRequired(true)
     .setMaxLength(2);
 
-  modal.addComponents(
-    new ActionRowBuilder().addComponents(nameInput),
-    new ActionRowBuilder().addComponents(bubbleInput),
-    new ActionRowBuilder().addComponents(resetTimeInput)
-  );
+  const resetTimeLabel = new LabelBuilder()
+    .setLabel("Daily reset hour in PST (0-23)")
+    .setTextInputComponent(resetTimeInput);
+
+  modal.addLabelComponents(nameLabel, thoughtLabel, resetTimeLabel);
 
   return modal;
 }

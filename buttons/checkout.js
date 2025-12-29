@@ -1,5 +1,5 @@
 import { AttachmentBuilder, MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
-import { formatMission, getStatusPayload } from "../utils/formatter.js";
+import { formatMission, getMissionListDisplay } from "../utils/formatter.js";
 import { formatTime } from "../utils/formatTime.js";
 import { getConfirmStatusRow } from "../components/buttonRows.js";
 import { getMissionCard } from "../components/missionComponents.js";
@@ -62,7 +62,7 @@ export default {
 async function getUpdatePayload(parent, interaction, db, user, mission, checkoutText) {
   switch (parent) {
     case "status":
-      return await getStatusPayload(interaction, db);
+      return await getMissionListDisplay(interaction, db);
 
     case "confirm":
       return { components: [checkoutText], flags: MessageFlags.IsComponentsV2 };

@@ -3,7 +3,7 @@ import { getMissionListDisplay } from "../utils/formatter.js";
 import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 import { formatMissionRewardMessage } from "../utils/missionRewards.js";
 import { getConfirmStatusRow } from "../components/buttonRows.js";
-import { processMissionCompletion } from "../logic/missionLogic.js";
+import { processMissionCompletion, sendDailyBonusFollowUp } from "../logic/missionLogic.js";
 import { ObjectId } from "mongodb";
 
 export default {
@@ -52,7 +52,7 @@ export default {
       return;
     }
 
-    // Default: show selector
+    // DEFAULT: show selector
     const missionArray = await missions.find({ user_id: user._id, is_complete: { $ne: true } }).toArray();
     if (missionArray.length === 0) {
       return interaction.reply({ content: "> `❌ No incomplete missions found.`", ephemeral: true });
@@ -79,16 +79,4 @@ async function getCompletionUpdatePayload(parent, interaction, db, user, mission
       flags: MessageFlags.IsComponentsV2,
     };
   }
-}
-
-async function sendDailyBonusFollowUp(interaction) {
-  const congratsMsgs = ["Woah!", "Harikitte ikou!", "How did you just do that."];
-  const congratsMsg =
-    Math.random() < 0.5 ? congratsMsgs[0] : congratsMsgs[Math.floor(Math.random() * (congratsMsgs.length - 1)) + 1];
-
-  const dailyBonusMsg = `\`${congratsMsg}\` \n> \`✨ Completed all daily missions!\``;
-  return interaction.followUp({
-    components: [new TextDisplayBuilder().setContent(dailyBonusMsg)],
-    flags: MessageFlags.IsComponentsV2,
-  });
 }
