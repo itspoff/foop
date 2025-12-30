@@ -1,6 +1,5 @@
 import { SectionBuilder, SeparatorBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import { formatTime, getCurrentPST } from "../utils/formatTime.js";
-import { calculateLevelUp } from "../utils/missionRewards.js";
 
 export function getDailyReport(user, discordUser, dailyMissions, allMissions) {
   const now = getCurrentPST();
@@ -19,12 +18,6 @@ export function getDailyReport(user, discordUser, dailyMissions, allMissions) {
   let cheers = 0;
   let numMissionsLeveledUp = 0;
   for (const mission of allMissions) {
-    if (mission.is_daily) {
-      const levelUp = calculateLevelUp(mission);
-      if (levelUp.level > mission.level) {
-        numMissionsLeveledUp++;
-      }
-    }
     if (mission.time_taken) {
       totalTimeTaken += mission.time_taken;
     }
@@ -43,7 +36,7 @@ export function getDailyReport(user, discordUser, dailyMissions, allMissions) {
 
 > \`Daily missions:      \` \` ${dailiesCompleted} / ${dailyMissions.length}\` ${
     allDailiesCompleted ? `\`🔥 x${user.daily_streak ? user.daily_streak + 1 : 1}\`` : ""
-  }${numMissionsLeveledUp >= 1 ? `\n> \`Missions leveled up: \` \`     ${numMissionsLeveledUp}\`` : ""}
+  }
 > \`All missions:        \` \` ${allCompleted} / ${allMissions.length}\`
 > \`Locked in for:       \` \` ${formatTime(totalTimeTaken)}\`
 

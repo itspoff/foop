@@ -1,6 +1,16 @@
-import { ActionRowBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import {
+  ActionRowBuilder,
+  LabelBuilder,
+  MessageFlags,
+  ModalBuilder,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+} from "discord.js";
 import { getCurrentPST } from "../utils/formatTime.js";
 import { getMissionCard } from "../components/missionComponents.js";
+import { getMissionListDisplay } from "../utils/formatter.js";
 
 const placeholders = [
   "", // default
@@ -24,33 +34,37 @@ export function getNewMissionModal(value = "") {
 
   const titleInput = new TextInputBuilder()
     .setCustomId("new_input_title")
-    .setLabel("Mission Title")
     .setStyle(TextInputStyle.Short)
     .setPlaceholder(placeholder)
     .setValue(value)
     .setRequired(true);
 
-  const dailyInput = new TextInputBuilder()
-    .setCustomId("new_input_daily")
-    .setLabel("Is this task daily? (Leave blank for no.)")
-    .setStyle(TextInputStyle.Short)
-    .setValue("")
-    .setPlaceholder('Type "Y", "T", or "Yes" to turn this into a daily task.')
+  const titleLabel = new LabelBuilder().setLabel("Mission Title").setTextInputComponent(titleInput);
+
+  const missionTypeSelect = new StringSelectMenuBuilder()
+    .setCustomId("new_input_type")
     .setRequired(false)
-    .setMaxLength(3)
-    .setMinLength(0);
+    .addOptions(
+      new StringSelectMenuOptionBuilder()
+        .setLabel("Daily")
+        .setDescription("This mission will reset every day.")
+        .setValue("daily"),
+      new StringSelectMenuOptionBuilder()
+        .setLabel("Standard")
+        .setDescription("Nothing special. Just a regular ol' mission.")
+        .setValue("standard")
+    );
+
+  const missionTypeLabel = new LabelBuilder().setLabel("Mission Type").setStringSelectMenuComponent(missionTypeSelect);
 
   const descInput = new TextInputBuilder()
     .setCustomId("new_input_desc")
-    .setLabel("Description")
     .setStyle(TextInputStyle.Paragraph)
     .setRequired(false);
 
-  modal.addComponents(
-    new ActionRowBuilder().addComponents(titleInput),
-    new ActionRowBuilder().addComponents(dailyInput),
-    new ActionRowBuilder().addComponents(descInput)
-  );
+  const descLabel = new LabelBuilder().setLabel("Description").setTextInputComponent(descInput);
+
+  modal.addLabelComponents(titleLabel, missionTypeLabel, descLabel);
 
   return modal;
 }
@@ -63,10 +77,9 @@ export default {
 
     const title = interaction.fields.getTextInputValue("new_input_title")?.trim();
     const desc = interaction.fields.getTextInputValue("new_input_desc")?.trim() || "";
-    const isDailyInput = interaction.fields.getTextInputValue("new_input_daily")?.trim().toLowerCase();
+    const type = interaction.fields.getStringSelectValues("new_input_type");
 
-    const trueInputs = ["t", "yes", "y"];
-    const isDaily = trueInputs.includes(isDailyInput);
+    const isDaily = type == "daily";
 
     const mission = {
       user_id: user._id,
@@ -83,16 +96,19 @@ export default {
       completed_count: 0,
       cheers: [],
       ...(isDaily && {
-        level: 1,
-        xp: 0,
-        max_level: 5,
+        current_streak: 0,
+        highest_streak: 0,
+        last_completed_at: null,
       }),
     };
 
     await missions.insertOne(mission);
     const missionCard = await getMissionCard(mission);
 
-    await interaction.reply({
+    const missionListDisplay = await getMissionListDisplay(interaction, db);
+    await interaction.update(missionListDisplay);
+
+    await interaction.followUp({
       components: [missionCard],
       flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
     });

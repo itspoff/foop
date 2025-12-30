@@ -53,23 +53,3 @@ export function formatMissionRewardMessage({
 
   return completeMissionMsg + bonusMessage;
 }
-
-export function calculateLevelUp(mission) {
-  let level = mission.level ?? 1;
-  let xp = mission.xp ?? mission.ppts_gained ?? 0;
-  if (mission.level >= mission.max_level) return { level, xp };
-
-  while (true) {
-    const xpToNextLevel = 5 * 2 ** level;
-    if (xp > xpToNextLevel && level < mission.max_level) {
-      xp -= xpToNextLevel;
-      level++;
-    } else {
-      break;
-    }
-  }
-  return {
-    level,
-    xp,
-  };
-}

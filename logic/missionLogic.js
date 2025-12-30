@@ -21,6 +21,29 @@ export async function processMissionCompletion(db, user, mission) {
     ? calculateTotalTimeTaken(mission.locked_in_at, mission.time_taken)
     : mission.time_taken || 0;
 
+  let newStreak = mission.current_streak || 0;
+  let highestStreak = mission.highest_streak || 0;
+
+  if (mission.is_daily) {
+    const lastComp = mission.completed_at
+      ? DateTime.fromJSDate(mission.completed_at).setZone("America/Los_Angeles")
+      : null;
+
+    if (!lastComp) {
+      newStreak = 1;
+    } else {
+      const diff = getCurrentPST().startOf("day").diff(lastComp.startOf("day"), "days").days;
+
+      if (diff === 1) {
+        newStreak += 1;
+      } else if (diff > 1) {
+        newStreak = 1;
+      }
+    }
+
+    if (newStreak > highestStreak) highestStreak = newStreak;
+  }
+
   const otherIncompleteDailies = await missions.countDocuments({
     user_id: user._id,
     is_daily: true,
@@ -50,11 +73,10 @@ export async function processMissionCompletion(db, user, mission) {
       time_taken: totalTime,
       completed_at: getCurrentPST().toJSDate(),
       ppts_gained: rewardData.totalBonus,
+      ...(mission.is_daily && { current_streak: newStreak, highest_streak: highest_streak }),
       ...(completedAllDaily && { rewarded_all_dailies: true }),
     },
   };
-
-  if (mission.is_daily) missionUpdate.$inc = { xp: rewardData.totalBonus };
 
   await missions.updateOne({ _id: mission._id }, missionUpdate);
   await users.updateOne(
@@ -82,8 +104,6 @@ export async function processMissionDeletion(db, user, missionId) {
 
   return mission;
 }
-
-// logic/missionLogic.js
 
 export async function processMissionLockIn(db, user, missionId) {
   const missions = db.collection("missions");

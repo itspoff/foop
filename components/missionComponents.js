@@ -52,12 +52,6 @@ export async function getMissionCard(mission) {
   if (mission.count && mission.count > 0) {
     count = mission.count;
   }
-  let completionRate = "Unknown";
-  if (mission.completed_count === 0) {
-    completionRate = "0.00%";
-  } else if (mission.count && mission.count > 0) {
-    completionRate = (((mission.completed_count ?? 0) / mission.count) * 100).toFixed(2) + "%";
-  }
 
   let cheerNames = "";
   if (Array.isArray(mission.cheers) && mission.cheers.length > 0) {
@@ -66,11 +60,7 @@ export async function getMissionCard(mission) {
   }
   let stats = `
 > \`🏷️\` \`Created at:      \` \`${createdAtFormatted}\`${
-    mission.is_daily
-      ? `\n> \`💯\` \`Completion Rate: \` \`${completionRate}\`\n> \`🌼\` \`Level:           \` \`${
-          mission.level ?? 0
-        }\``
-      : ""
+    mission.is_daily ? `\n> \`🔥\` \`Current Streak:  \` \`${mission.current_streak}\`` : ""
   }
 > \`⏱️\` \`Time Elapsed:    \` \`${formatTime(mission.time_taken)}\`${
     cheerNames.length ? `\n\`👏 ${cheerNames} cheered for this mission!\`` : ""

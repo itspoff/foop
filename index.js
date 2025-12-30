@@ -17,7 +17,6 @@ import { getCurrentPST, getResetTimePST } from "./utils/formatTime.js";
 import { formatReminder } from "./utils/formatReminder.js";
 import { getDailyReport } from "./components/dailyReport.js";
 import { getDailyButtonRow } from "./components/buttonRows.js";
-import { calculateLevelUp } from "./utils/missionRewards.js";
 
 config();
 
@@ -207,13 +206,6 @@ setInterval(async () => {
           },
           $inc: { count: 1 },
         };
-
-        if (daily.is_complete) {
-          const levelUp = calculateLevelUp(daily);
-          updateMission.$set.level = levelUp.level;
-          updateMission.$set.xp = levelUp.xp;
-          updateMission.$inc.completed_count = 1;
-        }
 
         await missionsCol.updateOne({ _id: daily._id }, updateMission);
       }
