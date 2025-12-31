@@ -10,7 +10,6 @@ import {
 } from "discord.js";
 import { sortMissions, capitalizeFirstLetter, formatDisplayMission } from "../utils/formatter.js";
 import { DateTime } from "luxon";
-import { getMissionButtonRow } from "./buttonRows.js";
 import { formatTime } from "../utils/formatTime.js";
 import { getExistingUserFromId } from "../utils/getOrCreateUser.js";
 
@@ -33,7 +32,7 @@ export const MissionSelectOperations = {
     title: "Locking in...",
     label: "Mission to lock in on:",
   },
-  VIEW: { placeholder: "Select a mission.", id: "view", title: "Viewing...", label: "Mission to view:" },
+  VIEW: { placeholder: "Select a mission.", id: "view", title: "Viewing...", label: "Mission(s) to view:" },
 };
 
 export function getMissionSelector(missionArray, options = MissionSelectOperations.COMPLETE) {
@@ -193,4 +192,58 @@ export function getMissionListButtonRow(user, options = {}) {
     .setDisabled(disableDelete);
 
   return new ActionRowBuilder().addComponents(newMissionButton, lockInButton, completeButton, viewButton, deleteButton);
+}
+
+export function getMissionButtonRow(missionId, userId, options = {}) {
+  const {
+    disableLockIn = false,
+    disableCheckOut = false,
+    disableComplete = false,
+    disableDelete = false,
+    disableCheer = false,
+    disableEdit = false,
+    lockedInMission = false,
+  } = options;
+
+  let lockInButton = new ButtonBuilder()
+    .setCustomId(`lockin_${missionId}_${userId}`)
+    .setLabel("🔐 Lock in")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableLockIn);
+
+  let completeButton = new ButtonBuilder()
+    .setCustomId(`complete_${missionId}_${userId}`)
+    .setLabel("🐾 Complete")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableComplete);
+
+  if (lockedInMission) {
+    const checkOutButton = new ButtonBuilder()
+      .setCustomId(`checkout_${missionId}_card_${userId}`)
+      .setLabel("💨 Check out")
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(disableCheckOut);
+    lockInButton = checkOutButton;
+    completeButton.setStyle(ButtonStyle.Primary);
+  }
+
+  const cheerButton = new ButtonBuilder()
+    .setCustomId(`cheer_${missionId}_card_${userId}`)
+    .setLabel("👏 Cheer")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableCheer);
+
+  const editButton = new ButtonBuilder()
+    .setCustomId(`edit_${missionId}_card_${userId}`)
+    .setLabel("✒️ Edit")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableEdit);
+
+  const deleteButton = new ButtonBuilder()
+    .setCustomId(`delete_${missionId}_card_${userId}`)
+    .setLabel("💢 Delete")
+    .setStyle(ButtonStyle.Danger)
+    .setDisabled(disableDelete);
+
+  return new ActionRowBuilder().addComponents(lockInButton, completeButton, cheerButton, editButton, deleteButton);
 }

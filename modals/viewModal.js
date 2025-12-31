@@ -20,6 +20,9 @@ export default {
       })
       .toArray();
 
+    const missionListDisplay = await getMissionListDisplay(interaction, db);
+    await interaction.update(missionListDisplay);
+
     for (const mission of selectedMissions) {
       const missionCard = await getMissionCard(mission);
       await interaction.followUp({
