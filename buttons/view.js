@@ -1,5 +1,5 @@
 import { MessageFlags, TextDisplayBuilder } from "discord.js";
-import { getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
+import { getMissionActionModal, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 import { getConfirmStatusRow } from "../components/buttonRows.js";
 
 export default {
@@ -15,12 +15,8 @@ export default {
     const missions = db.collection("missions");
 
     const missionArray = await missions.find({ user_id: user._id }).toArray();
-    const text = new TextDisplayBuilder().setContent("## `📇 Mission View`");
-    const selector = getMissionSelector(missionArray, MissionSelectOperations.VIEW);
+    const modal = getMissionActionModal(missionArray, MissionSelectOperations.VIEW);
 
-    return interaction.reply({
-      components: [text, selector],
-      flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
-    });
+    return interaction.showModal(modal);
   },
 };

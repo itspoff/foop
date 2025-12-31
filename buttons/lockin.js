@@ -1,6 +1,11 @@
-import { MessageFlags, TextDisplayBuilder } from "discord.js";
+import { LabelBuilder, MessageFlags, ModalBuilder, TextDisplayBuilder } from "discord.js";
 import { formatMission } from "../utils/formatter.js";
-import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
+import {
+  getMissionActionModal,
+  getMissionCard,
+  getMissionSelector,
+  MissionSelectOperations,
+} from "../components/missionComponents.js";
 import { getConfirmCheckOutRow, getConfirmStatusRow } from "../components/buttonRows.js";
 import { processMissionLockIn } from "../logic/missionLogic.js";
 import { ObjectId } from "mongodb";
@@ -48,19 +53,14 @@ export default {
       }
     }
 
-    // DEFAULT: show selector
+    // DEFAULT: show modal
     const missionArray = await missions.find({ user_id: user._id, is_complete: { $ne: true } }).toArray();
     if (missionArray.length === 0) {
       return interaction.reply({ content: "> `❌ No missions to lock in on.`", ephemeral: true });
     }
 
-    return interaction.reply({
-      components: [
-        new TextDisplayBuilder().setContent("## `🔐 Mission Lock In`"),
-        getMissionSelector(missionArray, MissionSelectOperations.LOCKIN),
-      ],
-      flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
-    });
+    const modal = getMissionActionModal(missionArray, MissionSelectOperations.LOCKIN);
+    return interaction.showModal(modal);
   },
 };
 

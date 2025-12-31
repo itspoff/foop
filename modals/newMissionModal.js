@@ -39,7 +39,7 @@ export function getNewMissionModal(value = "") {
     .setValue(value)
     .setRequired(true);
 
-  const titleLabel = new LabelBuilder().setLabel("Mission Title").setTextInputComponent(titleInput);
+  const titleLabel = new LabelBuilder().setLabel("Mission title:").setTextInputComponent(titleInput);
 
   const missionTypeSelect = new StringSelectMenuBuilder()
     .setCustomId("new_input_type")
@@ -55,14 +55,14 @@ export function getNewMissionModal(value = "") {
         .setValue("standard")
     );
 
-  const missionTypeLabel = new LabelBuilder().setLabel("Mission Type").setStringSelectMenuComponent(missionTypeSelect);
+  const missionTypeLabel = new LabelBuilder().setLabel("Mission type:").setStringSelectMenuComponent(missionTypeSelect);
 
   const descInput = new TextInputBuilder()
     .setCustomId("new_input_desc")
     .setStyle(TextInputStyle.Paragraph)
     .setRequired(false);
 
-  const descLabel = new LabelBuilder().setLabel("Description").setTextInputComponent(descInput);
+  const descLabel = new LabelBuilder().setLabel("Mission description:").setTextInputComponent(descInput);
 
   modal.addLabelComponents(titleLabel, missionTypeLabel, descLabel);
 

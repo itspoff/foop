@@ -1,7 +1,7 @@
 import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { capitalizeFirstLetter } from "../utils/formatter.js";
 import { getConfirmStatusRow } from "../components/buttonRows.js";
-import { getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
+import { getMissionActionModal, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 import { processMissionDeletion } from "../logic/missionLogic.js";
 import { ObjectId } from "mongodb";
 
@@ -38,14 +38,12 @@ export default {
     }
 
     const missionArray = await missions.find({ user_id: user._id }).toArray();
+    if (missionArray.length === 0) {
+      return interaction.reply({ content: "> `❌ No missions to delete.`", ephemeral: true });
+    }
 
-    return interaction.reply({
-      components: [
-        new TextDisplayBuilder().setContent("## `💢 Mission Delete`"),
-        getMissionSelector(missionArray, MissionSelectOperations.DELETE),
-      ],
-      flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
-    });
+    const modal = getMissionActionModal(missionArray, MissionSelectOperations.DELETE);
+    return interaction.showModal(modal);
   },
 };
 

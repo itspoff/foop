@@ -57,7 +57,7 @@ async function safeExecute(interaction, fn) {
   } catch (err) {
     console.error("❌ Interaction error:", err);
     if (!interaction.replied) {
-      await interaction.reply({ content: "`❌ There was an error.`", ephemeral: true });
+      await interaction.reply({ content: "> `❌ There was an error.`", ephemeral: true });
     }
   }
 }

@@ -1,7 +1,8 @@
 import { MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import { formatTime, timeSince } from "./formatTime.js";
 import { getOrCreateUser } from "./getOrCreateUser.js";
-import { getMissionListButtonRow, getStatusButtonRow } from "../components/buttonRows.js";
+import { getStatusButtonRow } from "../components/buttonRows.js";
+import { getMissionListButtonRow } from "../components/missionComponents.js";
 
 export function formatMood(mood) {
   const moodMap = {
@@ -196,14 +197,14 @@ export function formatHelpText(string) {
 
 export async function getStatusPayload(interaction, db, targetUser = null) {
   const discordUser = targetUser ? await interaction.client.users.fetch(targetUser._id) : interaction.user;
-  const missionsCollection = db.collection("missions");
+  const missions = db.collection("missions");
 
   const user = await getOrCreateUser(discordUser);
   const [activeTag, lockedInMission, missionsCompletedCount, missionCount] = await Promise.all([
     user.active_tag ? db.collection("tags").findOne({ code: user.active_tag }) : null,
-    missionsCollection.findOne({ user_id: user._id, locked_in_at: { $ne: null } }),
-    missionsCollection.countDocuments({ user_id: user._id, is_complete: true }),
-    missionsCollection.countDocuments({ user_id: user._id }),
+    missions.findOne({ user_id: user._id, locked_in_at: { $ne: null } }),
+    missions.countDocuments({ user_id: user._id, is_complete: true }),
+    missions.countDocuments({ user_id: user._id }),
   ]);
 
   const displayName = formatDisplayName(user.display_name || discordUser.globalName);
@@ -234,13 +235,13 @@ export async function getStatusPayload(interaction, db, targetUser = null) {
 }
 
 export async function getMissionListDisplay(interaction, db) {
-  const missionsCollection = db.collection("missions");
+  const missions = db.collection("missions");
   const user = await getOrCreateUser(interaction.user);
 
-  const displayMissions = await showMissionList(interaction, user, missionsCollection, false);
+  const displayMissions = await showMissionList(interaction, user, missions, false);
   const missionsList = new TextDisplayBuilder().setContent(displayMissions);
 
-  const lockedInMission = await missionsCollection.findOne({
+  const lockedInMission = await missions.findOne({
     user_id: user._id,
     locked_in_at: { $ne: null },
   });

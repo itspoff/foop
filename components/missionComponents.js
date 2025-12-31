@@ -1,4 +1,13 @@
-import { StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ContainerBuilder } from "discord.js";
+import {
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
+  ActionRowBuilder,
+  ContainerBuilder,
+  ModalBuilder,
+  LabelBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} from "discord.js";
 import { sortMissions, capitalizeFirstLetter, formatDisplayMission } from "../utils/formatter.js";
 import { DateTime } from "luxon";
 import { getMissionButtonRow } from "./buttonRows.js";
@@ -6,10 +15,25 @@ import { formatTime } from "../utils/formatTime.js";
 import { getExistingUserFromId } from "../utils/getOrCreateUser.js";
 
 export const MissionSelectOperations = {
-  COMPLETE: { placeholder: "Select mission(s) to complete.", id: "complete" },
-  DELETE: { placeholder: "Select mission(s) to delete.", id: "delete" },
-  LOCKIN: { placeholder: "Select a mission to lock in on.", id: "lockin" },
-  VIEW: { placeholder: "Select a mission to view.", id: "view" },
+  COMPLETE: {
+    placeholder: "Select mission(s).",
+    id: "complete",
+    title: "Completing...",
+    label: "Mission(s) to complete:",
+  },
+  DELETE: {
+    placeholder: "Select mission(s).",
+    id: "delete",
+    title: "Deleting...",
+    label: "Mission(s) to delete:",
+  },
+  LOCKIN: {
+    placeholder: "Select a mission.",
+    id: "lockin",
+    title: "Locking in...",
+    label: "Mission to lock in on:",
+  },
+  VIEW: { placeholder: "Select a mission.", id: "view", title: "Viewing...", label: "Mission to view:" },
 };
 
 export function getMissionSelector(missionArray, options = MissionSelectOperations.COMPLETE) {
@@ -21,7 +45,7 @@ export function getMissionSelector(missionArray, options = MissionSelectOperatio
   }
   const sortedMissions = sortMissions(missionArray);
   const select = new StringSelectMenuBuilder()
-    .setCustomId(`missionSelect_${options.id}`)
+    .setCustomId(`${options.id}_select`)
     .setPlaceholder(options.placeholder)
     .addOptions(
       sortedMissions.map((mission) => {
@@ -37,13 +61,23 @@ export function getMissionSelector(missionArray, options = MissionSelectOperatio
       })
     );
 
-  if (options === MissionSelectOperations.COMPLETE || options === MissionSelectOperations.DELETE) {
+  if (options !== MissionSelectOperations.LOCKIN) {
     if (missionArray.length) {
       select.setMinValues(1).setMaxValues(sortedMissions.length);
     }
   }
 
-  return new ActionRowBuilder().addComponents(select);
+  return select;
+}
+
+export function getMissionActionModal(missionArray, options = MissionSelectOperations.COMPLETE) {
+  const modal = new ModalBuilder().setCustomId(`${options.id}_modal_submit`).setTitle(options.title);
+  const StringSelectMenu = getMissionSelector(missionArray, options);
+
+  const selectLabel = new LabelBuilder().setLabel(options.label).setStringSelectMenuComponent(StringSelectMenu);
+  modal.addLabelComponents(selectLabel);
+
+  return modal;
 }
 
 export async function getMissionCard(mission) {
@@ -97,4 +131,66 @@ ${stats}
     .addActionRowComponents(buttons);
 
   return missionCard;
+}
+export function getMissionListButtonRow(user, options = {}) {
+  const userId = user._id;
+
+  const {
+    disableAddMission = false,
+    disableLockIn = false,
+    disableCheckOut = false,
+    disableComplete = false,
+    disableView = false,
+    disableDelete = false,
+    lockedInMission = false,
+  } = options;
+
+  const newMissionButton = new ButtonBuilder()
+    .setCustomId(`new_${userId}`)
+    .setLabel("🌱 New mission")
+    .setStyle(ButtonStyle.Success)
+    .setDisabled(disableAddMission);
+
+  let lockInButton = new ButtonBuilder()
+    .setCustomId(`lockin_0_${userId}`)
+    .setLabel("🔐 Lock in")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableLockIn);
+
+  let completeButton = new ButtonBuilder()
+    .setCustomId(`complete_0_${userId}`)
+    .setLabel("🐾 Complete")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableComplete);
+
+  if (lockedInMission) {
+    const missionId = lockedInMission._id;
+
+    const checkOutButton = new ButtonBuilder()
+      .setCustomId(`checkout_${missionId}_status_${userId}`)
+      .setLabel("💨 Check out")
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(disableCheckOut);
+
+    lockInButton = checkOutButton;
+    completeButton = new ButtonBuilder()
+      .setCustomId(`complete_${missionId}_status_${userId}`)
+      .setLabel("🐾 Complete")
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(disableComplete);
+  }
+
+  const viewButton = new ButtonBuilder()
+    .setCustomId(`view_${userId}`)
+    .setLabel("📇 View")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(disableView);
+
+  const deleteButton = new ButtonBuilder()
+    .setCustomId(`delete_${userId}`)
+    .setLabel("💢 Delete")
+    .setStyle(ButtonStyle.Danger)
+    .setDisabled(disableDelete);
+
+  return new ActionRowBuilder().addComponents(newMissionButton, lockInButton, completeButton, viewButton, deleteButton);
 }

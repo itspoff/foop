@@ -1,6 +1,11 @@
 import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { getMissionListDisplay } from "../utils/formatter.js";
-import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
+import {
+  getMissionActionModal,
+  getMissionCard,
+  getMissionSelector,
+  MissionSelectOperations,
+} from "../components/missionComponents.js";
 import { formatMissionRewardMessage } from "../utils/missionRewards.js";
 import { getConfirmStatusRow } from "../components/buttonRows.js";
 import { processMissionCompletion, sendDailyBonusFollowUp } from "../logic/missionLogic.js";
@@ -52,19 +57,14 @@ export default {
       return;
     }
 
-    // DEFAULT: show selector
+    // DEFAULT: show modal
     const missionArray = await missions.find({ user_id: user._id, is_complete: { $ne: true } }).toArray();
     if (missionArray.length === 0) {
       return interaction.reply({ content: "> `❌ No incomplete missions found.`", ephemeral: true });
     }
 
-    return interaction.reply({
-      components: [
-        new TextDisplayBuilder().setContent("## `🐾 Mission Complete`"),
-        getMissionSelector(missionArray, MissionSelectOperations.COMPLETE),
-      ],
-      flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
-    });
+    const modal = getMissionActionModal(missionArray, MissionSelectOperations.COMPLETE);
+    return interaction.showModal(modal);
   },
 };
 
