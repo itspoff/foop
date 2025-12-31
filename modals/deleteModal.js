@@ -29,8 +29,8 @@ export default {
 
     await missions.deleteMany({ _id: { $in: selectedIds } });
 
-    const missionDisplay = await getMissionListDisplay(interaction, db);
-    await interaction.update(missionDisplay);
+    const missionListDisplay = await getMissionListDisplay(interaction, db);
+    await interaction.update(missionListDisplay);
 
     await interaction.followUp({
       components: [new TextDisplayBuilder().setContent(rewardMessages.join("\n"))],

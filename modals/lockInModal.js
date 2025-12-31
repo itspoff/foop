@@ -20,8 +20,8 @@ export default {
       .toArray();
 
     await missions.updateOne({ _id: selectedMissions[0]._id }, { $set: { locked_in_at: new Date() } });
-    const missionList = await getMissionListDisplay(interaction, db);
-    await interaction.update({ missionList });
+    const missionListDisplay = await getMissionListDisplay(interaction, db);
+    await interaction.update(missionListDisplay);
     const updatedMission = await missions.findOne({ _id: selectedMissions[0]._id });
     return interaction.followUp({
       components: [await getMissionCard(updatedMission)],
