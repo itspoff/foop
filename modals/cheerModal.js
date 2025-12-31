@@ -18,7 +18,7 @@ export function getCheerModal(userToCheer = "a friend", missionId) {
     Math.random() < 0.5 ? placeholders[0] : placeholders[Math.floor(Math.random() * (placeholders.length - 1)) + 1];
 
   const textDescription = new TextDisplayBuilder().setContent(
-    `Use 250 ppts to cheer for this mission? \n-# ${userToCheer} will receive double the rewards on completion.`
+    `Use 100 ppts to cheer for this mission? \n-# ${userToCheer} will receive double the rewards on completion.`
   );
   const messageInput = new TextInputBuilder()
     .setCustomId("cheer_input_message")
@@ -52,7 +52,7 @@ export default {
         ephemeral: true,
       });
     }
-    if (user.ppts < 250) {
+    if (user.ppts < 100) {
       return interaction.reply({
         content: "> `❌ You don't have enough points to cheer!`",
         ephemeral: true,
@@ -75,7 +75,7 @@ export default {
 
     // store message id of the mission card? and update the card
 
-    await users.updateOne({ _id: user._id }, { $inc: { ppts: -25 } });
+    await users.updateOne({ _id: user._id }, { $inc: { ppts: -100 } });
     await missions.updateOne({ _id: missionId }, { $addToSet: { cheers: user._id } });
 
     await interaction.reply({
