@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 import { getCurrentPST } from "../utils/formatTime.js";
 import { calculateMissionRewards } from "../utils/missionRewards.js";
@@ -126,7 +127,7 @@ export async function processMissionLockIn(db, user, missionId) {
 }
 
 export async function sendDailyBonusFollowUp(interaction) {
-  const congratsMsgs = ["Woah!", "Harikitte ikou!", "How did you just do that."];
+  const congratsMsgs = ["Woah!", "Harikitte ikou!", "How did you just do that.", "You've been so good..."];
   const congratsMsg = congratsMsgs[Math.floor(Math.random() * congratsMsgs.length)];
 
   const dailyBonusMsg = `\`${congratsMsg}\` \n> \`✨ Completed all daily missions!\``;
