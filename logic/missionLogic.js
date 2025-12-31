@@ -74,7 +74,7 @@ export async function processMissionCompletion(db, user, mission) {
       time_taken: totalTime,
       completed_at: getCurrentPST().toJSDate(),
       ppts_gained: rewardData.totalBonus,
-      ...(mission.is_daily && { current_streak: newStreak, highest_streak: highest_streak }),
+      ...(mission.is_daily && { current_streak: newStreak, highest_streak: highestStreak }),
       ...(completedAllDaily && { rewarded_all_dailies: true }),
     },
   };
