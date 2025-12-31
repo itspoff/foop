@@ -2,6 +2,7 @@ import { DateTime } from "luxon";
 import { calculateTotalTimeTaken } from "../utils/calculateTotalTimeTaken.js";
 import { getCurrentPST } from "../utils/formatTime.js";
 import { calculateMissionRewards } from "../utils/missionRewards.js";
+import { TextDisplayBuilder } from "discord.js";
 
 export async function processMissionCheckout(db, user, mission) {
   const totalTime = calculateTotalTimeTaken(mission.locked_in_at, mission.time_taken);
