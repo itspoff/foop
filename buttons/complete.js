@@ -7,7 +7,6 @@ import {
   MissionSelectOperations,
 } from "../components/missionComponents.js";
 import { formatMissionRewardMessage } from "../utils/missionRewards.js";
-import { getConfirmStatusRow } from "../components/buttonRows.js";
 import { processMissionCompletion, sendDailyBonusFollowUp } from "../logic/missionLogic.js";
 import { ObjectId } from "mongodb";
 
@@ -17,7 +16,7 @@ export default {
   async execute(interaction, { db, user, value }) {
     if (!value.endsWith(interaction.user.id)) {
       return interaction.reply({
-        components: [getConfirmStatusRow(user)],
+        components: [new TextDisplayBuilder().setContent("> `🥀 This isn't your button.`")],
         flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
       });
     }

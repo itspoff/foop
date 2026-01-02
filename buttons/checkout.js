@@ -1,23 +1,21 @@
 import { AttachmentBuilder, MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
 import { formatMission, getMissionListDisplay } from "../utils/formatter.js";
 import { formatTime } from "../utils/formatTime.js";
-import { getConfirmStatusRow } from "../components/buttonRows.js";
 import { getMissionCard } from "../components/missionComponents.js";
-import { processMissionCheckout } from "../logic/missionLogic.js"; // Import the helper
+import { processMissionCheckout } from "../logic/missionLogic.js";
 
 export default {
   prefix: "checkout_",
   async execute(interaction, { db, user, value }) {
     if (!value.endsWith(interaction.user.id)) {
       return interaction.reply({
-        components: [getConfirmStatusRow(user)],
+        components: [new TextDisplayBuilder().setContent("> `🥀 This isn't your button.`")],
         flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
       });
     }
 
     const missions = db.collection("missions");
     const [missionId, parent] = value.split("_");
-
     const mission = await missions.findOne({
       user_id: user._id,
       locked_in_at: { $ne: null },

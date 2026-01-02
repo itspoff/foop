@@ -1,14 +1,12 @@
-import { MessageFlags, TextDisplayBuilder } from "discord.js";
-import { getMissionActionModal, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
-import { getConfirmStatusRow } from "../components/buttonRows.js";
+import { MessageFlags } from "discord.js";
+import { getMissionActionModal, MissionSelectOperations } from "../components/missionComponents.js";
 
 export default {
   prefix: "view_",
   async execute(interaction, { db, user, value }) {
     if (!value.endsWith(interaction.user.id)) {
-      const openStatus = getConfirmStatusRow(user);
       return interaction.reply({
-        components: [openStatus],
+        components: [new TextDisplayBuilder().setContent("> `🥀 This isn't your button.`")],
         flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
       });
     }

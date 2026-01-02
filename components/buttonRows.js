@@ -1,53 +1,6 @@
 import { ButtonBuilder, ButtonStyle, ActionRowBuilder, SectionBuilder } from "discord.js";
 import { formatMission } from "../utils/formatter.js";
 
-export function getMissionButtonRow(missionId, userId, options = {}) {
-  const {
-    disableLockIn = false,
-    disableCheckOut = false,
-    disableComplete = false,
-    disableDelete = false,
-    disableCheer = false,
-    lockedInMission = false,
-  } = options;
-
-  let lockInButton = new ButtonBuilder()
-    .setCustomId(`lockin_${missionId}_${userId}`)
-    .setLabel("🔐 Lock in")
-    .setStyle(ButtonStyle.Secondary)
-    .setDisabled(disableLockIn);
-
-  let completeButton = new ButtonBuilder()
-    .setCustomId(`complete_${missionId}_${userId}`)
-    .setLabel("🐾 Complete")
-    .setStyle(ButtonStyle.Secondary)
-    .setDisabled(disableComplete);
-
-  if (lockedInMission) {
-    const checkOutButton = new ButtonBuilder()
-      .setCustomId(`checkout_${missionId}_card_${userId}`)
-      .setLabel("💨 Check out")
-      .setStyle(ButtonStyle.Primary)
-      .setDisabled(disableCheckOut);
-    lockInButton = checkOutButton;
-    completeButton.setStyle(ButtonStyle.Primary);
-  }
-
-  const cheerButton = new ButtonBuilder()
-    .setCustomId(`cheer_${missionId}_card_${userId}`)
-    .setLabel("👏 Cheer")
-    .setStyle(ButtonStyle.Secondary)
-    .setDisabled(disableCheer);
-
-  const deleteButton = new ButtonBuilder()
-    .setCustomId(`delete_${missionId}_card_${userId}`)
-    .setLabel("💢 Delete")
-    .setStyle(ButtonStyle.Danger)
-    .setDisabled(disableDelete);
-
-  return new ActionRowBuilder().addComponents(lockInButton, completeButton, cheerButton, deleteButton);
-}
-
 export function getStatusButtonRow(user, lockedInMission, options = {}) {
   const { disableCheer = lockedInMission ? false : true, disablePackage = true, disableProfile = false } = options;
   const missionId = lockedInMission ? lockedInMission._id : "0";
@@ -80,16 +33,6 @@ export function getConfirmCheerRow(user, missionId) {
     )
     .setButtonAccessory((button) =>
       button.setCustomId(`cheer_${missionId}_confirm_${user._id}`).setLabel("⭕️ Confirm").setStyle(ButtonStyle.Danger)
-    );
-}
-
-export function getConfirmStatusRow(user) {
-  return new SectionBuilder()
-    .addTextDisplayComponents((textDisplay) =>
-      textDisplay.setContent(`\`This isn't your button!\`\n\`Open your status?\``)
-    )
-    .setButtonAccessory((button) =>
-      button.setCustomId(`status_confirm_${user._id}`).setLabel("🧻 Status").setStyle(ButtonStyle.Success)
     );
 }
 

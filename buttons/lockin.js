@@ -6,7 +6,7 @@ import {
   getMissionSelector,
   MissionSelectOperations,
 } from "../components/missionComponents.js";
-import { getConfirmCheckOutRow, getConfirmStatusRow } from "../components/buttonRows.js";
+import { getConfirmCheckOutRow } from "../components/buttonRows.js";
 import { processMissionLockIn } from "../logic/missionLogic.js";
 import { ObjectId } from "mongodb";
 
@@ -15,7 +15,7 @@ export default {
   async execute(interaction, { db, user, value }) {
     if (!value.endsWith(interaction.user.id)) {
       return interaction.reply({
-        components: [getConfirmStatusRow(user)],
+        components: [new TextDisplayBuilder().setContent("> `🥀 This isn't your button.`")],
         flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
       });
     }

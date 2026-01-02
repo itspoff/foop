@@ -1,6 +1,5 @@
 import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { capitalizeFirstLetter } from "../utils/formatter.js";
-import { getConfirmStatusRow } from "../components/buttonRows.js";
 import { getMissionActionModal, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
 import { processMissionDeletion } from "../logic/missionLogic.js";
 import { ObjectId } from "mongodb";
@@ -10,7 +9,7 @@ export default {
   async execute(interaction, { db, user, value }) {
     if (!value.endsWith(interaction.user.id)) {
       return interaction.reply({
-        components: [getConfirmStatusRow(user)],
+        components: [new TextDisplayBuilder().setContent("> `🥀 This isn't your button.`")],
         flags: [MessageFlags.IsComponentsV2, MessageFlags.Ephemeral],
       });
     }
