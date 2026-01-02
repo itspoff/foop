@@ -95,11 +95,9 @@ export default {
       count: 0,
       completed_count: 0,
       cheers: [],
-      ...(isDaily && {
-        current_streak: 0,
-        highest_streak: 0,
-        last_completed_at: null,
-      }),
+      current_streak: 0,
+      highest_streak: 0,
+      last_completed_at: null,
     };
 
     await missions.insertOne(mission);

@@ -58,7 +58,7 @@ export function getEditMissionModal(mission) {
     .setDescription("This will remove any streaks, time elapsed, and cheers on this mission.")
     .setStringSelectMenuComponent(missionReset);
 
-  modal.addLabelComponents(titleLabel, missionTypeLabel, descLabel, missionResetLabel);
+  modal.addLabelComponents(titleLabel, missionTypeLabel, descLabel);
 
   return modal;
 }
@@ -72,31 +72,25 @@ export default {
     const title = interaction.fields.getTextInputValue("edit_input_title")?.trim();
     const type = interaction.fields.getStringSelectValues("edit_input_type");
     const desc = interaction.fields.getTextInputValue("edit_input_desc")?.trim();
-    const reset = interaction.fields.getStringSelectValues("edit_input_reset");
+    // const reset = interaction.fields.getStringSelectValues("edit_input_reset");
 
     const isDaily = type == "daily";
 
     let [_, missionId] = interaction.customId.split(":");
     missionId = ObjectId.createFromHexString(missionId);
-    const mission = await missions.findOne({
-      _id: missionId,
-    });
 
-    console.log(mission);
     const missionUpdate = {
       $set: {
         name: title,
         description: desc,
         is_daily: isDaily,
+        ...(isDaily && { current_streak: 0 }),
+        // setting a mission from non-daily to daily resets streak
       },
     };
 
-    const updatedMission = await missions.updateOne(
-      {
-        _id: missionId,
-      },
-      missionUpdate
-    );
+    await missions.updateOne({ _id: missionId }, missionUpdate);
+    const updatedMission = await missions.findOne({ _id: missionId });
 
     const missionCard = await getMissionCard(updatedMission);
 

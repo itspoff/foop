@@ -201,7 +201,7 @@ export function getMissionButtonRow(missionId, userId, options = {}) {
     disableComplete = false,
     disableDelete = false,
     disableCheer = false,
-    disableEdit = true,
+    disableEdit = false,
     lockedInMission = false,
   } = options;
 
