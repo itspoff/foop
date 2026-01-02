@@ -22,16 +22,18 @@ export function getEditMissionModal(mission) {
 
   const missionTypeSelect = new StringSelectMenuBuilder()
     .setCustomId("edit_input_type")
-    .setRequired(false)
+    .setRequired(true)
     .addOptions(
       new StringSelectMenuOptionBuilder()
         .setLabel("Daily")
         .setDescription("This mission will reset every day.")
-        .setValue("daily"),
+        .setValue("daily")
+        .setDefault(mission.is_daily),
       new StringSelectMenuOptionBuilder()
         .setLabel("Standard")
         .setDescription("Nothing special. Just a regular ol' mission.")
         .setValue("standard")
+        .setDefault(!mission.is_daily)
     );
 
   const missionTypeLabel = new LabelBuilder().setLabel("Mission type:").setStringSelectMenuComponent(missionTypeSelect);
@@ -58,7 +60,7 @@ export function getEditMissionModal(mission) {
     .setDescription("This will remove any streaks, time elapsed, and cheers on this mission.")
     .setStringSelectMenuComponent(missionReset);
 
-  modal.addLabelComponents(titleLabel, missionTypeLabel, descLabel);
+  modal.addLabelComponents(titleLabel, missionTypeLabel, descLabel, missionResetLabel);
 
   return modal;
 }
@@ -72,9 +74,10 @@ export default {
     const title = interaction.fields.getTextInputValue("edit_input_title")?.trim();
     const type = interaction.fields.getStringSelectValues("edit_input_type");
     const desc = interaction.fields.getTextInputValue("edit_input_desc")?.trim();
-    // const reset = interaction.fields.getStringSelectValues("edit_input_reset");
+    const reset = interaction.fields.getStringSelectValues("edit_input_reset");
 
     const isDaily = type == "daily";
+    const resetMission = reset == "yes";
 
     let [_, missionId] = interaction.customId.split(":");
     missionId = ObjectId.createFromHexString(missionId);
@@ -85,6 +88,18 @@ export default {
         description: desc,
         is_daily: isDaily,
         ...(isDaily && { current_streak: 0 }),
+        ...(resetMission && {
+          is_complete: false,
+          time_taken: null,
+          locked_in_at: null,
+          ppts_gained: 0,
+          count: 0,
+          completed_count: 0,
+          cheers: [],
+          current_streak: 0,
+          highest_streak: 0,
+          last_completed_at: null,
+        }),
         // setting a mission from non-daily to daily resets streak
       },
     };
