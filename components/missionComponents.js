@@ -131,6 +131,7 @@ ${stats}
 
   return missionCard;
 }
+
 export function getMissionListButtonRow(user, options = {}) {
   const userId = user._id;
 

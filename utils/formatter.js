@@ -1,8 +1,9 @@
-import { MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
-import { formatTime, timeSince } from "./formatTime.js";
+import { ActionRowBuilder, MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
+import { formatTime, getCurrentPST, timeSince } from "./formatTime.js";
 import { getOrCreateUser } from "./getOrCreateUser.js";
 import { getStatusButtonRow } from "../components/buttonRows.js";
 import { getMissionListButtonRow } from "../components/missionComponents.js";
+import { getMissionTabSelector } from "../selects/missionTabSelect.js";
 
 export function formatMood(mood) {
   const moodMap = {
@@ -117,8 +118,10 @@ export function createProgressBar(current, total, size = 9) {
   return `\`${mark} ${bar}\``;
 }
 
-export async function showMissionList(interaction, user, missions, followUp = true) {
-  const all = await missions.find({ user_id: user._id }).toArray();
+export async function formatMissionList(interaction, user, missions, options = {}) {
+  const all = await missions
+    .find({ user_id: user._id, ...(options.selected_tab == 1 && { is_daily: true }) })
+    .toArray();
   const sorted = sortMissions(all);
 
   const completed = sorted.filter((m) => m.is_complete);
@@ -135,9 +138,11 @@ export async function showMissionList(interaction, user, missions, followUp = tr
 
   const msg = [dailyList, otherList].filter(Boolean).join("\n\n");
 
-  const content = `### \`${user.display_name}'s Missions:\` \`${completed.length} / ${sorted.length}\`\n${msg}`;
+  const content = `### \`${getCurrentPST().toISODate()}\` \`Completed: ${completed.length} / ${
+    sorted.length
+  }\`\n${msg}`;
 
-  return followUp ? interaction.reply({ content }) : content;
+  return content;
 }
 
 export function sortMissions(missions) {
@@ -234,22 +239,22 @@ export async function getStatusPayload(interaction, db, targetUser = null) {
   };
 }
 
-export async function getMissionListDisplay(interaction, db) {
+export async function getMissionListDisplay(interaction, db, options = {}) {
   const missions = db.collection("missions");
   const user = await getOrCreateUser(interaction.user);
 
-  const displayMissions = await showMissionList(interaction, user, missions, false);
+  const displayMissions = await formatMissionList(interaction, user, missions, options);
   const missionsList = new TextDisplayBuilder().setContent(displayMissions);
 
   const lockedInMission = await missions.findOne({
     user_id: user._id,
     locked_in_at: { $ne: null },
   });
-
+  const tabSelector = new ActionRowBuilder().addComponents(getMissionTabSelector(user, options));
   const footer = getMissionListButtonRow(user, { lockedInMission });
 
   return {
-    components: [missionsList, footer],
+    components: [tabSelector, missionsList, footer],
     flags: MessageFlags.IsComponentsV2,
   };
 }

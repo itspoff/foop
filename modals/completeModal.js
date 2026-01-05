@@ -1,5 +1,4 @@
-import { LabelBuilder, MessageFlags, ModalBuilder, TextDisplayBuilder } from "discord.js";
-import { getMissionCard, getMissionSelector, MissionSelectOperations } from "../components/missionComponents.js";
+import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { getMissionListDisplay } from "../utils/formatter.js";
 import { ObjectId } from "mongodb";
 import { processMissionCompletion, sendDailyBonusFollowUp } from "../logic/missionLogic.js";

@@ -1,11 +1,6 @@
-import { LabelBuilder, MessageFlags, ModalBuilder, TextDisplayBuilder } from "discord.js";
+import { MessageFlags, TextDisplayBuilder } from "discord.js";
 import { formatMission } from "../utils/formatter.js";
-import {
-  getMissionActionModal,
-  getMissionCard,
-  getMissionSelector,
-  MissionSelectOperations,
-} from "../components/missionComponents.js";
+import { getMissionActionModal, getMissionCard, MissionSelectOperations } from "../components/missionComponents.js";
 import { getConfirmCheckOutRow } from "../components/buttonRows.js";
 import { processMissionLockIn } from "../logic/missionLogic.js";
 import { ObjectId } from "mongodb";
