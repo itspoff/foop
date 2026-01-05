@@ -69,11 +69,9 @@ export default {
     const message = interaction.fields.getTextInputValue("cheer_input_message")?.trim() || "You got this!";
 
     const text = new TextDisplayBuilder().setContent(
-      `\`${message}\`
+      `\`🗨️\` \`${message}\`
 > \`${user.display_name} cheered for\` ${formatMission(mission)}`
     );
-
-    // store message id of the mission card? and update the card
 
     await users.updateOne({ _id: user._id }, { $inc: { ppts: -100 } });
     await missions.updateOne({ _id: missionId }, { $addToSet: { cheers: user._id } });

@@ -245,5 +245,5 @@ export function getMissionButtonRow(missionId, userId, options = {}) {
     .setStyle(ButtonStyle.Danger)
     .setDisabled(disableDelete);
 
-  return new ActionRowBuilder().addComponents(lockInButton, completeButton, cheerButton, editButton, deleteButton);
+  return new ActionRowBuilder().addComponents(lockInButton, completeButton, editButton, deleteButton);
 }
