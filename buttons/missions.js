@@ -7,7 +7,7 @@ export default {
 
   async execute(interaction, { db, user }) {
     const missions = db.collection("missions");
-    const displayMissions = await formatMissionList(interaction, user, missions, MissionTabOptions.ALL);
+    const displayMissions = await formatMissionList(interaction, user, missions);
     await interaction.reply({ components: displayMissions, flags: MessageFlags.Ephemeral });
   },
 };

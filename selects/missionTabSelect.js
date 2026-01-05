@@ -1,7 +1,7 @@
 import { MessageFlags, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { getMissionListDisplay } from "../utils/formatter.js";
 
-export function getMissionTabSelector(user, options = {}) {
+export function getMissionTabSelector(user, options = MissionTabOptions.ALL) {
   const userId = user._id;
   const select = new StringSelectMenuBuilder().setCustomId(`missionTabSelect_${userId}`).addOptions(
     new StringSelectMenuOptionBuilder()

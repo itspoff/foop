@@ -2,23 +2,25 @@ import { LabelBuilder, ModalBuilder, TextDisplayBuilder, TextInputBuilder } from
 import { MessageFlags, TextInputStyle } from "discord.js";
 import { ObjectId } from "mongodb";
 import { formatMission } from "../utils/formatter.js";
+import { getCurrentPST } from "../utils/formatTime.js";
+import { DateTime, Duration } from "luxon";
 
 const placeholders = [
-  "", // default
-  "You can do it!",
-  "Is this task bothering you?",
+  "You got this!", // default
+  "Meow.",
 ];
 
-export function getCheerModal(userToCheer = "a friend", missionId) {
+export function getCheerModal(userToCheer = "a friend", missionId, cheerStatus) {
   const modal = new ModalBuilder()
     .setCustomId(`cheer_modal_submit:${missionId}`)
     .setTitle(`Cheer for ${userToCheer} 🎉`);
 
   const placeholder =
     Math.random() < 0.5 ? placeholders[0] : placeholders[Math.floor(Math.random() * (placeholders.length - 1)) + 1];
+  const nextRefillUnix = Math.floor(cheerStatus.nextRefillAt.toSeconds());
 
   const textDescription = new TextDisplayBuilder().setContent(
-    `Use 100 ppts to cheer for this mission? \n-# ${userToCheer} will receive double the rewards on completion.`
+    `Cheer for this mission? You have \`${cheerStatus.currentBalance}\` cheer(s).\n-# ${userToCheer} will receive double the rewards on completion.\n-# Your next cheer refills <t:${nextRefillUnix}:R>`
   );
   const messageInput = new TextInputBuilder()
     .setCustomId("cheer_input_message")
@@ -52,12 +54,7 @@ export default {
         ephemeral: true,
       });
     }
-    if (user.ppts < 100) {
-      return interaction.reply({
-        content: "> `❌ You don't have enough points to cheer!`",
-        ephemeral: true,
-      });
-    }
+
     const alreadyCheered = mission.cheers?.includes(user._id);
     if (alreadyCheered) {
       return interaction.reply({
@@ -66,19 +63,65 @@ export default {
       });
     }
 
+    const cheerStatus = await getCheerStatus(user, db);
+    if (cheerStatus.currentBalance <= 0) {
+      return interaction.reply({
+        content: `> \`❌ You are out of cheers!\``,
+        ephemeral: true,
+      });
+    }
+
     const message = interaction.fields.getTextInputValue("cheer_input_message")?.trim() || "You got this!";
+
+    await users.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          ppts: user.ppts - 100,
+          cheer_balance: cheerStatus.currentBalance - 1,
+          last_cheered_at: cheerStatus.lastAppliedRefill.toJSDate(),
+        },
+      }
+    );
+    await missions.updateOne({ _id: missionId }, { $addToSet: { cheers: user._id } });
 
     const text = new TextDisplayBuilder().setContent(
       `\`🗨️\` \`${message}\`
 > \`${user.display_name} cheered for\` ${formatMission(mission)}`
     );
-
-    await users.updateOne({ _id: user._id }, { $inc: { ppts: -100 } });
-    await missions.updateOne({ _id: missionId }, { $addToSet: { cheers: user._id } });
-
     await interaction.reply({
       components: [text],
       flags: MessageFlags.IsComponentsV2,
     });
   },
 };
+
+const MAX_CHEERS = 3;
+const REFILL_RATE = Duration.fromObject({ hours: 8 });
+
+export async function getCheerStatus(user) {
+  const now = getCurrentPST();
+
+  const lastUpdate = user.last_cheered_at
+    ? DateTime.fromJSDate(user.last_cheered_at)
+    : now.minus(REFILL_RATE.multiply(MAX_CHEERS));
+
+  const diffMs = now.diff(lastUpdate).as("milliseconds");
+  const refillMs = REFILL_RATE.as("milliseconds");
+
+  const regenerated = Math.floor(diffMs / refillMs);
+  const currentBalance = Math.min(MAX_CHEERS, (user.cheer_balance || 0) + regenerated);
+
+  const appliedRefillMs = regenerated * refillMs;
+  const lastAppliedRefill = lastUpdate.plus({ milliseconds: appliedRefillMs });
+
+  const msToNext = refillMs - (diffMs % refillMs);
+  const nextRefillAt = now.plus({ milliseconds: msToNext });
+
+  return {
+    currentBalance,
+    lastAppliedRefill,
+    nextRefillAt,
+    now,
+  };
+}

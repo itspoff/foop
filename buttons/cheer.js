@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { getCheerModal } from "../modals/cheerModal.js";
+import { getCheerModal, getCheerStatus } from "../modals/cheerModal.js";
 import { getExistingUserFromId } from "../utils/getOrCreateUser.js";
 
 export default {
@@ -39,7 +39,8 @@ export default {
       }
 
       const userToCheer = await getExistingUserFromId(mission.user_id);
-      const modal = getCheerModal(userToCheer.display_name, missionId);
+      const cheerStatus = await getCheerStatus(user);
+      const modal = getCheerModal(userToCheer.display_name, missionId, cheerStatus);
 
       return interaction.showModal(modal);
     }

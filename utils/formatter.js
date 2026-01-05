@@ -4,6 +4,7 @@ import { getOrCreateUser } from "./getOrCreateUser.js";
 import { getStatusButtonRow } from "../components/buttonRows.js";
 import { getMissionListButtonRow } from "../components/missionComponents.js";
 import { getMissionTabSelector } from "../selects/missionTabSelect.js";
+import { getCheerStatus } from "../modals/cheerModal.js";
 
 export function formatMood(mood) {
   const moodMap = {
@@ -221,9 +222,11 @@ export async function getStatusPayload(interaction, db, targetUser = null) {
   const thoughtBubble = formatThoughtBubble(user.thought_bubble) || "`🧠 Head empty. No thoughts.`";
   const progressString = createProgressBar(missionsCompletedCount, missionCount);
 
+  const cheerStatus = await getCheerStatus(user);
+
   const statusUpdate = [
     `## ${displayName}  ${mood}  ${energy}`,
-    `-#  ${displayTagStr}\`Last Updated: ${lastUpdated}\`  |  \`PPts: ${user.ppts}\``,
+    `-#  ${displayTagStr}\`Last Updated: ${lastUpdated}\`  |  \`PPts: ${user.ppts}\`  |  \`Cheers: ${cheerStatus.currentBalance} / 3\``,
     `> **\`Current thought: \`** ${thoughtBubble}`,
     `> **\`Locked in on:    \`** ${formatLockedInMission(lockedInMission)}`,
     `> **\`Missions:        \`** ${progressString}`,
