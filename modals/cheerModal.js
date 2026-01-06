@@ -101,10 +101,9 @@ const REFILL_RATE = Duration.fromObject({ hours: 8 });
 
 export async function getCheerStatus(user) {
   const now = getCurrentPST();
+  const fallbackTime = now.minus(refillMs * MAX_CHEERS);
 
-  const lastUpdate = user.last_cheered_at
-    ? DateTime.fromJSDate(user.last_cheered_at)
-    : now.minus(REFILL_RATE.multiply(MAX_CHEERS));
+  const lastUpdate = user.last_cheered_at ? DateTime.fromJSDate(user.last_cheered_at) : fallbackTime;
 
   const diffMs = now.diff(lastUpdate).as("milliseconds");
   const refillMs = REFILL_RATE.as("milliseconds");
