@@ -3,7 +3,7 @@ import { formatTime, getCurrentPST, timeSince } from "./formatTime.js";
 import { getOrCreateUser } from "./getOrCreateUser.js";
 import { getStatusButtonRow } from "../components/buttonRows.js";
 import { getMissionListButtonRow } from "../components/missionComponents.js";
-import { getMissionTabSelector } from "../selects/missionTabSelect.js";
+import { getMissionTabSelector, MissionTabOptions } from "../selects/missionTabSelect.js";
 import { getCheerStatus } from "../modals/cheerModal.js";
 
 export function formatMood(mood) {
@@ -242,7 +242,7 @@ export async function getStatusPayload(interaction, db, targetUser = null) {
   };
 }
 
-export async function getMissionListDisplay(interaction, db, options = {}) {
+export async function getMissionListDisplay(interaction, db, options = MissionTabOptions.ALL) {
   const missions = db.collection("missions");
   const user = await getOrCreateUser(interaction.user);
 
