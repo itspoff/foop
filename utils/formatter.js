@@ -177,12 +177,17 @@ export function formatDisplayMission(mission, quoted = true) {
 
   let timer = "";
   if (mission.time_taken) {
-    timer = `\`⏱️ ${formatTime(mission.time_taken)}\``;
+    timer = ` \`⏱️ ${formatTime(mission.time_taken)}\``;
+  }
+
+  let streak = "";
+  if (mission.is_daily && mission.current_streak >= 2) {
+    streak = ` \`🔥 ${mission.current_streak}\``;
   }
 
   return `${quoted ? "> " : ""}\`${emoji}\`  ${mission.is_complete ? "~~" : ""}\`${capitalizeFirstLetter(
     mission.name
-  )}\`${mission.is_complete ? "~~" : ""} ${timer}`;
+  )}\`${mission.is_complete ? "~~" : ""}${timer}${streak}`;
 }
 
 export function formatLockedInMission(mission) {
