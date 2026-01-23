@@ -203,6 +203,7 @@ setInterval(async () => {
             ppts_gained: null,
             cheers: [],
             rewarded_all_dailies: false,
+            last_completed_at: now.toJSDate(),
           },
           $inc: { count: 1 },
         };
