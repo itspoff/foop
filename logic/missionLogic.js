@@ -57,6 +57,10 @@ export async function processMissionCompletion(db, user, mission) {
   let dailyBonus = 0;
 
   if (completedAllDaily) {
+    const hasDailyMissions = await missions.findOne({
+      user_id: user._id,
+      is_daily: true,
+    });
     const alreadyRewarded = await missions.findOne({
       user_id: user._id,
       is_daily: true,
@@ -86,7 +90,7 @@ export async function processMissionCompletion(db, user, mission) {
     {
       $set: { last_updated: getCurrentPST().toJSDate() },
       $inc: { ppts: rewardData.totalBonus, energy: -rewardData.cost },
-    }
+    },
   );
 
   const updatedUser = await users.findOne({ _id: user._id });
