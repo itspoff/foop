@@ -67,6 +67,9 @@ export async function processMissionCompletion(db, user, mission) {
       rewarded_all_dailies: true,
     });
     if (!alreadyRewarded) dailyBonus = 50;
+    if (!hasDailyMissions) {
+      alreadyRewarded = true;
+    }
   }
 
   const rewardData = calculateMissionRewards({ mission, user, totalTime, dailyBonus });
