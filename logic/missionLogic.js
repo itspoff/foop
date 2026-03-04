@@ -61,7 +61,7 @@ export async function processMissionCompletion(db, user, mission) {
       user_id: user._id,
       is_daily: true,
     });
-    const alreadyRewarded = await missions.findOne({
+    let alreadyRewarded = await missions.findOne({
       user_id: user._id,
       is_daily: true,
       rewarded_all_dailies: true,
