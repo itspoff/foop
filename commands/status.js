@@ -1,5 +1,4 @@
 import { SlashCommandBuilder, InteractionContextType, MessageFlags } from "discord.js";
-import connectToDatabase from "../db.js";
 import { getStatusPayload } from "../utils/formatter.js";
 
 export const data = new SlashCommandBuilder()

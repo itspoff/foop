@@ -17,6 +17,7 @@ import { getCurrentPST, getResetTimePST } from "./utils/formatTime.js";
 import { formatReminder } from "./utils/formatReminder.js";
 import { getDailyReport } from "./components/dailyReport.js";
 import { getDailyButtonRow } from "./components/buttonRows.js";
+import { seedDatabase } from "./seed.js";
 
 config();
 
@@ -68,6 +69,8 @@ function findHandlerByPrefix(handlers, customId) {
 
 (async () => {
   db = await connectToDatabase();
+
+  await seedDatabase(db);
 
   await loadHandlers("./buttons", client.buttonHandlersByPrefix);
   await loadHandlers("./modals", client.modalHandlersByPrefix);

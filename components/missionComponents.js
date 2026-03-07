@@ -57,7 +57,7 @@ export function getMissionSelector(missionArray, options = MissionSelectOperatio
           .setLabel(capitalizeFirstLetter(mission.name.slice(0, 100)))
           .setValue(mission._id.toString())
           .setDescription(descString || " ");
-      })
+      }),
     );
 
   if (options !== MissionSelectOperations.LOCKIN) {

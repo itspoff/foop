@@ -1,4 +1,5 @@
 import connectToDatabase from "../db.js";
+import { formatMood } from "./formatter.js";
 import { getCurrentPST } from "./formatTime.js";
 
 export async function getOrCreateUser(discordUser, guildMember = null) {
@@ -7,36 +8,35 @@ export async function getOrCreateUser(discordUser, guildMember = null) {
 
   const userId = discordUser.id;
   const display_name = guildMember?.nickname || discordUser.global_name || discordUser.username;
+  const avatarURL = discordUser.displayAvatarURL();
+  const now = getCurrentPST().toJSDate();
 
-  let user = await users.findOne({ _id: userId });
+  const result = await users.findOneAndUpdate(
+    { _id: userId },
+    {
+      $set: {
+        display_name,
+        display_avatar_url: avatarURL,
+        last_updated: now,
+      },
+      $setOnInsert: {
+        discord_id: userId,
+        thought_bubble: null,
+        date_created: now,
+        daily_reset_hour: 5,
+        mood: "normal",
+        energy: 100,
+        conditions: [],
+        tags: [],
+        active_tag: null,
+        ppts: 0,
+        backpack: { items: [] },
+      },
+    },
+    { upsert: true, returnDocument: "after" },
+  );
 
-  const now = getCurrentPST();
-  const avatarURL = discordUser.display_avatar_url;
-
-  if (!user) {
-    const newUser = {
-      _id: userId,
-      discord_id: userId,
-      display_name,
-      display_avatar_url: avatarURL,
-      thought_bubble: null,
-      date_created: now.toJSDate(),
-      last_updated: now.toJSDate(),
-      daily_reset_hour: 5,
-      mood: "normal",
-      energy: 100,
-      conditions: [],
-      tags: [],
-      active_tag: null,
-      ppts: 0,
-    };
-
-    await users.insertOne(newUser);
-    user = newUser;
-    console.log(`Created new user: ${display_name}`);
-  }
-
-  return user;
+  return result;
 }
 
 export async function getExistingUserFromId(userId) {

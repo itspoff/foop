@@ -6,6 +6,10 @@ import { getMissionListButtonRow } from "../components/missionComponents.js";
 import { getMissionTabSelector, MissionTabOptions } from "../selects/missionTabSelect.js";
 import { getCheerStatus } from "../modals/cheerModal.js";
 
+export function wrap(string) {
+  return "`" + string + "`";
+}
+
 export function formatMood(mood) {
   const moodMap = {
     great: "`☀️GREAT`",
@@ -186,7 +190,7 @@ export function formatDisplayMission(mission, quoted = true) {
   }
 
   return `${quoted ? "> " : ""}\`${emoji}\`  ${mission.is_complete ? "~~" : ""}\`${capitalizeFirstLetter(
-    mission.name
+    mission.name,
   )}\`${mission.is_complete ? "~~" : ""}${timer}${streak}`;
 }
 
@@ -206,8 +210,8 @@ export function formatHelpText(string) {
   return `\n-# *${string}*`;
 }
 
-export async function getStatusPayload(interaction, db, targetUser = null) {
-  const discordUser = targetUser ? await interaction.client.users.fetch(targetUser._id) : interaction.user;
+export async function getStatusPayload(interaction, db) {
+  const discordUser = interaction.user;
   const missions = db.collection("missions");
 
   const user = await getOrCreateUser(discordUser);
@@ -226,6 +230,7 @@ export async function getStatusPayload(interaction, db, targetUser = null) {
   const displayTagStr = activeTag ? `${formatDisplayTag(activeTag)}  | ` : "";
   const thoughtBubble = formatThoughtBubble(user.thought_bubble) || "`🧠 Head empty. No thoughts.`";
   const progressString = createProgressBar(missionsCompletedCount, missionCount);
+  const displayAvatarURL = user.display_avatar_url;
 
   const cheerStatus = await getCheerStatus(user);
 
@@ -239,7 +244,7 @@ export async function getStatusPayload(interaction, db, targetUser = null) {
 
   const headerSection = new SectionBuilder()
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(statusUpdate))
-    .setThumbnailAccessory(new ThumbnailBuilder().setDescription("Status").setURL(discordUser.displayAvatarURL()));
+    .setThumbnailAccessory(new ThumbnailBuilder().setDescription("Status").setURL(displayAvatarURL));
 
   return {
     components: [headerSection, getStatusButtonRow(user, lockedInMission)],
