@@ -18,6 +18,8 @@ import { formatReminder } from "./utils/formatReminder.js";
 import { getDailyReport } from "./components/dailyReport.js";
 import { getDailyButtonRow } from "./components/buttonRows.js";
 
+import { initTwitchService } from "./services/twitchService.js";
+
 config();
 
 const client = new Client({
@@ -76,11 +78,14 @@ function findHandlerByPrefix(handlers, customId) {
 
   client.once(Events.ClientReady, async (c) => {
     console.log(`Logged in as ${c.user.tag}`);
+    initTwitchService(client, db);
   });
 
   client.on(Events.InteractionCreate, async (interaction) => {
     if (!db) db = await connectToDatabase();
     const user = await getOrCreateUser(interaction.user, interaction.member);
+
+    interaction.twitchSessionId = client.twitchSessionId;
 
     if (interaction.isButton()) {
       const handler = findHandlerByPrefix(client.buttonHandlersByPrefix, interaction.customId);
