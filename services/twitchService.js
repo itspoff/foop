@@ -33,11 +33,15 @@ export async function getUserAccessToken() {
 }
 
 export function initTwitchService(client, db) {
-    function connect() {
-        twitchWs = new WebSocket(TWITCH_WS_URL);
+    function connect(url=TWITCH_WS_URL) {
+        if (twitchWs) {
+            twitchWs.removeAllListeners();
+            twitchWs.terminate();
+        }
+        twitchWs = new WebSocket(url);
 
         twitchWs.on("open", () => {
-            console.log("Connected to Twitch EventSub WebSocket");
+            console.log(`Connected to Twitch EventSub WebSocket (${url === TWITCH_WS_URL ? "Primary" : "Reconnect"})`);
         });
 
         twitchWs.on("message", async (data) => {
@@ -71,12 +75,16 @@ export function initTwitchService(client, db) {
             else if (message_type === "reconnect") {
                 const reconnectUrl = message.payload.session.reconnect_url;
                 console.log(`🔄 Reconnecting to Twitch alternative cluster: ${reconnectUrl}`);
-                twitchWs = new WebSocket(reconnectUrl);
+                connect(reconnectUrl);
             }
         });
 
         twitchWs.on("error", (err) => {
             console.error("❌ Twitch WebSocket error:", err);
+        });
+
+        twitchWs.on("close", (code, reason) => {
+            console.warn(`⚠️ Twitch WebSocket closed (Code: ${code}). Reason: ${reason}`);
         });
 
     }
