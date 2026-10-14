@@ -227,13 +227,17 @@ setInterval(async () => {
         const separator = new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small);
         const buttons = getDailyButtonRow(discordUser);
 
-        await discordUser.send({
-          components: [dailyReport.section, separator, buttons],
-          flags: [MessageFlags.IsComponentsV2],
-        });
-      } else {
-        console.log(`⏭️ Skipped daily DM for ${user.display_name} (inactive)`);
+        try {
+
+          await discordUser.send({
+            components: [dailyReport.section, separator, buttons],
+            flags: [MessageFlags.IsComponentsV2],
+          });
+        } catch (err) {
+          console.error(`❌ Could not send daily reset to user`, err);
+        }
       }
+
     } catch (err) {
       console.error(`❌ Daily reset failed for ${user._id}:`, err);
     }
