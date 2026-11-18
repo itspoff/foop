@@ -8,7 +8,6 @@ let userAccessToken = null;
 const TWITCH_WS_URL = "wss://eventsub.wss.twitch.tv/ws";
 
 export async function getUserAccessToken() {
-
     const url = new URL("https://id.twitch.tv/oauth2/token");
     url.searchParams.append("client_id", process.env.TWITCH_CLIENT_ID);
     url.searchParams.append("client_secret", process.env.TWITCH_CLIENT_SECRET);
@@ -33,7 +32,7 @@ export async function getUserAccessToken() {
 }
 
 export function initTwitchService(client, db) {
-    function connect(url=TWITCH_WS_URL) {
+    function connect(url = TWITCH_WS_URL) {
         if (twitchWs) {
             twitchWs.removeAllListeners();
             twitchWs.terminate();
@@ -45,37 +44,29 @@ export function initTwitchService(client, db) {
         });
 
         twitchWs.on("message", async (data) => {
-            const message = JSON.parse(data.toString());
-            const { message_type } = message.metadata;
+            try {
+                const message = JSON.parse(data.toString());
+                const messageType = message.metadata.message_type;
 
-            if (message_type === "session_welcome") {
-                currentSessionId = message.payload.session.id;
-                console.log(`Twitch WebSocket Welcome received. Session ID: ${currentSessionId}`);
+                if (messageType === "session_welcome") {
+                    currentSessionId = message.payload.session.id;
+                    console.log(`Twitch WebSocket Welcome received. Session ID: ${currentSessionId}`);
 
-                client.twitchSessionId = currentSessionId;
+                    client.twitchSessionId = currentSessionId;
 
-                try {
-                    const trackedChannels = await db.collection("twitch_channels").find().toArray();
-                    console.log(`Re-registering subscriptions for ${trackedChannels.length} channel(s)...`);
-
-                    for (const channel of trackedChannels) {
-                        await createEventSub(currentSessionId, "stream.online", "1", channel.broadcaster_id);
-                        await createEventSub(currentSessionId, "stream.offline", "1", channel.broadcaster_id);
-                    }
-                } catch (err) {
-                    console.error("❌ Failed to restore twitch subscriptions from database:", err);
+                    await registerAllSubscriptions(db);
                 }
-            }
-
-            else if (message_type === "notification") {
-                const { subscription, event } = message.payload;
-                handleEvent(client, db, subscription.type, event);
-            }
-
-            else if (message_type === "reconnect") {
-                const reconnectUrl = message.payload.session.reconnect_url;
-                console.log(`🔄 Reconnecting to Twitch alternative cluster: ${reconnectUrl}`);
-                connect(reconnectUrl);
+                else if (messageType === "notification") {
+                    const { subscription, event } = message.payload;
+                    await handleEvent(client, db, subscription.type, event);
+                }
+                else if (messageType === "reconnect") {
+                    const reconnectUrl = message.payload.session.reconnect_url;
+                    console.log(`🔄 Reconnecting to Twitch alternative cluster: ${reconnectUrl}`);
+                    connect(reconnectUrl);
+                }
+            } catch (err) {
+                console.error("❌ Error handling incoming Twitch WebSocket message:", err);
             }
         });
 
@@ -84,18 +75,32 @@ export function initTwitchService(client, db) {
         });
 
         twitchWs.on("close", (code, reason) => {
-            console.warn(`⚠️ Twitch WebSocket closed (Code: ${code}). Reason: ${reason}`);
+            console.warn(`⚠️ Twitch WebSocket closed (Code: ${code}). Reason: ${reason}. Reconnecting in 5 seconds...`);
+            setTimeout(() => connect(), 5000);
         });
-
     }
+
     connect();
 }
 
-export async function createEventSub(sessionId, type, version, broadcasterId) {
-
-    userAccessToken = await getUserAccessToken();
-
+async function registerAllSubscriptions(db) {
     try {
+        const trackedChannels = await db.collection("twitch_channels").find().toArray();
+        console.log(`Re-registering subscriptions for ${trackedChannels.length} channel(s)...`);
+
+        for (const channel of trackedChannels) {
+            await createEventSub(currentSessionId, "stream.online", "1", channel.broadcaster_id);
+            await createEventSub(currentSessionId, "stream.offline", "1", channel.broadcaster_id);
+        }
+    } catch (err) {
+        console.error("❌ Failed to restore twitch subscriptions from database:", err);
+    }
+}
+
+export async function createEventSub(sessionId, type, version, broadcasterId) {
+    try {
+        userAccessToken = await getUserAccessToken();
+
         const response = await fetch("https://api.twitch.tv/helix/eventsub/subscriptions", {
             method: "POST",
             headers: {
@@ -106,7 +111,7 @@ export async function createEventSub(sessionId, type, version, broadcasterId) {
             body: JSON.stringify({
                 type: type,
                 version: version,
-                condition: { broadcaster_user_id: broadcasterId, },
+                condition: { broadcaster_user_id: broadcasterId },
                 transport: {
                     method: "websocket",
                     session_id: sessionId,
@@ -119,12 +124,15 @@ export async function createEventSub(sessionId, type, version, broadcasterId) {
             return true;
         } else {
             const errData = await response.json();
+            if (errData.error === "Conflict") {
+                console.log(`⚠️ Subscription for '${type}' (Broadcaster ID: ${broadcasterId}) already exists.`);
+                return true;
+            }
             console.error(`Twitch API Subscription Rejected (${response.status}):`, errData);
             return false;
         }
-
     } catch (error) {
-        console.error(`API request failed for broadcaster ${broadcasterId}`, error)
+        console.error(`API request failed for broadcaster ${broadcasterId}`, error);
         return false;
     }
 }
@@ -139,14 +147,13 @@ async function handleEvent(client, db, type, event) {
 
         const streamerName = event.broadcaster_user_name;
 
-
         if (type === "stream.online") {
+            await new Promise((res) => setTimeout(res, 3000));
 
             const streamArray = await getStream(event.broadcaster_user_id);
-            const streamData = streamArray[0];
-            console.log(streamData);
+            const streamData = streamArray?.[0];
 
-            const title = streamData?.title || "Stream Title";
+            const title = streamData?.title || "Live Stream";
             const gameName = streamData?.game_name || "something";
 
             const embed = new EmbedBuilder()
@@ -169,14 +176,13 @@ async function handleEvent(client, db, type, event) {
                 .setDisabled(true);
 
             const actionRow = new ActionRowBuilder()
-                .addComponents(linkButton, actionButton)
+                .addComponents(linkButton, actionButton);
 
             await targetChannel.send({
                 embeds: [embed],
                 components: [actionRow]
             });
         }
-
         else if (type === "stream.offline") {
             await targetChannel.send(`\`💤\` **\`${streamerName}\`** \`is now offline.\``);
         }
@@ -194,7 +200,7 @@ async function getStream(broadcaster_id) {
             "Authorization": `Bearer ${userAccessToken}`,
             "Client-Id": process.env.TWITCH_CLIENT_ID,
         },
-    })
+    });
     if (!response.ok) {
         throw new Error(`Twitch API error: ${response.status} ${response.statusText}`);
     }
