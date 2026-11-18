@@ -167,6 +167,7 @@ setInterval(async () => {
       console.error("❌ Failed to send reminder:", err);
     }
   }
+  
 
   const users = await db
     .collection("users")
@@ -216,11 +217,13 @@ setInterval(async () => {
         await missionsCol.updateOne({ _id: daily._id }, updateMission);
       }
 
-      await missionsCol.deleteMany({
-        user_id: user._id,
-        is_daily: false,
-        is_complete: true,
-      });
+      // delete completed missions
+
+      // await missionsCol.deleteMany({
+      //   user_id: user._id,
+      //   is_daily: false,
+      //   is_complete: true,
+      // });
 
       const lastUpdated = user.last_updated ? DateTime.fromJSDate(user.last_updated) : null;
       if (lastUpdated && now.diff(lastUpdated, "hours").hours <= 24) {

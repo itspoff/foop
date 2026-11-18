@@ -16,7 +16,6 @@ export function getDailyReport(user, discordUser, dailyMissions, allMissions) {
   let totalTimeTaken = 0;
   let pptsGained = 0;
   let cheers = 0;
-  let numMissionsLeveledUp = 0;
   for (const mission of allMissions) {
     if (mission.time_taken) {
       totalTimeTaken += mission.time_taken;
@@ -37,10 +36,10 @@ export function getDailyReport(user, discordUser, dailyMissions, allMissions) {
 > \`Daily missions:      \` \` ${dailiesCompleted} / ${dailyMissions.length}\` ${
     allDailiesCompleted ? `\`🔥 x${user.daily_streak ? user.daily_streak + 1 : 1}\`` : ""
   }
-> \`All missions:        \` \` ${allCompleted} / ${allMissions.length}\`
+> \`Missions Completed:        \` \` ${allCompleted} / ${allMissions.length}\`
 > \`Locked in for:       \` \` ${formatTime(totalTimeTaken)}\`
 
-> \`Ppts gained:         \` \` +${pptsGained}\`
+> \`Missions :         \` \` +${pptsGained}\`
 > \`Cheers received:     \` \` ${cheers}\` 
 
 `;
